@@ -14,7 +14,7 @@ class IHttpResponse;
 class IHttpRequest;
 class FCharacterApi;
 struct FRpmCharacter;
-class URpmSettings;
+class URpmDeveloperSettings;
 class UglTFRuntimeAsset;
 
 /**
@@ -68,7 +68,7 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me")
 	USceneComponent* AssetRoot;
-	URpmSettings* RpmSettings;
+	URpmDeveloperSettings* RpmSettings;
 	FglTFRuntimeSkeletalMeshAsync OnSkeletalMeshCallback;
 	TSharedPtr<FCharacterApi> CharacterApi;
 };

@@ -6,7 +6,6 @@
 #include "EditorCache.h"
 #include "HttpModule.h"
 #include "IImageWrapper.h"
-#include "RpmSettings.h"
 #include "SlateOptMacros.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
@@ -16,6 +15,7 @@
 #include "Widgets/Input/SEditableTextBox.h"
 #include "IImageWrapperModule.h"
 #include "Auth/DeveloperLoginRequest.h"
+#include "Settings/RpmDeveloperSettings.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -23,7 +23,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 {
 	FDeveloperAuth AuthData = DevAuthTokenCache::GetAuthData();
 	bIsLoggedIn = AuthData.IsValid();
-	Settings = GetDefault<URpmSettings>();
+	Settings = GetDefault<URpmDeveloperSettings>();
 	UserName = AuthData.Name;
 	ChildSlot
 	[

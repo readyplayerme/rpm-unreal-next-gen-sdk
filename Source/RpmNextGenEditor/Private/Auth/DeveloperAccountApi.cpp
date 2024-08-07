@@ -1,10 +1,10 @@
 ﻿#include "Auth/DeveloperAccountApi.h"
 #include "JsonObjectConverter.h"
-#include "RpmSettings.h"
+#include "Settings/RpmDeveloperSettings.h"
 
 FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy) : FWebApiWithAuth(InAuthenticationStrategy)
 {
-    if (URpmSettings* Settings = GetMutableDefault<URpmSettings>())
+    if (URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>())
     {
         ApiBaseUrl = Settings->ApiBaseUrl;
     }

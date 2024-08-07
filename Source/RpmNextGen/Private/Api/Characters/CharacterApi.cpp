@@ -1,15 +1,15 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
-#include "RpmSettings.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
 #include "Api/Characters/Models/CharacterUpdateRequest.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Settings/RpmDeveloperSettings.h"
 
 FCharacterApi::FCharacterApi()
 {
-	URpmSettings *Settings = GetMutableDefault<URpmSettings>();
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
 	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *Settings->ApiBaseUrl) ;
 	Http = &FHttpModule::Get();
 }
@@ -59,7 +59,7 @@ void FCharacterApi::DispatchRaw(const FApiRequest& Data, const ECharacterRespons
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
 	//TODO move to auth strategy
-	URpmSettings *Settings = GetMutableDefault<URpmSettings>(); 
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
 	Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
 	UE_LOG(LogTemp, Warning, TEXT("Making request to Url: %s | Verb: %s with data %s"), *Data.Url, *Data.GetVerb(), *Data.Payload);
 	for (const auto& Header : Data.Headers)

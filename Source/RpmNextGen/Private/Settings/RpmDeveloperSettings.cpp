@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "RpmSettingsData.h"
+#include "Settings/RpmDeveloperSettings.h"
 
-URpmSettingsData::URpmSettingsData()
+URpmDeveloperSettings::URpmDeveloperSettings()
 {
 	ApiBaseUrl = TEXT("https://api.readyplayer.me");
 	ApiBaseAuthUrl = TEXT("https://readyplayer.me/api/auth");

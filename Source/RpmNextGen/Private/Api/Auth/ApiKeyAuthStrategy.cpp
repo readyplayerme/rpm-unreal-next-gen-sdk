@@ -1,5 +1,5 @@
 ﻿#include "Api/Auth/ApiKeyAuthStrategy.h"
-#include "RpmSettings.h"
+#include "Settings/RpmDeveloperSettings.h"
 
 class URpmSettings;
 
@@ -9,7 +9,7 @@ FApiKeyAuthStrategy::FApiKeyAuthStrategy()
 
 void FApiKeyAuthStrategy::AddAuthToRequest(FApiRequest& Request)
 {
-	URpmSettings *Settings = GetMutableDefault<URpmSettings>(); 
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
 	Request.Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);
 	UE_LOG(LogTemp, Log, TEXT("Added API key to request %s"), *Settings->ApiKey);
 	UE_LOG(LogTemp, Log, TEXT("Is OnAuthComplete bound = %d"), OnAuthComplete.IsBound());

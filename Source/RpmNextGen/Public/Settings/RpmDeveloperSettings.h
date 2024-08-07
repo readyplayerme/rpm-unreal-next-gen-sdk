@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
-#include "RpmSettingsData.generated.h"
+#include "RpmDeveloperSettings.generated.h"
 
 /**
  * 
  */
 UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Ready Player Me"))
-class RPMNEXTGEN_API URpmSettingsData : public UDeveloperSettings
+class RPMNEXTGEN_API URpmDeveloperSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 
 public:
-	URpmSettingsData();
+	URpmDeveloperSettings();
 
 	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiBaseUrl;

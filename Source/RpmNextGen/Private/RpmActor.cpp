@@ -4,19 +4,18 @@
 #include "glTFRuntimeAsset.h"
 #include "glTFRuntimeFunctionLibrary.h"
 #include "HttpModule.h"
-#include "RpmSettings.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Settings/RpmDeveloperSettings.h"
 
-class URpmSettings;
 class IHttpRequest;
 
 ARpmActor::ARpmActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	RpmSettings = GetMutableDefault<URpmSettings>();
+	RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &ARpmActor::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &ARpmActor::HandleCharacterUpdateResponse);

@@ -11,7 +11,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
-class URpmSettings;
+class URpmDeveloperSettings;
 class UDeveloperAuthApi;
 class SEditableTextBox;
 /**
@@ -50,7 +50,7 @@ private:
 	void SetLoggedInState(const bool IsLoggedIn);
 	void PopulateComboBoxItems(const TArray<FString>& Items);
 	
-	const URpmSettings* Settings;
+	const URpmDeveloperSettings* Settings;
 	TSharedPtr<SEditableTextBox> EmailTextBox;
 	TSharedPtr<SEditableTextBox> PasswordTextBox;
 

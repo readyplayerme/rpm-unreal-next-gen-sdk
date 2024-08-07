@@ -1,7 +1,7 @@
-#include "CharacterCustomizationWidget.h"
-#include "AssetButtonWidget.h"
+#include "Samples/CharacterCustomizationWidget.h"
+#include "Samples/AssetButtonWidget.h"
 #include "HttpModule.h"
-#include "RpmSettings.h"
+#include "Settings/RpmDeveloperSettings.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Api/Assets/Models/Asset.h"
@@ -13,7 +13,7 @@
 void UCharacterCustomizationWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-    URpmSettings* Settings = GetMutableDefault<URpmSettings>();
+    URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
     ApplicationID = Settings->ApplicationId;
     InitializeCustomizationOptions();
 }
@@ -22,7 +22,7 @@ void UCharacterCustomizationWidget::InitializeCustomizationOptions()
 {
     UE_LOG(LogTemp, Warning, TEXT("Initialize customization options called. Application ID: %s"), *ApplicationID);
 
-    URpmSettings* Settings = GetMutableDefault<URpmSettings>();
+    URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
     FString ApiBaseUrl = Settings->ApiBaseUrl;
 
     UE_LOG(LogTemp, Warning, TEXT("Asset API is valid"));

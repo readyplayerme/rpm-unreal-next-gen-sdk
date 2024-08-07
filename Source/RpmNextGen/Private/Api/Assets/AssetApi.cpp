@@ -1,11 +1,11 @@
 ﻿#include "Api/Assets/AssetApi.h"
-#include "RpmSettings.h"
+#include "Settings/RpmDeveloperSettings.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 
 FAssetApi::FAssetApi()
 {
-	URpmSettings* Settings = GetMutableDefault<URpmSettings>();
+	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = Settings->ApiBaseUrl;
 	OnApiResponse.BindRaw(this, &FAssetApi::HandleListAssetResponse);
 }

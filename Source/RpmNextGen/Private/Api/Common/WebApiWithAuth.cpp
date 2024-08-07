@@ -1,6 +1,6 @@
 ﻿#include "Api/Common/WebApiWithAuth.h"
 
-FWebApiWithAuth::FWebApiWithAuth() : AuthenticationStrategy(nullptr), ApiRequestData(nullptr)
+FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)
 {
     FWebApi();
 }
