@@ -10,14 +10,11 @@ FApiKeyAuthStrategy::FApiKeyAuthStrategy()
 void FApiKeyAuthStrategy::AddAuthToRequest(FApiRequest& Request)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
-	Request.Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);
-	UE_LOG(LogTemp, Log, TEXT("Added API key to request %s"), *Settings->ApiKey);
-	UE_LOG(LogTemp, Log, TEXT("Is OnAuthComplete bound = %d"), OnAuthComplete.IsBound());
-	
+	Request.Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);	
 	OnAuthComplete.ExecuteIfBound(true, false);
 }
 
-void FApiKeyAuthStrategy::OnRefreshTokenResponse(FString Response, bool bWasSuccessful)
+void FApiKeyAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful)
 {
 }
 

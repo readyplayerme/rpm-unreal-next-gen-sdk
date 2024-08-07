@@ -27,7 +27,7 @@ protected:
 		const FApiRequest& Data
 	);
 	
-	void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	 virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
 	

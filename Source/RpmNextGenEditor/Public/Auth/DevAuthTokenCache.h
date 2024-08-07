@@ -61,7 +61,7 @@ class RPMNEXTGENEDITOR_API DevAuthTokenCache
 {
 public:
 	static FDeveloperAuth GetAuthData();
-	static void SetAuthData(const FDeveloperLoginResponse& Token);
+	static void SetAuthData(const FDeveloperAuth& DevAuthData);
 	static void ClearAuthData();
 private:
 	static constexpr const TCHAR* CacheKeyName = TEXT("Name");

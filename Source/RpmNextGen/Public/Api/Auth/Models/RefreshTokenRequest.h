@@ -36,7 +36,7 @@ struct RPMNEXTGEN_API FRefreshTokenRequest
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
-	FRefreshTokenRequestBody Payload;
+	FRefreshTokenRequestBody Data;
 
 	FString ToJsonString() const
 	{

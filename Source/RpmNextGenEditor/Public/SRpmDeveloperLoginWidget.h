@@ -11,6 +11,8 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
+struct FDeveloperLoginResponse;
+class FDeveloperAuthApi;
 class URpmDeveloperSettings;
 class UDeveloperAuthApi;
 class SEditableTextBox;
@@ -36,7 +38,7 @@ private:
 
 	void LoadBaseModelList();
 
-	void HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful);
 	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
 
 	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
@@ -63,7 +65,8 @@ private:
 	bool bIsLoggedIn = false;
 	FString UserName;
 	TUniquePtr<FAssetApi> AssetApi;
-	TUniquePtr<FDeveloperAccountApi> DeveloperApi;
+	TUniquePtr<FDeveloperAccountApi> DeveloperAccountApi;
+	TUniquePtr<FDeveloperAuthApi> DeveloperAuthApi;
 	static constexpr const TCHAR* CacheKeyEmail = TEXT("Email");
 
 	TSharedPtr<SVerticalBox> ContentBox;

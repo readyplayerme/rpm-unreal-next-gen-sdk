@@ -27,7 +27,6 @@ void FWebApi::DispatchRaw(const FApiRequest& Data)
     for (const auto& Header : Data.Headers)
     {
         Request->SetHeader(Header.Key, Header.Value);
-        //UE_LOG(LogTemp, Log, TEXT("Header Key: %s | Value: %s"), *Header.Key, *Header.Value);
     }
 
     if (!Data.Payload.IsEmpty())
@@ -41,10 +40,8 @@ void FWebApi::DispatchRaw(const FApiRequest& Data)
 
 void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        UE_LOG(LogTemp, Warning, TEXT("WebApi from URL %s Response Success: %s."), *Request->GetURL(), *Response->GetContentAsString());
         OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
         return;
     }

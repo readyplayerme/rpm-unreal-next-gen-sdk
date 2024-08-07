@@ -30,9 +30,9 @@ FDeveloperAuth DevAuthTokenCache::GetAuthData()
 	return AuthData;
 }
 
-void DevAuthTokenCache::SetAuthData(const FDeveloperLoginResponse& LoginResponse)
+void DevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
 {
-	AuthData = FDeveloperAuth(LoginResponse.Data, false);
+	AuthData = DevAuthData;
 	EditorCache::SetString( CacheKeyName, AuthData.Name);
 	EditorCache::SetString( CacheKeyToken, AuthData.Token);
 	EditorCache::SetString( CacheKeyRefreshToken, AuthData.RefreshToken);

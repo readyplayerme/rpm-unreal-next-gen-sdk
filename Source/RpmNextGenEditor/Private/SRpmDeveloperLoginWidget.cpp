@@ -14,6 +14,7 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "IImageWrapperModule.h"
+#include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -174,6 +175,12 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 void SRpmDeveloperLoginWidget::Initialize()
 {
 	if(bIsInitialized) return;
+
+	if(!DeveloperAuthApi.IsValid())
+	{
+		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
+		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
+	}
 	
 	if (!AssetApi.IsValid())
 	{
@@ -181,14 +188,14 @@ void SRpmDeveloperLoginWidget::Initialize()
 		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
 
 	}
-	if(!DeveloperApi.IsValid())
+	if(!DeveloperAccountApi.IsValid())
 	{
 		DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
-		DeveloperApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
+		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
 
-		DeveloperApi->SetAuthenticationStrategy(AuthStrategy);
-		DeveloperApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
-		DeveloperApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
+		DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
+		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
 	}
 	bIsInitialized = true;
 	if(bIsLoggedIn)
@@ -334,10 +341,8 @@ UTexture2D* SRpmDeveloperLoginWidget::CreateTextureFromImageData(const TArray<ui
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Clicked on style ID %s"), *StyleId);
 	AssetLoader = FEditorAssetLoader();
 	const FString Url = FString::Printf(TEXT("%s"), *CharacterStyleAssets[StyleId].GlbUrl);
-	UE_LOG(LogTemp, Warning, TEXT("Trying to load GLB from URL %s"), *Url);
 	AssetLoader.LoadGLBFromURL(Url);
 }
 
@@ -365,51 +370,29 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 	Password = Password.TrimStartAndEnd();
 	
 	FDeveloperLoginRequest LoginRequest = FDeveloperLoginRequest(Email, Password);
-	FString url = FString::Printf(TEXT("%s/login"), *Settings->ApiBaseAuthUrl);
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindSP(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
-	Request->SetURL(url); 
-	Request->SetVerb(TEXT("POST"));	
-	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->SetContentAsString(LoginRequest.ToJsonString());
-	Request->ProcessRequest();
-
+	DeveloperAuthApi->LoginWithEmail(LoginRequest);
 	return FReply::Handled();
 }
 
 void SRpmDeveloperLoginWidget::GetOrgList()
 {
 	FOrganizationListRequest OrgRequest;
-	DeveloperApi->ListOrganizationsAsync(OrgRequest);
+	DeveloperAccountApi->ListOrganizationsAsync(OrgRequest);
 }
 
-void SRpmDeveloperLoginWidget::HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful)
 {
-	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() == 200)
+	if(bWasSuccessful)
 	{
-		TSharedPtr<FJsonObject> ResponseObj;
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-		
-
-		if (FJsonSerializer::Deserialize(Reader, ResponseObj))
-		{
-			SetLoggedInState(true);
-			FDeveloperLoginResponse ResponseStruct;
-			FDeveloperLoginResponse::FromJsonObject(ResponseObj, ResponseStruct);
-			UserName = ResponseStruct.Data.Name;
-			DevAuthTokenCache::SetAuthData(ResponseStruct);
-			FString json = ResponseStruct.ToJsonString();
-			
-			GetOrgList();
-			return;
-		}
-		UE_LOG(LogTemp, Error, TEXT("Failed to deserialize login response"));
+		UserName = Response.Data.Name;
+		FDeveloperAuth AuthData = FDeveloperAuth(Response.Data, false);
+		DevAuthTokenCache::SetAuthData(AuthData);
+		SetLoggedInState(true);
+		GetOrgList();
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Login request failed. %s"), *Response->GetContentAsString());
-		DevAuthTokenCache::ClearAuthData();
-	}
+	UE_LOG(LogTemp, Error, TEXT("Login request failed"),);
+	DevAuthTokenCache::ClearAuthData();
 }
 
 void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizationListResponse& Response,
@@ -426,7 +409,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 			
 		FApplicationListRequest Request;
 		Request.Params.Add("organizationId", Response.Data[0].Id);
-		DeveloperApi->ListApplicationsAsync(Request);
+		DeveloperAccountApi->ListApplicationsAsync(Request);
 	}
 	else
 	{
@@ -440,11 +423,6 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 {
 	if (bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Applications:"));
-		for (const FApplication& App : Response.Data)
-		{
-			UE_LOG(LogTemp, Warning, TEXT(" - %s"), *App.Name);
-		}
 		TArray<FString> Items;
 		for (const FApplication& App : Response.Data)
 		{

@@ -1,5 +1,7 @@
 ﻿#include "Api/Common/WebApiWithAuth.h"
 
+#include "Interfaces/IHttpResponse.h"
+
 FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)
 {
     FWebApi();
@@ -13,17 +15,13 @@ FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrate
 void FWebApiWithAuth::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy)
 {
     AuthenticationStrategy = InAuthenticationStrategy;
-    UE_LOG( LogTemp, Log, TEXT("About to bind =  %d"), AuthenticationStrategy->OnAuthComplete.IsBound());
-
     AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
-    UE_LOG( LogTemp, Log, TEXT("Set auth strategy. OnAuthComplete Isbound =  %d"), AuthenticationStrategy->OnAuthComplete.IsBound());
 }
 
 void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful, bool bWasRefreshed)
 {
     if(bWasSuccessful)
     {
-        UE_LOG(LogTemp, Log, TEXT("Dispatching raw data"));
         DispatchRaw(*ApiRequestData);
         return;
     }
@@ -33,20 +31,9 @@ void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful, bool bWasRefreshed)
         AuthenticationStrategy->TryRefresh(*ApiRequestData);
         return;
     }
-    UE_LOG(LogTemp, Log, TEXT("Auth failed"));
+    UE_LOG(LogTemp, Warning, TEXT("Auth failed"));
     OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
 }
-
-// template <typename TRequestBody>
-// void FWebApiWithAuth::DispatchWithAuth(
-//     const TFApiRequest<TRequestBody>& Data
-// )
-// {
-//     TFApiRequestBody<TRequestBody> payload = TFApiRequestBody<TRequestBody>(Data.Payload);
-//     FString PayloadString = ConvertToJsonString(payload.Data);
-//     DispatchRawWithAuth(TFApiRequest<FString>{Data.Url, Data.Method, Data.Headers, PayloadString});
-// }
-
 
 void FWebApiWithAuth::DispatchRawWithAuth(
     FApiRequest& Data
@@ -54,10 +41,25 @@ void FWebApiWithAuth::DispatchRawWithAuth(
 {
     if (AuthenticationStrategy == nullptr)
     {
-        UE_LOG(LogTemp, Log, TEXT("Auth strategy is null"));
+        UE_LOG(LogTemp, Warning, TEXT("Auth strategy is null"));
         DispatchRaw(Data);
         return;
     }
     this->ApiRequestData = &Data;
     AuthenticationStrategy->AddAuthToRequest(Data);
+}
+
+void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+    //FWebApi::OnProcessResponse(Request, Response, bWasSuccessful);
+    if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+    {
+        OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
+        return;
+    }
+    if(EHttpResponseCodes::Denied == Response->GetResponseCode())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Forbidden response trying auth refresh"));
+        AuthenticationStrategy->TryRefresh(*ApiRequestData);
+    }
 }

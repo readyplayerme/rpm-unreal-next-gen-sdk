@@ -17,12 +17,14 @@ public:
 	// void DispatchWithAuth(
 	// 	const TFApiRequest<TRequestBody>& Data
 	// );
-
+	
 	void OnAuthComplete(bool bWasSuccessful, bool bWasRefreshed); 
 
 	void DispatchRawWithAuth(FApiRequest& Data);
 protected:
 	FApiRequest* ApiRequestData;
+
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
 
 private:
 	IAuthenticationStrategy* AuthenticationStrategy;
