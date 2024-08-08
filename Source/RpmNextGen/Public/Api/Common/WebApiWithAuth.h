@@ -18,7 +18,8 @@ public:
 	// 	const TFApiRequest<TRequestBody>& Data
 	// );
 	
-	void OnAuthComplete(bool bWasSuccessful, bool bWasRefreshed); 
+	void OnAuthComplete(bool bWasSuccessful); 
+	void OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful); 
 
 	void DispatchRawWithAuth(FApiRequest& Data);
 protected:

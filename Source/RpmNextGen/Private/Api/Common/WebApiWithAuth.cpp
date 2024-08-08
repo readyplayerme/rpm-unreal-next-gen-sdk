@@ -16,22 +16,35 @@ void FWebApiWithAuth::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthe
 {
     AuthenticationStrategy = InAuthenticationStrategy;
     AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
+    AuthenticationStrategy->OnTokenRefreshed.BindRaw(this, &FWebApiWithAuth::OnAuthTokenRefreshed);
 }
 
-void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful, bool bWasRefreshed)
+void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)
 {
-    if(bWasSuccessful)
+    if(bWasSuccessful && ApiRequestData != nullptr)
     {
         DispatchRaw(*ApiRequestData);
         return;
     }
-    if(!bWasRefreshed)
+    UE_LOG(LogTemp, Warning, TEXT("Auth failed"));
+    OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
+}
+
+void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful)
+{
+    if(bWasSuccessful)
     {
-        UE_LOG(LogTemp, Log, TEXT("Auth failed, trying to refresh"));
-        AuthenticationStrategy->TryRefresh(*ApiRequestData);
+        const FString Key = TEXT("Authorization");
+        if (ApiRequestData->Headers.Contains(Key))
+        {
+            ApiRequestData->Headers.Remove(Key);
+        }
+        ApiRequestData->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Response.Token));
+        UE_LOG(LogTemp, Log, TEXT("Auth refreshed, running request"));
+        DispatchRaw(*ApiRequestData);
         return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("Auth failed"));
+
     OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
 }
 

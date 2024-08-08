@@ -13,8 +13,14 @@ DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy()
 
 void DeveloperTokenAuthStrategy::AddAuthToRequest(FApiRequest& Request) 
 {
-	Request.Headers.Add(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *DevAuthTokenCache::GetAuthData().Token));
-	OnAuthComplete.ExecuteIfBound(true, false);
+	const FString Key = TEXT("Authorization");
+	if (Request.Headers.Contains(Key))
+	{
+		Request.Headers.Remove(Key);
+	}
+	Request.Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *DevAuthTokenCache::GetAuthData().Token));
+	
+	OnAuthComplete.ExecuteIfBound(true);
 }
 
 void DeveloperTokenAuthStrategy::TryRefresh(FApiRequest& Request)
@@ -34,12 +40,12 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
 		DevAuthTokenCache::SetAuthData(DeveloperAuth);
-		UE_LOG(LogTemp, Log, TEXT("Token refreshed successfully: %s"), *Response.Data.Token);
-		OnAuthComplete.ExecuteIfBound(true, true);
+		UE_LOG(LogTemp, Log, TEXT("Token refreshed successfully: %s"), *DeveloperAuth.Token);
+		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Failed to refresh token"));
-	OnAuthComplete.ExecuteIfBound(false, true);
+	OnTokenRefreshed.ExecuteIfBound(Response.Data, false);
 }
 
 

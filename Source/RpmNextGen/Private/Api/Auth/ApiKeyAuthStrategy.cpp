@@ -11,7 +11,7 @@ void FApiKeyAuthStrategy::AddAuthToRequest(FApiRequest& Request)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
 	Request.Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);	
-	OnAuthComplete.ExecuteIfBound(true, false);
+	OnAuthComplete.ExecuteIfBound(true);
 }
 
 void FApiKeyAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful)
