@@ -17,6 +17,7 @@
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
+#include "Widgets/Layout/SScrollBox.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -160,51 +161,30 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 			SNew(STextBlock)
 			.Text(FText::FromString("Here you can import your character styles from Studio"))
 			.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
-		] 
+		]
 		+ SVerticalBox::Slot()
-		.AutoHeight()
+		.Padding(10)
+		.FillHeight(1.0f) // Allows the scroll box to take up remaining space
 		[
-		
-			SAssignNew(ContentBox, SVerticalBox)
+			SNew(SScrollBox)
 			.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
-		]	
+			+ SScrollBox::Slot()
+			[
+				SAssignNew(ContentBox, SVerticalBox)
+			]
+		]
+		// + SVerticalBox::Slot()
+		// .AutoHeight()
+		// [
+		//
+		// 	SAssignNew(ContentBox, SVerticalBox)
+		// 	.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
+		// ]	
 	];
 	
 	EmailTextBox->SetText(FText::FromString(EditorCache::GetString(CacheKeyEmail)));
 	Initialize();
 }
-
-void SRpmDeveloperLoginWidget::Initialize()
-{
-	if(bIsInitialized) return;
-
-	if(!DeveloperAuthApi.IsValid())
-	{
-		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
-		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
-	}
-	
-	if (!AssetApi.IsValid())
-	{
-		AssetApi = MakeUnique<FAssetApi>();
-		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
-
-	}
-	if(!DeveloperAccountApi.IsValid())
-	{
-		DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
-		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
-
-		DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
-		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
-		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
-	}
-	bIsInitialized = true;
-	if(bIsLoggedIn)
-	{
-		GetOrgList();
-	}
-}	
 
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
@@ -245,13 +225,17 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 				   ]
 			   ]
 		   ]
-		   + SHorizontalBox::Slot()
+	   		+ SHorizontalBox::Slot()
 		   .AutoWidth()
 		   .VAlign(VAlign_Top)
 		   .Padding(10, 10, 0, 0) // Padding from the left side of the Image & Button stack
 		   [
-			   SNew(STextBlock)
+			   SNew(SEditableText)
 			   .Text(FText::FromString(FString::Printf(TEXT("ID: %s"), *StyleAsset.Id)))
+			   .IsReadOnly(true) // Prevents the text from being editable
+			   .IsCaretMovedWhenGainFocus(false) // Caret won't appear when focused, keeping it look like plain text
+			   .SelectAllTextWhenFocused(false) // Prevents selecting all text when focused
+			   .MinDesiredWidth(100.0f) // Minimum width for the text box
 		   ]
 	   ];
 
@@ -263,6 +247,38 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	  }
 	});
 }
+
+void SRpmDeveloperLoginWidget::Initialize()
+{
+	if(bIsInitialized) return;
+
+	if(!DeveloperAuthApi.IsValid())
+	{
+		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
+		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
+	}
+	
+	if (!AssetApi.IsValid())
+	{
+		AssetApi = MakeUnique<FAssetApi>();
+		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
+
+	}
+	if(!DeveloperAccountApi.IsValid())
+	{
+		DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
+		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
+
+		DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
+		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
+	}
+	bIsInitialized = true;
+	if(bIsLoggedIn)
+	{
+		GetOrgList();
+	}
+}	
 
 void SRpmDeveloperLoginWidget::DownloadImage(const FString& Url, TFunction<void(UTexture2D*)> Callback)
 {
@@ -344,8 +360,8 @@ UTexture2D* SRpmDeveloperLoginWidget::CreateTextureFromImageData(const TArray<ui
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
 	AssetLoader = FEditorAssetLoader();
-	const FString Url = FString::Printf(TEXT("%s"), *CharacterStyleAssets[StyleId].GlbUrl);
-	AssetLoader.LoadGLBFromURL(Url);
+	UE_LOG(LogTemp, Error, TEXT("Loading model from glb url %s"), *CharacterStyleAssets[StyleId].GlbUrl);
+	AssetLoader.LoadGLBFromURL(CharacterStyleAssets[StyleId].GlbUrl);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const
@@ -473,6 +489,11 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 
 FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 {
+	// Clear the content box to remove all child widgets
+	if (ContentBox.IsValid())
+	{
+		ContentBox->ClearChildren();
+	}
 	DevAuthTokenCache::ClearAuthData();
 	SetLoggedInState(false);
 	return FReply::Handled();
@@ -495,6 +516,7 @@ void SRpmDeveloperLoginWidget::HandleBaseModelListResponse(const FAssetListRespo
 	for (FAsset Asset : Response.Data)
 	{
 		CharacterStyleAssets.Add(Asset.Id, Asset);
+		UE_LOG(LogTemp, Error, TEXT("Asset ID: %s"), *Asset.Id);
 		AddCharacterStyle(Asset);
 	}
 }

@@ -14,7 +14,7 @@ FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetDownloadComplete(bool bWasSuccessful, FString FilePath, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
 {
 	if(bWasSuccessful)
 	{
@@ -49,6 +49,10 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 		{
 			NewActor->SetFlags(RF_Transient);
 			NewActor->Asset = gltfAsset;
+			if(SkeletonToCopy)
+			{
+				NewActor->SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom = SkeletonToCopy;
+			}
 			NewActor->bAllowSkeletalAnimations = false;
 			NewActor->bAllowNodeAnimations = false;
 			NewActor->StaticMeshConfig.bGenerateStaticMeshDescription = true;
@@ -80,6 +84,15 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 void FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString Path)
 {
 	FglTFRuntimeSkeletonConfig skeletonConfig = FglTFRuntimeSkeletonConfig();
+	if(SkeletonToCopy)
+	{
+		skeletonConfig.CopyRotationsFrom = SkeletonToCopy;
+	}
 	USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, skeletonConfig);
 	UTransientObjectSaverLibrary::SaveTransientSkeleton(Skeleton,TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
+	// FglTFRuntimeSkeletalMeshConfig meshConfig = FglTFRuntimeSkeletalMeshConfig();
+	// USkeletalMesh* skeletalMesh = gltfAsset->LoadSkeletalMeshRecursive("", {}, meshConfig);
+	// const FTransientObjectSaverMaterialNameGenerator& MaterialNameGenerator = FTransientObjectSaverMaterialNameGenerator();
+	// const FTransientObjectSaverTextureNameGenerator& TextureNameGenerator = FTransientObjectSaverTextureNameGenerator(); 
+	// UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, TEXT("/Game/ReadyPlayerMe/TestSkeletalMesh"), TEXT("/Game/ReadyPlayerMe/TestSkeleton"), TEXT("/Game/ReadyPlayerMe/TestPhysicsAsset"), MaterialNameGenerator, TextureNameGenerator);
 }
