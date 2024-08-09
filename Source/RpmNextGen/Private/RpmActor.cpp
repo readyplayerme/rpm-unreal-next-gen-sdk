@@ -4,6 +4,7 @@
 #include "glTFRuntimeAsset.h"
 #include "glTFRuntimeFunctionLibrary.h"
 #include "HttpModule.h"
+#include "Animation/AnimInstance.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "Interfaces/IHttpResponse.h"
@@ -54,7 +55,7 @@ void ARpmActor::CreateCharacter(FString AppId)
 	//TODO update to fetch first app id
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
 	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
-	CharacterCreateRequest.Data.Assets.Add("baseModel", "663a61055134180105bcdf0d");
+	CharacterCreateRequest.Data.Assets.Add("baseModel", BaseModelId);
 	CharacterCreateRequest.Data.ApplicationId = AppId;
 
 	CharacterApi->CreateAsync(CharacterCreateRequest);
@@ -62,6 +63,14 @@ void ARpmActor::CreateCharacter(FString AppId)
 
 USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* SkeletalMesh, const FString& Name)
 {
+	if(AddedMeshComponents.Num() > 0)
+	{
+		for (auto AddedMeshComponent : AddedMeshComponents)
+		{
+			AddedMeshComponent->DestroyComponent();
+		}
+		AddedMeshComponents.Empty();
+	}
 	USkeletalMeshComponent* NewSkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, *Name);
 	NewSkeletalMeshComponent->SetupAttachment(RootComponent);
 	NewSkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
@@ -69,14 +78,30 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 	NewSkeletalMeshComponent->RegisterComponent();
 	AddInstanceComponent(NewSkeletalMeshComponent);
 	AddedMeshComponents.Add(NewSkeletalMeshComponent);
+	
+	if (AddedMeshComponents.Num() == 1 && AddedMeshComponents.IsValidIndex(0))
+	{
+		// Get the SkeletalMeshComponent at index 0
+		USkeletalMeshComponent* MeshComponent = AddedMeshComponents[0];
+
+		// Check if the MeshComponent is valid
+		if (MeshComponent && TargetAnimBP)
+		{
+			// Set the animation blueprint class
+			MeshComponent->SetAnimInstanceClass(TargetAnimBP);
+		}
+	}
+	else if(AddedMeshComponents.Num() > 1 && AddedMeshComponents.IsValidIndex(0))
+	{
+		NewSkeletalMeshComponent->SetMasterPoseComponent(AddedMeshComponents[0]);
+	}
+
 	return NewSkeletalMeshComponent;
 }
 
 void ARpmActor::LoadglTFAsset(UglTFRuntimeAsset* Asset, const FString& AssetName)
 {
-
-	FglTFRuntimeSkeletalMeshConfig* SkeletalMeshConfig = new FglTFRuntimeSkeletalMeshConfig();
-	Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, *SkeletalMeshConfig );
+	Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, SkeletalMeshConfig );
 }
 
 void ARpmActor::HandleSkeletalMeshLoaded(USkeletalMesh* SkeletalMesh)
@@ -91,9 +116,9 @@ void ARpmActor::OnAssetDataLoaded(TSharedPtr<IHttpRequest> HttpRequest, TSharedP
 	if (bIsSuccessful)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Request success from url %s "), *HttpRequest->GetURL());
-		FglTFRuntimeConfig Config;
-		Config.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
-		UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(HttpResponse->GetContent(),Config);
+		
+		glTFRuntimeConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
+		UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(HttpResponse->GetContent(), glTFRuntimeConfig);
 		LoadglTFAsset(gltfAsset, "Asset");
 	}
 	else
