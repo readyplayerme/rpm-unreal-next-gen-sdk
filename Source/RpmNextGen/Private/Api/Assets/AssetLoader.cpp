@@ -47,7 +47,7 @@ void FAssetLoader::OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr 
     if (bWasSuccessful && Response.IsValid())
     {
         TArray<uint8> Content = Response->GetContent();
-        OnAssetDataReceived.ExecuteIfBound(true, Content);
+        OnAssetDataReceived.ExecuteIfBound(Content, true);
         
         FString FileName = FPaths::GetCleanFilename(Request->GetURL());
         FString FilePath = DownloadDirectory / FileName;
@@ -57,7 +57,7 @@ void FAssetLoader::OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr 
         {
             UE_LOG(LogTemp, Log, TEXT("Downloaded GLB file to %s"), *FilePath);
             UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Content, *GltfConfig);
-            OnAssetDownloaded.ExecuteIfBound(true, FilePath, gltfAsset);
+            OnAssetDownloaded.ExecuteIfBound(FilePath, gltfAsset, true);
         }
         else
         {
@@ -69,8 +69,8 @@ void FAssetLoader::OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr 
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to download GLB file from URL"));
     }
-    OnAssetDataReceived.ExecuteIfBound(false, TArray<uint8>());
-    OnAssetDownloaded.ExecuteIfBound(false, FString(), nullptr);
+    OnAssetDataReceived.ExecuteIfBound(TArray<uint8>(), false);
+    OnAssetDownloaded.ExecuteIfBound(FString(), nullptr, false);
 }
 
 

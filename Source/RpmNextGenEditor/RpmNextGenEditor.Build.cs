@@ -32,7 +32,9 @@ public class RpmNextGenEditor : ModuleRules
 				"ImageWrapper",
 				"EditorStyle",
 				"glTFRuntime",
-				"TransientObjectSaver"
+				"TransientObjectSaver",
+				"UnrealEd",
+				"PropertyEditor",
 			}
 			);
 			

@@ -50,6 +50,19 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void CreateCharacter(FString AppId);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ready Player Me")
+	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ready Player Me")
+	FglTFRuntimeConfig glTFRuntimeConfig;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Ready Player Me")
+	FString BaseModelId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TSubclassOf<UAnimInstance> TargetAnimBP;
+	
 protected:
 	FRpmCharacter Character;
 

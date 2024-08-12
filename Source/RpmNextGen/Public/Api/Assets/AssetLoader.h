@@ -8,8 +8,8 @@
 struct FglTFRuntimeConfig;
 class UglTFRuntimeAsset;
 
-DECLARE_DELEGATE_TwoParams(FOnAssetDataReceived, bool, TArray<uint8>);
-DECLARE_DELEGATE_ThreeParams(FOnAssetDownloaded, bool, FString, UglTFRuntimeAsset*);
+DECLARE_DELEGATE_TwoParams(FOnAssetDataReceived, TArray<uint8>, bool);
+DECLARE_DELEGATE_ThreeParams(FOnAssetDownloaded, FString, UglTFRuntimeAsset*, bool);
 
 class RPMNEXTGEN_API FAssetLoader : public FWebApi
 {
