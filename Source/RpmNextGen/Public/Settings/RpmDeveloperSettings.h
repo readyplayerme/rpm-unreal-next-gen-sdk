@@ -31,5 +31,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiProxyUrl;
+
+	void SetupGuestUser();
 	
 };

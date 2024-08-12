@@ -14,6 +14,7 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "IImageWrapperModule.h"
+#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
@@ -192,10 +193,21 @@ void SRpmDeveloperLoginWidget::Initialize()
 	}
 	if(!DeveloperAccountApi.IsValid())
 	{
-		DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
-		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
-
-		DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+		const FDeveloperAuth DevAuthData = DevAuthTokenCache::GetAuthData();
+		
+		if(DevAuthData.IsDemo)
+		{
+			DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
+			DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
+			DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+		}
+		else
+		{
+			FApiKeyAuthStrategy* AuthStrategy = new FApiKeyAuthStrategy();
+			DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
+			DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+		}
+		
 		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
 		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
 	}
@@ -467,6 +479,11 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {	
 	UserName = "DemoUser";
 	//TODO: Implement demo account login
+	FDeveloperAuth AuthData = FDeveloperAuth();
+	AuthData.Name = "Guest user";
+	AuthData.IsDemo = true;
+	
+	DevAuthTokenCache::SetAuthData(AuthData);
 	UE_LOG(LogTemp, Error, TEXT("Demo account login not implemented"));
 	return FReply::Handled();
 }
