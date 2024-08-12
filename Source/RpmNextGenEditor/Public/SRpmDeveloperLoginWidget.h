@@ -50,7 +50,7 @@ private:
 	FText GetWelcomeText() const;
 	
 	void SetLoggedInState(const bool IsLoggedIn);
-	void PopulateComboBoxItems(const TArray<FString>& Items);
+	void PopulateComboBoxItems(const TArray<FString>& Items, FString CurrentItem);
 	
 	const URpmDeveloperSettings* Settings;
 	TSharedPtr<SEditableTextBox> EmailTextBox;
@@ -58,6 +58,7 @@ private:
 
 	TArray<TSharedPtr<FString>> ComboBoxItems;
 	TSharedPtr<FString> SelectedComboBoxItem;
+	TArray<FApplication> UserApplications;
 
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
 	FText GetSelectedComboBoxItemText() const;

@@ -441,12 +441,22 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 {
 	if (bWasSuccessful)
 	{
+		UserApplications = Response.Data;
+		FString Active;
 		TArray<FString> Items;
-		for (const FApplication& App : Response.Data)
+		for (const FApplication& App : UserApplications)
 		{
 			Items.Add(App.Name);
+			if(App.Id == Settings->ApplicationId)
+			{
+				Active = App.Name;
+			}
 		}
-		PopulateComboBoxItems(Items);
+		if(Active.IsEmpty() && Items.Num() > 0)
+		{
+			OnComboBoxSelectionChanged(MakeShared<FString>(Items[0]), ESelectInfo::Direct);
+		}
+		PopulateComboBoxItems(Items, Active);
 
 	}
 	else
@@ -457,19 +467,20 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 }
 
 
-void SRpmDeveloperLoginWidget::PopulateComboBoxItems(const TArray<FString>& Items)
+void SRpmDeveloperLoginWidget::PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem)
 {
 	ComboBoxItems.Empty();
 	for (const FString& Item : Items)
 	{
 		ComboBoxItems.Add(MakeShared<FString>(Item));
 	}
-	SelectedComboBoxItem = ComboBoxItems.Num() > 0 ? ComboBoxItems[0] : nullptr;
+	SelectedComboBoxItem = MakeShared<FString>(ActiveItem);
 }
+
 
 FText SRpmDeveloperLoginWidget::GetSelectedComboBoxItemText() const
 {
-	return SelectedComboBoxItem.IsValid() ? FText::FromString(*SelectedComboBoxItem) : FText::FromString("Select an option");
+	return SelectedComboBoxItem.IsValid() && *SelectedComboBoxItem != "" ? FText::FromString(*SelectedComboBoxItem) : FText::FromString("Select an option");
 }
 
 
@@ -477,6 +488,16 @@ FText SRpmDeveloperLoginWidget::GetSelectedComboBoxItemText() const
 void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo)
 {
 	SelectedComboBoxItem = NewValue;
+	FApplication* application = UserApplications.FindByPredicate([&](FApplication item)
+{
+	return item.Name == *NewValue;
+});
+	if(application)
+	{
+		URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+		RpmSettings->ApplicationId = application->Id;
+		RpmSettings->SaveConfig();
+	}
 }
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
