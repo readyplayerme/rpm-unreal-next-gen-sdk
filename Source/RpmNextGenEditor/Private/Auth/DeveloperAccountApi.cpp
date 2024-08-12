@@ -6,7 +6,7 @@ FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthentica
 {
     if (URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>())
     {
-        ApiBaseUrl = Settings->ApiBaseUrl;
+        ApiBaseUrl = Settings->GetApiBaseUrl();
     }
 }
 

@@ -34,4 +34,5 @@ public:
 
 	void SetupGuestUser();
 	
+	FString GetApiBaseUrl();
 };

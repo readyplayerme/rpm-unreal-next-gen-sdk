@@ -6,7 +6,7 @@
 FAssetApi::FAssetApi()
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	ApiBaseUrl = Settings->ApiBaseUrl;
+	ApiBaseUrl = Settings->GetApiBaseUrl();
 	OnApiResponse.BindRaw(this, &FAssetApi::HandleListAssetResponse);
 }
 

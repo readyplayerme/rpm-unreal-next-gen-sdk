@@ -194,20 +194,13 @@ void SRpmDeveloperLoginWidget::Initialize()
 	if(!DeveloperAccountApi.IsValid())
 	{
 		const FDeveloperAuth DevAuthData = DevAuthTokenCache::GetAuthData();
-		
-		if(DevAuthData.IsDemo)
-		{
-			DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
-			DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
-			DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
-		}
-		else
+		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(nullptr);
+		if(!DevAuthData.IsDemo)
 		{
 			FApiKeyAuthStrategy* AuthStrategy = new FApiKeyAuthStrategy();
-			DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
 			DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
 		}
-		
+
 		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
 		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
 	}
@@ -477,14 +470,15 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {	
-	UserName = "DemoUser";
-	//TODO: Implement demo account login
+	
 	FDeveloperAuth AuthData = FDeveloperAuth();
 	AuthData.Name = "Guest user";
 	AuthData.IsDemo = true;
-	
+	UserName = AuthData.Name;
 	DevAuthTokenCache::SetAuthData(AuthData);
-	UE_LOG(LogTemp, Error, TEXT("Demo account login not implemented"));
+	SetLoggedInState(true);
+	GetOrgList();
+	UE_LOG(LogTemp, Error, TEXT("Logging in as demo user."));
 	return FReply::Handled();
 }
 

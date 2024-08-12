@@ -10,7 +10,7 @@
 FCharacterApi::FCharacterApi()
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
-	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *Settings->ApiBaseUrl) ;
+	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *Settings->GetApiBaseUrl()) ;
 	Http = &FHttpModule::Get();
 }
 
