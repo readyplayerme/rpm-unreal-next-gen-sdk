@@ -40,11 +40,10 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
 		DevAuthTokenCache::SetAuthData(DeveloperAuth);
-		UE_LOG(LogTemp, Log, TEXT("Token refreshed successfully: %s"), *DeveloperAuth.Token);
 		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Failed to refresh token"));
+	UE_LOG(LogTemp, Error, TEXT("Failed to refresh token"));
 	OnTokenRefreshed.ExecuteIfBound(Response.Data, false);
 }
 

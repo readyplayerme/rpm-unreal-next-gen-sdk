@@ -18,9 +18,6 @@ public:
 	URpmDeveloperSettings();
 
 	UPROPERTY(EditAnywhere, Config, Category = "API")
-	FString ApiBaseUrl;
-
-	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiBaseAuthUrl;
 	
 	UPROPERTY(EditAnywhere, Config, Category = "API")
@@ -33,6 +30,9 @@ public:
 	FString ApiProxyUrl;
 
 	void SetupGuestUser();
-	
+	void Reset();
 	FString GetApiBaseUrl();
+
+private:	
+	FString ApiBaseUrl;
 };

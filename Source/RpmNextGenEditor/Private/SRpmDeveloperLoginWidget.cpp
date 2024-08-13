@@ -28,7 +28,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 	DevAuthTokenCache::SetAuthData(AuthData);
 
 	bIsLoggedIn = AuthData.IsValid();
-	Settings = GetDefault<URpmDeveloperSettings>();
+	Settings = GetMutableDefault<URpmDeveloperSettings>();
 	UserName = AuthData.Name;
 	ChildSlot
 	[
@@ -209,8 +209,7 @@ void SRpmDeveloperLoginWidget::Initialize()
 		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(nullptr);
 		if(!DevAuthData.IsDemo)
 		{
-			FApiKeyAuthStrategy* AuthStrategy = new FApiKeyAuthStrategy();
-			DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
+			DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
 		}
 
 		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
@@ -221,7 +220,7 @@ void SRpmDeveloperLoginWidget::Initialize()
 	{
 		GetOrgList();
 	}
-}	
+}
 
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
@@ -284,38 +283,6 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	  }
 	});
 }
-
-void SRpmDeveloperLoginWidget::Initialize()
-{
-	if(bIsInitialized) return;
-
-	if(!DeveloperAuthApi.IsValid())
-	{
-		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
-		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
-	}
-	
-	if (!AssetApi.IsValid())
-	{
-		AssetApi = MakeUnique<FAssetApi>();
-		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
-
-	}
-	if(!DeveloperAccountApi.IsValid())
-	{
-		DeveloperTokenAuthStrategy* AuthStrategy = new DeveloperTokenAuthStrategy();
-		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(AuthStrategy);
-
-		DeveloperAccountApi->SetAuthenticationStrategy(AuthStrategy);
-		DeveloperAccountApi->OnOrganizationResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
-		DeveloperAccountApi->OnApplicationListResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
-	}
-	bIsInitialized = true;
-	if(bIsLoggedIn)
-	{
-		GetOrgList();
-	}
-}	
 
 void SRpmDeveloperLoginWidget::DownloadImage(const FString& Url, TFunction<void(UTexture2D*)> Callback)
 {
@@ -423,7 +390,8 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 	EditorCache::SetString(CacheKeyEmail, Email);
 	Email = Email.TrimStartAndEnd();
 	Password = Password.TrimStartAndEnd();
-	
+	DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
+	AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
 	FDeveloperLoginRequest LoginRequest = FDeveloperLoginRequest(Email, Password);
 	DeveloperAuthApi->LoginWithEmail(LoginRequest);
 	return FReply::Handled();
@@ -446,7 +414,7 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 		GetOrgList();
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Login request failed"),);
+	UE_LOG(LogTemp, Error, TEXT("Login request failed"));
 	DevAuthTokenCache::ClearAuthData();
 }
 
@@ -517,26 +485,39 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 }
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
-{	
-	
+{
+	// TODO find a better way to get the latest settings
+	Settings = GetMutableDefault<URpmDeveloperSettings>();
+	Settings->SetupGuestUser();
 	FDeveloperAuth AuthData = FDeveloperAuth();
-	AuthData.Name = "Guest user";
+	AuthData.Name = DemoUserName;
 	AuthData.IsDemo = true;
 	UserName = AuthData.Name;
 	DevAuthTokenCache::SetAuthData(AuthData);
 	SetLoggedInState(true);
+
+	// Unset the authentication strategy for the APIs
+	DeveloperAccountApi->SetAuthenticationStrategy(nullptr);
+	AssetApi->SetAuthenticationStrategy(nullptr);
+	
 	GetOrgList();
-	UE_LOG(LogTemp, Error, TEXT("Logging in as demo user."));
 	return FReply::Handled();
 }
 
 FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 {
+	// TODO find a better way to get the latest settings
+
+	Settings = GetMutableDefault<URpmDeveloperSettings>();
+	Settings->Reset();
+	
 	// Clear the content box to remove all child widgets
 	if (ContentBox.IsValid())
 	{
 		ContentBox->ClearChildren();
 	}
+	ComboBoxItems.Empty();
+	
 	DevAuthTokenCache::ClearAuthData();
 	SetLoggedInState(false);
 	return FReply::Handled();
@@ -544,12 +525,17 @@ FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 
 void SRpmDeveloperLoginWidget::LoadBaseModelList()
 {
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	if(RpmSettings->ApplicationId.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Application ID is empty, unable to load base models."));
+		return;
+	}
 	FAssetListRequest Request = FAssetListRequest();
 	FAssetListQueryParams Params = FAssetListQueryParams();
-	Params.ApplicationId = Settings->ApplicationId;
+	Params.ApplicationId = RpmSettings->ApplicationId;
 	Params.Type = "baseModel";
 	Request.Params = Params;
-	AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
 	AssetApi->ListAssetsAsync(Request);
 }
 
@@ -559,7 +545,6 @@ void SRpmDeveloperLoginWidget::HandleBaseModelListResponse(const FAssetListRespo
 	for (FAsset Asset : Response.Data)
 	{
 		CharacterStyleAssets.Add(Asset.Id, Asset);
-		UE_LOG(LogTemp, Error, TEXT("Asset ID: %s"), *Asset.Id);
 		AddCharacterStyle(Asset);
 	}
 }

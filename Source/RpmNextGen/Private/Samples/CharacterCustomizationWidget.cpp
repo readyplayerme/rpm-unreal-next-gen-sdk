@@ -22,6 +22,7 @@ void UCharacterCustomizationWidget::InitializeCustomizationOptions()
 {
     UE_LOG(LogTemp, Warning, TEXT("Initialize customization options called. Application ID: %s"), *ApplicationID);
 
+    
     URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
     FString ApiBaseUrl = Settings->GetApiBaseUrl();
 
