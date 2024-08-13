@@ -32,7 +32,7 @@ public:
 	USkeletalMeshComponent* CreateSkeletalMeshComponent(USkeletalMesh* SkeletalMesh, const FString& Name);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	void LoadglTFAsset(UglTFRuntimeAsset *Asset, const FString& AssetName);
+	void LoadglTFAsset(UglTFRuntimeAsset *Asset);
 
 	void OnAssetDataLoaded(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bIsSuccessful);
 	
@@ -49,7 +49,7 @@ public:
 	USkeletalMeshComponent* BaseSkeletalMeshComponent;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	void CreateCharacter(FString AppId);
+	void CreateCharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ready Player Me")
 	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
@@ -81,7 +81,7 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me")
 	USceneComponent* AssetRoot;
-	URpmDeveloperSettings* RpmSettings;
 	FglTFRuntimeSkeletalMeshAsync OnSkeletalMeshCallback;
 	TSharedPtr<FCharacterApi> CharacterApi;
+	FString AppId;
 };
