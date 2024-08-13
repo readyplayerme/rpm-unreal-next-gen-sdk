@@ -33,6 +33,7 @@ private:
 	TSharedPtr<SVerticalBox> ContentBox;
 	TSharedPtr<SEditableTextBox> EmailTextBox;
 	TSharedPtr<SEditableTextBox> PasswordTextBox;
+	TSharedPtr<STextBlock> SelectedApplicationTextBlock;
 	TSharedPtr<FString> SelectedComboBoxItem;
 	TArray<TSharedPtr<FString>> ComboBoxItems;
 	TMap<FString, FAsset> CharacterStyleAssets;
