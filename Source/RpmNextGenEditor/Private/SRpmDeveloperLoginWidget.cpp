@@ -492,7 +492,7 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {
 	// TODO find a better way to get the latest settings
 	Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Settings->SetupGuestUser();
+	Settings->SetupDemoAccount();
 	FDeveloperAuth AuthData = FDeveloperAuth();
 	AuthData.Name = DemoUserName;
 	AuthData.IsDemo = true;

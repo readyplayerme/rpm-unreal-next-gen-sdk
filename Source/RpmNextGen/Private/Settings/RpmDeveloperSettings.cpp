@@ -12,21 +12,20 @@ URpmDeveloperSettings::URpmDeveloperSettings()
 	ApiProxyUrl = TEXT("");
 }
 
-void URpmDeveloperSettings::SetupGuestUser()
+void URpmDeveloperSettings::SetupDemoAccount()
 {
-	ApplicationId = TEXT("665e05a50c62c921e5a6ab84");
-	ApiProxyUrl = TEXT("https://api.readyplayer.me/demo");
+	ApplicationId = DemoAppId;
+	ApiProxyUrl = DemoProxyUrl;
 	this->SaveConfig();
 }
 
 void URpmDeveloperSettings::Reset()
 {
-	if(ApplicationId == TEXT("665e05a50c62c921e5a6ab84"))
+	if(ApplicationId == DemoAppId)
 	{
 		ApplicationId = TEXT("");
-
 	}
-	if(ApiProxyUrl == TEXT("https://api.readyplayer.me/demo"))
+	if(ApiProxyUrl == DemoProxyUrl)
 	{
 		ApiProxyUrl = TEXT("");
 	}

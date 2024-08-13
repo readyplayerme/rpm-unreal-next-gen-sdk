@@ -29,10 +29,12 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiProxyUrl;
 
-	void SetupGuestUser();
+	void SetupDemoAccount();
 	void Reset();
 	FString GetApiBaseUrl();
 
 private:	
 	FString ApiBaseUrl;
+	const FString DemoAppId = TEXT("665e05a50c62c921e5a6ab84");
+	const FString DemoProxyUrl = TEXT("https://api.readyplayer.me/demo");
 };
