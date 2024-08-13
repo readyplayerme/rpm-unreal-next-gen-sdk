@@ -135,6 +135,7 @@ void ARpmActor::LoadAsset(FAsset AssetData)
 
 void ARpmActor::LoadCharacterUrl(const FString Url)
 {
+	// TODO replace this with use of WebApi class
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(Url);
 	HttpRequest->SetVerb("GET");

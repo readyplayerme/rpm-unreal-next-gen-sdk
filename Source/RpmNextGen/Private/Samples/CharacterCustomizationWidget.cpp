@@ -20,14 +20,9 @@ void UCharacterCustomizationWidget::NativeConstruct()
 
 void UCharacterCustomizationWidget::InitializeCustomizationOptions()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Initialize customization options called. Application ID: %s"), *ApplicationID);
-
-    
     URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
     FString ApiBaseUrl = Settings->GetApiBaseUrl();
-
-    UE_LOG(LogTemp, Warning, TEXT("Asset API is valid"));
-
+    
     // Setup request and parameters
     FAssetListRequest Request = FAssetListRequest();
     FAssetListQueryParams Params;
@@ -36,6 +31,7 @@ void UCharacterCustomizationWidget::InitializeCustomizationOptions()
     Request.Params = Params;
     FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *Request.BuildQueryString());
 
+    // TODO replace this with use of AssetApi class
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(Url);
     HttpRequest->SetVerb("GET");
