@@ -34,6 +34,7 @@ FAssetLoader::~FAssetLoader()
 
 void FAssetLoader::LoadGLBFromURL(const FString& URL)
 {
+    // TODO replace this with use of WebApi class
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->OnProcessRequestComplete().BindRaw(this, &FAssetLoader::OnDownloadComplete);
     HttpRequest->SetURL(URL);

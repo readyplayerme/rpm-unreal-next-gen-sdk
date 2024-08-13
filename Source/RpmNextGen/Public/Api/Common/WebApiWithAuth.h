@@ -23,7 +23,7 @@ public:
 
 	void DispatchRawWithAuth(FApiRequest& Data);
 protected:
-	FApiRequest* ApiRequestData;
+	TSharedPtr<FApiRequest> ApiRequestData;
 
 	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
 

@@ -16,12 +16,12 @@ ARpmActor::ARpmActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	AppId = RpmSettings->ApplicationId;
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &ARpmActor::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &ARpmActor::HandleCharacterUpdateResponse);
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &ARpmActor::HandleCharacterFindResponse);
-    
 	AssetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AssetRoot"));
 	RootComponent = AssetRoot;
 	BaseSkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseSkeletalMesh"));
@@ -33,26 +33,22 @@ ARpmActor::ARpmActor()
 
 void ARpmActor::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleCharacterCreateResponse"));
 	Character = CharacterCreateResponse.Data;
 	LoadCharacter(Character);
 }
 
 void ARpmActor::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleCharacterUpdateResponse"));
 	Character = CharacterUpdateResponse.Data;
 }
 
 void ARpmActor::HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleCharacterFindResponse"));
 	Character = CharacterFindByIdResponse.Data;
 }
 
-void ARpmActor::CreateCharacter(FString AppId)
+void ARpmActor::CreateCharacter()
 {
-	//TODO update to fetch first app id
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
 	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
 	CharacterCreateRequest.Data.Assets.Add("baseModel", BaseModelId);
@@ -99,7 +95,7 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 	return NewSkeletalMeshComponent;
 }
 
-void ARpmActor::LoadglTFAsset(UglTFRuntimeAsset* Asset, const FString& AssetName)
+void ARpmActor::LoadglTFAsset(UglTFRuntimeAsset* Asset)
 {
 	Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, SkeletalMeshConfig );
 }
@@ -114,16 +110,10 @@ void ARpmActor::HandleSkeletalMeshLoaded(USkeletalMesh* SkeletalMesh)
 void ARpmActor::OnAssetDataLoaded(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse,	bool bIsSuccessful)
 {
 	if (bIsSuccessful)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Request success from url %s "), *HttpRequest->GetURL());
-		
+	{		
 		glTFRuntimeConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 		UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(HttpResponse->GetContent(), glTFRuntimeConfig);
-		LoadglTFAsset(gltfAsset, "Asset");
-	}
-	else
-	{
-		// Handle error
+		LoadglTFAsset(gltfAsset);
 	}
 }
 
@@ -139,19 +129,14 @@ void ARpmActor::LoadAsset(FAsset AssetData)
 	FCharacterPreviewRequest PreviewRequest;
 	PreviewRequest.Id = Character.Id;
 	PreviewRequest.Params.Assets = PreviewAssetMap;
-	for (auto PreviewAsset : PreviewAssetMap)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PreviewAssetMap: %s | Value %s"), *PreviewAsset.Key, *PreviewAsset.Value);
-	}
 	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
 	LoadCharacterUrl(Url);
 }
 
 void ARpmActor::LoadCharacterUrl(const FString Url)
 {
+	// TODO replace this with use of WebApi class
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-	UE_LOG(LogTemp, Warning, TEXT("Requesting from url %s"), *Url);
-
 	HttpRequest->SetURL(Url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Content-Type", "application/json");

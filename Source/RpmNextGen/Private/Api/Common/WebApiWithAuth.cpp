@@ -14,7 +14,16 @@ FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrate
 
 void FWebApiWithAuth::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy)
 {
+    if(AuthenticationStrategy != nullptr)
+    {
+        AuthenticationStrategy->OnAuthComplete.Unbind();
+        AuthenticationStrategy->OnTokenRefreshed.Unbind();
+    }
     AuthenticationStrategy = InAuthenticationStrategy;
+    if(AuthenticationStrategy == nullptr)
+    {
+        return;
+    }
     AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
     AuthenticationStrategy->OnTokenRefreshed.BindRaw(this, &FWebApiWithAuth::OnAuthTokenRefreshed);
 }
@@ -26,7 +35,6 @@ void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)
         DispatchRaw(*ApiRequestData);
         return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("Auth failed"));
     OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
 }
 
@@ -48,18 +56,15 @@ void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Resp
     OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
 }
 
-void FWebApiWithAuth::DispatchRawWithAuth(
-    FApiRequest& Data
-)
+void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
 {
+    this->ApiRequestData = MakeShared<FApiRequest>(Data);
     if (AuthenticationStrategy == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Auth strategy is null"));
         DispatchRaw(Data);
         return;
     }
-    this->ApiRequestData = &Data;
-    AuthenticationStrategy->AddAuthToRequest(Data);
+    AuthenticationStrategy->AddAuthToRequest(this->ApiRequestData);
 }
 
 void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -70,9 +75,8 @@ void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePt
         OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
         return;
     }
-    if(EHttpResponseCodes::Denied == Response->GetResponseCode())
+    if(EHttpResponseCodes::Denied == Response->GetResponseCode() && AuthenticationStrategy != nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Forbidden response trying auth refresh"));
-        AuthenticationStrategy->TryRefresh(*ApiRequestData);
+        AuthenticationStrategy->TryRefresh(ApiRequestData);
     }
 }

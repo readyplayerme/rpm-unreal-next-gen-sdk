@@ -7,7 +7,6 @@
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Auth/DeveloperAccountApi.h"
-#include "Interfaces/IHttpRequest.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
@@ -23,61 +22,55 @@ class RPMNEXTGENEDITOR_API SRpmDeveloperLoginWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SRpmDeveloperLoginWidget)
-	{}
+		{
+		}
+
 	SLATE_END_ARGS()
 
-	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
 private:
-	FReply OnLoginClicked();
-	void GetOrgList();
-	FReply OnUseDemoAccountClicked();
-	FReply OnLogoutClicked();
-	
-
-	void LoadBaseModelList();
-
-	void HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful);
-	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
-
-	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
-	void HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful);
-	void OnLoadStyleClicked(const FString& StyleId);
-	EVisibility GetLoginViewVisibility() const;
-	EVisibility GetLoggedInViewVisibility() const;
-	
-	FText GetWelcomeText() const;
-	
-	void SetLoggedInState(const bool IsLoggedIn);
-	void PopulateComboBoxItems(const TArray<FString>& Items, FString CurrentItem);
-	
-	const URpmDeveloperSettings* Settings;
+	TSharedPtr<SVerticalBox> ContentBox;
 	TSharedPtr<SEditableTextBox> EmailTextBox;
 	TSharedPtr<SEditableTextBox> PasswordTextBox;
-
-	TArray<TSharedPtr<FString>> ComboBoxItems;
 	TSharedPtr<FString> SelectedComboBoxItem;
-	TArray<FApplication> UserApplications;
+	TArray<TSharedPtr<FString>> ComboBoxItems;
+	TMap<FString, FAsset> CharacterStyleAssets;
 
-	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
-	FText GetSelectedComboBoxItemText() const;
-	
-	bool bIsLoggedIn = false;
-	FString UserName;
+	EVisibility GetLoginViewVisibility() const;
+	EVisibility GetLoggedInViewVisibility() const;
+
+	FEditorAssetLoader AssetLoader;
 	TUniquePtr<FAssetApi> AssetApi;
 	TUniquePtr<FDeveloperAccountApi> DeveloperAccountApi;
 	TUniquePtr<FDeveloperAuthApi> DeveloperAuthApi;
 	static constexpr const TCHAR* CacheKeyEmail = TEXT("Email");
+	bool bIsLoggedIn = false;
+	bool bIsInitialized = false;
+	FString UserName;
+	TArray<FApplication> UserApplications;
+	URpmDeveloperSettings* Settings;
+	FText GetWelcomeText() const;
+	FString DemoUserName = TEXT("Guest user");
+	FText GetSelectedComboBoxItemText() const;
 
-	TSharedPtr<SVerticalBox> ContentBox;
+	FReply OnLoginClicked();
+	FReply OnUseDemoAccountClicked();
+	FReply OnLogoutClicked();
 
-	TMap<FString, FAsset> CharacterStyleAssets;
+	static void SetImageFromTexture(UTexture2D* Texture, const TSharedPtr<SImage>& ImageWidget);
+	void Initialize();
+	void GetOrgList();
+	void LoadBaseModelList();
+	void HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful);
+	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
+	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
+	void HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful);
+	void OnLoadStyleClicked(const FString& StyleId);
+	void SetLoggedInState(const bool IsLoggedIn);
+	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
+	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
 	void AddCharacterStyle(const FAsset& StyleAsset);
 	void DownloadImage(const FString& Url, TFunction<void(UTexture2D*)> Callback);
 	UTexture2D* CreateTextureFromImageData(const TArray<uint8>& ImageData);
-	static void SetImageFromTexture(UTexture2D* Texture, const TSharedPtr<SImage>& ImageWidget);
-	bool bIsInitialized = false;
-	FEditorAssetLoader AssetLoader;
-	void Initialize();
 };

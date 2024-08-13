@@ -52,7 +52,7 @@ struct RPMNEXTGENEDITOR_API FDeveloperAuth
 
 	bool IsValid() const
 	{
-		return !Token.IsEmpty();
+		return IsDemo || !Token.IsEmpty();
 	}
 };
 
