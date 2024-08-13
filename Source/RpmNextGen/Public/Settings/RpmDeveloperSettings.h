@@ -18,9 +18,6 @@ public:
 	URpmDeveloperSettings();
 
 	UPROPERTY(EditAnywhere, Config, Category = "API")
-	FString ApiBaseUrl;
-
-	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiBaseAuthUrl;
 	
 	UPROPERTY(EditAnywhere, Config, Category = "API")
@@ -31,5 +28,13 @@ public:
 	
 	UPROPERTY(EditAnywhere, Config, Category = "API")
 	FString ApiProxyUrl;
-	
+
+	void SetupDemoAccount();
+	void Reset();
+	FString GetApiBaseUrl();
+
+private:	
+	FString ApiBaseUrl;
+	const FString DemoAppId = TEXT("665e05a50c62c921e5a6ab84");
+	const FString DemoProxyUrl = TEXT("https://api.readyplayer.me/demo");
 };

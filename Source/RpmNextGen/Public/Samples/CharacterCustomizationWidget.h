@@ -63,5 +63,4 @@ private:
 
 	FString ApplicationID;
 	TArray<FAsset> AssetDataArray;
-	TSharedPtr<FCharacterApi> CharacterApi;
 };

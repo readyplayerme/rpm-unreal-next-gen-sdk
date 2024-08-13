@@ -11,3 +11,28 @@ URpmDeveloperSettings::URpmDeveloperSettings()
 	ApiKey = TEXT("");
 	ApiProxyUrl = TEXT("");
 }
+
+void URpmDeveloperSettings::SetupDemoAccount()
+{
+	ApplicationId = DemoAppId;
+	ApiProxyUrl = DemoProxyUrl;
+	this->SaveConfig();
+}
+
+void URpmDeveloperSettings::Reset()
+{
+	if(ApplicationId == DemoAppId)
+	{
+		ApplicationId = TEXT("");
+	}
+	if(ApiProxyUrl == DemoProxyUrl)
+	{
+		ApiProxyUrl = TEXT("");
+	}
+	this->SaveConfig();
+}
+
+FString URpmDeveloperSettings::GetApiBaseUrl()
+{
+	return ApiProxyUrl.IsEmpty() ? ApiBaseUrl : ApiProxyUrl;
+}
