@@ -58,13 +58,13 @@ void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Resp
 
 void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
 {
-    this->ApiRequestData = &Data;
+    this->ApiRequestData = MakeShared<FApiRequest>(Data);
     if (AuthenticationStrategy == nullptr)
     {
         DispatchRaw(Data);
         return;
     }
-    AuthenticationStrategy->AddAuthToRequest(Data);
+    AuthenticationStrategy->AddAuthToRequest(this->ApiRequestData);
 }
 
 void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -77,6 +77,6 @@ void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePt
     }
     if(EHttpResponseCodes::Denied == Response->GetResponseCode() && AuthenticationStrategy != nullptr)
     {
-        AuthenticationStrategy->TryRefresh(*ApiRequestData);
+        AuthenticationStrategy->TryRefresh(ApiRequestData);
     }
 }

@@ -16,7 +16,7 @@ void URpmDeveloperSettings::SetupGuestUser()
 {
 	ApplicationId = TEXT("665e05a50c62c921e5a6ab84");
 	ApiProxyUrl = TEXT("https://api.readyplayer.me/demo");
-	
+	this->SaveConfig();
 }
 
 void URpmDeveloperSettings::Reset()

@@ -14,7 +14,6 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "IImageWrapperModule.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
@@ -190,22 +189,27 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 void SRpmDeveloperLoginWidget::Initialize()
 {
 	if(bIsInitialized) return;
-
+	const FDeveloperAuth DevAuthData = DevAuthTokenCache::GetAuthData();
 	if(!DeveloperAuthApi.IsValid())
 	{
 		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
+		
 		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
 	}
 	
 	if (!AssetApi.IsValid())
 	{
 		AssetApi = MakeUnique<FAssetApi>();
+		if(!DevAuthData.IsDemo)
+		{
+			AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
+		}
 		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
 
 	}
 	if(!DeveloperAccountApi.IsValid())
 	{
-		const FDeveloperAuth DevAuthData = DevAuthTokenCache::GetAuthData();
+		
 		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(nullptr);
 		if(!DevAuthData.IsDemo)
 		{
