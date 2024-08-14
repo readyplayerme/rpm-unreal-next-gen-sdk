@@ -2,6 +2,7 @@
 
 #include "Samples/RpmAssetButtonWidget.h"
 #include "RpmImageLoader.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
@@ -26,9 +27,32 @@ void URpmAssetButtonWidget::InitializeButton(const FAsset& InAssetData, const FV
         FRpmImageLoader ImageLoader;
         ImageLoader.LoadImageFromURL(AssetImage, AssetData.IconUrl);
     }
+
+    if (SelectionBorder)
+    {
+        SelectionBorder->SetBrushColor(SelectedColor);
+        SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+    }
 }
 
 void URpmAssetButtonWidget::HandleButtonClicked() 
 {
+    const bool bIsSelected = SelectionBorder->Visibility == ESlateVisibility::Visible;
+    SetSelected(!bIsSelected);
     OnAssetButtonClicked.Broadcast(AssetData);
+}
+
+void URpmAssetButtonWidget::SetSelected(bool bIsSelected)
+{
+    if (SelectionBorder)
+    {
+        if (bIsSelected)
+        {
+            SelectionBorder->SetVisibility(ESlateVisibility::Visible);
+        }
+        else
+        {
+            SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
 }

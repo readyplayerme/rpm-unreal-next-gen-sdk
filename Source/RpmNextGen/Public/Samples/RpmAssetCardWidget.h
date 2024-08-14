@@ -6,7 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetCardWidget.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnImageLoaded, UTexture2D*);
+class UImage;
+class UTextBlock;
 
 UCLASS()
 class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
@@ -16,7 +17,20 @@ class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
-	void Initialize(FAsset Asset);
-
+	void Initialize(const FAsset& Asset);
 	void LoadImage(const FString& URL);
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* AssetCategoryText;
+	
+	UPROPERTY(meta = (BindWidget))
+	UImage* AssetImage;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* AssetNameText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* AssetIdText;
+private:
+	FAsset AssetData;
 };

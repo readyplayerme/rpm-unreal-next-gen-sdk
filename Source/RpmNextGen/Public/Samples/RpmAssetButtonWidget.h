@@ -8,6 +8,7 @@
 #include "Interfaces/IHttpRequest.h"
 #include "RpmAssetButtonWidget.generated.h"
 
+class UBorder;
 class UImage;
 class UButton;
 
@@ -28,10 +29,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void InitializeButton(const FAsset& InAssetData, const FVector2D& InImageSize);
 
+	UFUNCTION(BlueprintCallable, Category = "Category Button")
+	void SetSelected(bool bIsSelected);
+
 protected:
 	virtual void NativeConstruct() override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Button" )
+	FLinearColor SelectedColor = FLinearColor::Yellow;
 
 private:
+
+	UPROPERTY(meta = (BindWidget))
+	UBorder* SelectionBorder;
+	
 	UPROPERTY(meta = (BindWidget))
 	UButton* AssetButton;
 
