@@ -29,12 +29,13 @@ public class RpmNextGenEditor : ModuleRules
 				"HTTP",
 				"JsonUtilities",
 				"RpmNextGen",
-				"ImageWrapper",
 				"EditorStyle",
 				"glTFRuntime",
 				"TransientObjectSaver",
 				"UnrealEd",
 				"PropertyEditor",
+				"Slate",
+				"SlateCore",
 			}
 			);
 			
@@ -48,9 +49,9 @@ public class RpmNextGenEditor : ModuleRules
 				"UnrealEd",
 				"ToolMenus",
 				"CoreUObject",
-				"Slate",
-				"SlateCore",
-				"Json"
+				"Json", 
+				"UMG",
+				"ImageWrapper",
 			}
 			);
 		

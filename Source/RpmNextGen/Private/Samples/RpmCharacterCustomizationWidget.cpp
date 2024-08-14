@@ -1,5 +1,5 @@
-#include "Samples/CharacterCustomizationWidget.h"
-#include "Samples/AssetButtonWidget.h"
+#include "Samples/RpmCharacterCustomizationWidget.h"
+#include "Samples/RpmAssetButtonWidget.h"
 #include "HttpModule.h"
 #include "Settings/RpmDeveloperSettings.h"
 #include "Components/HorizontalBox.h"
@@ -10,7 +10,7 @@
 #include "Api/Characters/CharacterApi.h"
 #include "Interfaces/IHttpResponse.h"
 
-void UCharacterCustomizationWidget::NativeConstruct()
+void URpmCharacterCustomizationWidget::NativeConstruct()
 {
     Super::NativeConstruct();
     URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
@@ -18,7 +18,7 @@ void UCharacterCustomizationWidget::NativeConstruct()
     InitializeCustomizationOptions();
 }
 
-void UCharacterCustomizationWidget::InitializeCustomizationOptions()
+void URpmCharacterCustomizationWidget::InitializeCustomizationOptions()
 {
     URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
     FString ApiBaseUrl = Settings->GetApiBaseUrl();
@@ -60,7 +60,7 @@ void UCharacterCustomizationWidget::InitializeCustomizationOptions()
     UE_LOG(LogTemp, Warning, TEXT("Made request"));
 }
 
-void UCharacterCustomizationWidget::OnAssetsFetched(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
+void URpmCharacterCustomizationWidget::OnAssetsFetched(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("OnAssetsFetched called. Success: %s"), bWasSuccessful ? TEXT("true") : TEXT("false"));
 
@@ -77,7 +77,7 @@ void UCharacterCustomizationWidget::OnAssetsFetched(const FAssetListResponse& As
     OnAssetsFetchedDelegate.Broadcast(bWasSuccessful, AssetDataArray);
 }
 
-void UCharacterCustomizationWidget::PopulateBoxWithFilter(UPanelWidget* ParentBox, const FString& AssetType)
+void URpmCharacterCustomizationWidget::PopulateBoxWithFilter(UPanelWidget* ParentBox, const FString& AssetType)
 {
     if (!ParentBox)
     {
@@ -94,7 +94,7 @@ void UCharacterCustomizationWidget::PopulateBoxWithFilter(UPanelWidget* ParentBo
     }
 }
 
-void UCharacterCustomizationWidget::PopulateBox(UPanelWidget* ParentBox)
+void URpmCharacterCustomizationWidget::PopulateBox(UPanelWidget* ParentBox)
 {
     if (!ParentBox)
     {
@@ -108,7 +108,7 @@ void UCharacterCustomizationWidget::PopulateBox(UPanelWidget* ParentBox)
     }
 }
 
-void UCharacterCustomizationWidget::ClearBox(UPanelWidget* ParentBox)
+void URpmCharacterCustomizationWidget::ClearBox(UPanelWidget* ParentBox)
 {
     if (!ParentBox)
     {
@@ -119,14 +119,14 @@ void UCharacterCustomizationWidget::ClearBox(UPanelWidget* ParentBox)
     ParentBox->ClearChildren();
 }
 
-void UCharacterCustomizationWidget::UpdateCustomizationOptions(UPanelWidget* ParentBox)
+void URpmCharacterCustomizationWidget::UpdateCustomizationOptions(UPanelWidget* ParentBox)
 {
     ClearBox(ParentBox);
     InitializeCustomizationOptions();
     PopulateBox(ParentBox);
 }
 
-void UCharacterCustomizationWidget::CreateAssetWidget(const FAsset& AssetData, UPanelWidget* ParentBox)
+void URpmCharacterCustomizationWidget::CreateAssetWidget(const FAsset& AssetData, UPanelWidget* ParentBox)
 {
     if (!ParentBox)
     {
@@ -140,16 +140,16 @@ void UCharacterCustomizationWidget::CreateAssetWidget(const FAsset& AssetData, U
         return;
     }
 
-    UAssetButtonWidget* AssetButton = CreateWidget<UAssetButtonWidget>(this, AssetButtonWidgetClass);
+    URpmAssetButtonWidget* AssetButton = CreateWidget<URpmAssetButtonWidget>(this, AssetButtonWidgetClass);
     if (AssetButton)
     {
         AssetButton->InitializeButton(AssetData, ImageSize);
-        AssetButton->OnAssetButtonClicked.AddDynamic(this, &UCharacterCustomizationWidget::OnAssetButtonClicked);
+        AssetButton->OnAssetButtonClicked.AddDynamic(this, &URpmCharacterCustomizationWidget::OnAssetButtonClicked);
         ParentBox->AddChild(AssetButton);
     }
 }
 
-void UCharacterCustomizationWidget::OnAssetButtonClicked(const FAsset& AssetData)
+void URpmCharacterCustomizationWidget::OnAssetButtonClicked(const FAsset& AssetData)
 {
     FString GlbUrl = AssetData.GlbUrl;
     UE_LOG(LogTemp, Log, TEXT("Asset Button Clicked: %s"), *GlbUrl);

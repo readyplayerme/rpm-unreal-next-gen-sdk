@@ -6,7 +6,7 @@
 #include "Api/Assets/Models/Asset.h"
 #include "Blueprint/UserWidget.h"
 #include "Interfaces/IHttpRequest.h"
-#include "AssetButtonWidget.generated.h"
+#include "RpmAssetButtonWidget.generated.h"
 
 class UImage;
 class UButton;
@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetButtonClicked, const FAsset&
  * 
  */
 UCLASS()
-class RPMNEXTGEN_API UAssetButtonWidget : public UUserWidget
+class RPMNEXTGEN_API URpmAssetButtonWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,4 @@ private:
 
 	UFUNCTION()
 	void HandleButtonClicked();
-
-	void SetImageFromURL(UImage* Image, const FString& URL);
-	void OnImageDownloaded(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakObjectPtr<UImage> Image);
 };

@@ -6,7 +6,7 @@
 #include "Api/Assets/Models/Asset.h"
 #include "Blueprint/UserWidget.h"
 #include "Api/Characters/CharacterApi.h"
-#include "CharacterCustomizationWidget.generated.h"
+#include "RpmCharacterCustomizationWidget.generated.h"
 
 class FCharacterApi;
 struct FAssetListResponse;
@@ -21,7 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetSelected, const FAsset&, Ass
  * 
  */
 UCLASS()
-class RPMNEXTGEN_API UCharacterCustomizationWidget : public UUserWidget
+class RPMNEXTGEN_API URpmCharacterCustomizationWidget : public UUserWidget
 {
 	GENERATED_BODY()
 

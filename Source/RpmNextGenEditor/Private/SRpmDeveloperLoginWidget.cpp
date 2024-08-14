@@ -4,16 +4,13 @@
 #include "SRpmDeveloperLoginWidget.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
-#include "HttpModule.h"
-#include "IImageWrapper.h"
 #include "SlateOptMacros.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Auth/DeveloperAccountApi.h"
 #include "Auth/DeveloperTokenAuthStrategy.h"
-#include "Interfaces/IHttpResponse.h"
 #include "Widgets/Input/SEditableTextBox.h"
-#include "IImageWrapperModule.h"
+#include "RpmImageLoader.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
@@ -279,91 +276,9 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 		   ]
 	   ];
 
-	DownloadImage(StyleAsset.IconUrl, [ImageWidget](UTexture2D* Texture)
-	{
-	  if (ImageWidget.IsValid())
-	  {
-		  SetImageFromTexture(Texture, ImageWidget);
-	  }
-	});
+	FRpmImageLoader ImageLoader;
+	ImageLoader.LoadImageFromURL(ImageWidget, StyleAsset.IconUrl);
 }
-
-void SRpmDeveloperLoginWidget::DownloadImage(const FString& Url, TFunction<void(UTexture2D*)> Callback)
-{
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-	HttpRequest->OnProcessRequestComplete().BindLambda([Callback, this](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-	{
-		if (bWasSuccessful && Response.IsValid() && Response->GetContentLength() > 0)
-		{
-			// Create a texture from the image data
-			UTexture2D* Texture = CreateTextureFromImageData(Response->GetContent());
-			if (Texture)
-			{
-				Callback(Texture);
-			}
-		}
-	});
-
-	HttpRequest->SetURL(Url);
-	HttpRequest->SetVerb(TEXT("GET"));
-	HttpRequest->ProcessRequest();
-}
-
-void SRpmDeveloperLoginWidget::SetImageFromTexture(UTexture2D* Texture, const TSharedPtr<SImage>& ImageWidget)
-{
-	const FVector2D DesiredSize(100.0f, 100.0f);
-	if (Texture)
-	{
-		FSlateBrush* Brush = new FSlateBrush();
-		Brush->SetResourceObject(Texture);
-		Brush->ImageSize = DesiredSize;
-		ImageWidget->SetImage(Brush);
-	}
-}
-
-UTexture2D* SRpmDeveloperLoginWidget::CreateTextureFromImageData(const TArray<uint8>& ImageData)
-{
-	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-	EImageFormat ImageFormat = ImageWrapperModule.DetectImageFormat(ImageData.GetData(), ImageData.Num());
-
-	if (ImageFormat != EImageFormat::Invalid)
-	{
-		TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(ImageFormat);
-		if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(ImageData.GetData(), ImageData.Num()))
-		{
-			TArray<uint8> UncompressedBGRA ;
-			if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, UncompressedBGRA))
-			{
-				UTexture2D* Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight());
-				if (Texture)
-				{
-					void* TextureData = Texture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-					FMemory::Memcpy(TextureData, UncompressedBGRA.GetData(), UncompressedBGRA.Num());
-					Texture->GetPlatformData()->Mips[0].BulkData.Unlock();
-
-					Texture->UpdateResource();
-					return Texture;
-				}
-				UE_LOG(LogTemp, Error, TEXT("Failed to create texture: Texture is null."));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("Failed to get raw image data."));
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to set compressed data or ImageWrapper is invalid."));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid image format detected."));
-	}
-
-	return nullptr;
-}
-
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
