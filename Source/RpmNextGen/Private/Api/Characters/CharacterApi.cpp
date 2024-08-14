@@ -63,8 +63,7 @@ void FCharacterApi::DispatchRaw(const FApiRequest& Data, const ECharacterRespons
 	//TODO move to auth strategy
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
-	UE_LOG(LogTemp, Warning, TEXT("Making request to Url: %s | Verb: %s with data %s"), *Data.Url, *Data.GetVerb(),
-	       *Data.Payload);
+
 	for (const auto& Header : Data.Headers)
 	{
 		if (!Request->GetHeader(Header.Key).IsEmpty())
@@ -103,8 +102,6 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 		       ));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Character API Response: %s. Response Code: %d"), *Response->GetContentAsString(),
-	       Response->GetResponseCode());
 
 	switch (ResponseType)
 	{
@@ -124,15 +121,6 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, success);
 		break;
 	}
-	// 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-	// 	{
-	// 		UE_LOG(LogTemp, Warning, TEXT("WebApi Response Success: %s. Response Code: %d"), *Response->GetContentAsString(), Response->GetResponseCode());
-	// 		OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
-	// 		return;
-	// 	}
-	// 	FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
-	// 	UE_LOG(LogTemp, Warning, TEXT("WebApi request failed: %s"), *ErrorMessage);
-	// 	OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), false);
 }
 
 FString FCharacterApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
