@@ -17,6 +17,7 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 	
 	FString QueryString = Request.BuildQueryString();
 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *QueryString);
+	UE_LOG(LogTemp, Warning, TEXT("Requesting assets from %s"), *Url);
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
@@ -31,9 +32,12 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
 		FAssetListResponse AssetListResponse = FAssetListResponse();
 		if(FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, 0))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Assets received: %d"), AssetListResponse.Data.Num());
+
 			OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
 			return;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Assets received: %d. But can't convert"), AssetListResponse.Data.Num());
 	}
 	else
 	{

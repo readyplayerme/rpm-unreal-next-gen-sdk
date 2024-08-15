@@ -3,3 +3,7 @@
 
 #include "Samples/RpmBasicUISampleWidget.h"
 
+void URpmBasicUISampleWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+}

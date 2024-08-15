@@ -7,6 +7,9 @@
 #include "RpmCategoryPanelWidget.generated.h"
 
 class URpmCategoryButton;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategorySelected, const FString&, CategoryName);
+
 /**
  * 
  */
@@ -16,9 +19,20 @@ class RPMNEXTGEN_API URpmCategoryPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
-	TSubclassOf<URpmCategoryButton> SelectedCategoryButton;
+	URpmCategoryButton* SelectedCategoryButton;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
+	TArray<URpmCategoryButton*> CategoryButtons;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnCategorySelected OnCategorySelected;
+	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
-	void UpdateSelectedButton(TSubclassOf<URpmCategoryButton> CategoryButton);
+	virtual void UpdateSelectedButton(URpmCategoryButton* CategoryButton);
+
+	UFUNCTION()
+	virtual void OnCategoryButtonClicked(URpmCategoryButton* CategoryButton);
 };

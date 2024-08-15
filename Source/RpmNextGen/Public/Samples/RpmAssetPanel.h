@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Api/Assets/Models/AssetListResponse.h"
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetPanel.generated.h"
 
+class FAssetApi;
 struct FAsset;
 class URpmAssetButtonWidget;
 
@@ -19,18 +21,20 @@ class RPMNEXTGEN_API URpmAssetPanel : public UUserWidget
 {
 	GENERATED_BODY()
 public:
+	virtual void NativeConstruct() override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel" )
-	TSubclassOf<URpmAssetButtonWidget> AssetButtonBlueprint;
+	URpmAssetButtonWidget* AssetButtonBlueprint;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel" )
+	UPROPERTY(meta = (BindWidget))
 	UPanelWidget* ButtonContainer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel")
-	TSubclassOf<URpmAssetButtonWidget> SelectedAssetButton;
+	URpmAssetButtonWidget* SelectedAssetButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Button" )
 	FVector2D ImageSize;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events" )
 	FOnAssetSelected OnAssetSelected;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
@@ -40,13 +44,19 @@ public:
 	void ClearAllButtons();
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
-	void UpdateSelectedButton(TSubclassOf<URpmAssetButtonWidget> AssetButton);
+	void UpdateSelectedButton(URpmAssetButtonWidget* AssetButton);
 
 	UFUNCTION()
 	void OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButtonWidget);
 	
-	void CreateButton(const FAsset& AssetData);
+	UFUNCTION()
+	void OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
 
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
+	void FetchAssets(const FString& AssetType);
+	
+	void CreateButton(const FAsset& AssetData);
 private:
 	TArray<TSubclassOf<URpmAssetButtonWidget>> AssetButtons;
+	TSharedPtr<FAssetApi> AssetApi;
 };

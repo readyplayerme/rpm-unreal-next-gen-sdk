@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmBasicUISampleWidget.generated.h"
 
+class FAssetApi;
 /**
  * 
  */
@@ -13,5 +14,7 @@ UCLASS()
 class RPMNEXTGEN_API URpmBasicUISampleWidget : public UUserWidget
 {
 	GENERATED_BODY()
-public: 
+public:
+
+	virtual void NativeConstruct() override;
 };

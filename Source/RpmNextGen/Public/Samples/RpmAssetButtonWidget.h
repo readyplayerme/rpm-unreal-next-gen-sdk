@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Blueprint/UserWidget.h"
-#include "Interfaces/IHttpRequest.h"
 #include "RpmAssetButtonWidget.generated.h"
 
 class UBorder;

@@ -3,13 +3,46 @@
 
 #include "Samples/RpmAssetPanel.h"
 
+#include "Api/Assets/AssetApi.h"
+#include "Api/Assets/Models/AssetListRequest.h"
+#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Components/PanelWidget.h"
 #include "Samples/RpmAssetButtonWidget.h"
+#include "Settings/RpmDeveloperSettings.h"
+
+void URpmAssetPanel::NativeConstruct()
+{
+	Super::NativeConstruct();
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
+	AssetApi = MakeShared<FAssetApi>();
+	// TODO -  add smarter setting of auth strategy
+	if(Settings->ApiProxyUrl.IsEmpty() && !Settings->ApiKey.IsEmpty())
+	{
+		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+		UE_LOG(LogTemp, Warning, TEXT("Adding ApiKeyAuthStrategy"));
+	}
+	
+	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanel::OnAssetListResponse);
+}
+
+void URpmAssetPanel::OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
+{
+	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Asset Fetch Success."));
+
+		LoadAssetsAndCreateButtons(AssetListResponse.Data);
+
+		return;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Failed to fetch assets"));
+}
 
 void URpmAssetPanel::LoadAssetsAndCreateButtons(TArray<FAsset> Assets)
 {
 	for (auto Asset : Assets)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Creating button."));
 		CreateButton(Asset);
 	}
 }
@@ -23,11 +56,13 @@ void URpmAssetPanel::ClearAllButtons()
 	SelectedAssetButton = nullptr;
 }
 
-void URpmAssetPanel::UpdateSelectedButton(TSubclassOf<URpmAssetButtonWidget> AssetButton)
+void URpmAssetPanel::UpdateSelectedButton(URpmAssetButtonWidget* AssetButton)
 {
 	if(SelectedAssetButton)
 	{
-		SelectedAssetButton.GetDefaultObject()->SetSelected(false);
+		SelectedAssetButton->SetSelected(false);
+		UE_LOG(LogTemp, Warning, TEXT("Setting old button to false"));
+
 	}
 	SelectedAssetButton = AssetButton;
 }
@@ -42,7 +77,7 @@ void URpmAssetPanel::CreateButton(const FAsset& AssetData)
 		if (World)
 		{
 			// Create the widget instance
-			URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint);
+			URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint->GetClass());
 
 			if (AssetButtonInstance)
 			{
@@ -54,7 +89,7 @@ void URpmAssetPanel::CreateButton(const FAsset& AssetData)
 				{
 					ButtonContainer->AddChild(AssetButtonInstance);
 				}
-
+				UE_LOG(LogTemp, Warning, TEXT("Button created and added."));
 				AssetButtons.Add(AssetButtonInstance->GetClass());
 				AssetButtonInstance->OnAssetButtonClicked.AddDynamic(this, &URpmAssetPanel::OnAssetButtonClicked);
 			}
@@ -62,7 +97,19 @@ void URpmAssetPanel::CreateButton(const FAsset& AssetData)
 	}
 }
 
+
 void URpmAssetPanel::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)
 {
+	UpdateSelectedButton(const_cast<URpmAssetButtonWidget*>(AssetButton));
 	OnAssetSelected.Broadcast(AssetButton->GetAssetData());
+}
+
+void URpmAssetPanel::FetchAssets(const FString& AssetType)
+{
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
+	FAssetListQueryParams QueryParams;
+	QueryParams.Type = AssetType;
+	QueryParams.ApplicationId = Settings->ApplicationId;
+	const FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+	AssetApi->ListAssetsAsync(AssetListRequest);	
 }
