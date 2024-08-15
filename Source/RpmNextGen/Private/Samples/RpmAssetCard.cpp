@@ -11,7 +11,7 @@ void URpmAssetCardWidget::NativeConstruct()
 	
 }
 
-void URpmAssetCardWidget::Initialize(const FAsset& Asset)
+void URpmAssetCardWidget::InitializeCard(const FAsset& Asset)
 {
 	AssetData = Asset;
 	AssetCategoryText->SetText(FText::FromString(AssetData.Type));

@@ -12,6 +12,7 @@ void URpmAssetButtonWidget::NativeConstruct()
     if (AssetButton)
     {
         AssetButton->OnClicked.AddDynamic(this, &URpmAssetButtonWidget::HandleButtonClicked);
+        DefaultColor = AssetButton->BackgroundColor;
     }
 }
 
@@ -21,38 +22,26 @@ void URpmAssetButtonWidget::InitializeButton(const FAsset& InAssetData, const FV
 
     if (AssetImage)
     {
-        // Set the image size
         AssetImage->SetDesiredSizeOverride(InImageSize);
 
         FRpmImageLoader ImageLoader;
         ImageLoader.LoadImageFromURL(AssetImage, AssetData.IconUrl);
     }
-
-    if (SelectionBorder)
-    {
-        SelectionBorder->SetBrushColor(SelectedColor);
-        SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
-    }
 }
 
 void URpmAssetButtonWidget::HandleButtonClicked() 
 {
-    const bool bIsSelected = SelectionBorder->Visibility == ESlateVisibility::Visible;
     SetSelected(!bIsSelected);
-    OnAssetButtonClicked.Broadcast(AssetData);
+    OnAssetButtonClicked.Broadcast(this);
 }
 
-void URpmAssetButtonWidget::SetSelected(bool bIsSelected)
+void URpmAssetButtonWidget::SetSelected(const bool bInIsSelected)
 {
-    if (SelectionBorder)
+    bIsSelected = bInIsSelected;
+
+    if (AssetButton)
     {
-        if (bIsSelected)
-        {
-            SelectionBorder->SetVisibility(ESlateVisibility::Visible);
-        }
-        else
-        {
-            SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
-        }
+        const FLinearColor NewColor = bInIsSelected ? SelectedColor : DefaultColor;
+        AssetButton->SetBackgroundColor(NewColor);
     }
 }

@@ -10,7 +10,7 @@ class UImage;
 class UBorder;
 class UButton;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategoryClicked, const FString&, CategoryName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategoryClicked, URpmCategoryButton*, CategoryButton);
 
 /**
  * 
@@ -22,9 +22,6 @@ class RPMNEXTGEN_API URpmCategoryButton : public UUserWidget
 	
 public:
 	virtual void NativeConstruct() override;
-
-	UPROPERTY(meta = (BindWidget))
-	UBorder* SelectionBorder;
 	
 	UPROPERTY(meta = (BindWidget))
 	UImage* CategoryImage;
@@ -42,10 +39,10 @@ public:
 	UTexture2D* CategoryImageTexture;
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
-	void Initialize(FString Category, UTexture2D* Image);
+	virtual void InitializeButton(FString Category, UTexture2D* Image);
 
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
-	void SetSelected(bool bInIsSelected);
+	virtual void SetSelected(bool bInIsSelected);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Button" )
 	FString AssetCategoryName;
@@ -58,7 +55,8 @@ public:
 	
 private:
 	UFUNCTION()
-	void HandleButtonClicked();
+	virtual void HandleButtonClicked();
 
 	bool bIsSelected;
+	FLinearColor DefaultColor;
 };

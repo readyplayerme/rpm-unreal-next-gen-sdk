@@ -9,6 +9,7 @@
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Samples/RpmAssetPanel.h"
 
 void URpmCharacterCustomizationWidget::NativeConstruct()
 {
@@ -149,9 +150,10 @@ void URpmCharacterCustomizationWidget::CreateAssetWidget(const FAsset& AssetData
     }
 }
 
-void URpmCharacterCustomizationWidget::OnAssetButtonClicked(const FAsset& AssetData)
+void URpmCharacterCustomizationWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)
 {
-    FString GlbUrl = AssetData.GlbUrl;
+    const FAsset& AssetData = AssetButton->GetAssetData();
+    const FString GlbUrl = AssetData.GlbUrl;
     UE_LOG(LogTemp, Log, TEXT("Asset Button Clicked: %s"), *GlbUrl);
     OnAssetButtonSelected.Broadcast(AssetData);
 }

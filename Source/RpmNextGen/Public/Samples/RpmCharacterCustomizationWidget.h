@@ -3,11 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RpmAssetPanel.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Blueprint/UserWidget.h"
 #include "Api/Characters/CharacterApi.h"
 #include "RpmCharacterCustomizationWidget.generated.h"
 
+class URpmAssetButtonWidget;
 class FCharacterApi;
 struct FAssetListResponse;
 class FApiKeyAuthStrategy;
@@ -15,7 +17,6 @@ class UImage;
 class UVerticalBox;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetsFetchedDelegate, bool, bWasSuccessful, const TArray<FAsset>&, AssetDataArray);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetSelected, const FAsset&, AssetData);
 
 /**
  * 
@@ -59,7 +60,7 @@ private:
 	void CreateAssetWidget(const FAsset& AssetData, UPanelWidget* ParentBox);
 	
 	UFUNCTION()
-	void OnAssetButtonClicked(const FAsset& AssetData);
+	void OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton);
 
 	FString ApplicationID;
 	TArray<FAsset> AssetDataArray;

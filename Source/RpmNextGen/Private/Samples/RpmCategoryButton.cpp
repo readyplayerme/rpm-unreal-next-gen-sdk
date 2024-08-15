@@ -2,7 +2,6 @@
 
 
 #include "Samples/RpmCategoryButton.h"
-#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
@@ -14,11 +13,7 @@ void URpmCategoryButton::NativeConstruct()
 	if (CategoryButton)
 	{
 		CategoryButton->OnClicked.AddDynamic(this, &URpmCategoryButton::HandleButtonClicked);
-	}
-
-	if (SelectionBorder)
-	{
-		SelectionBorder->SetBrushColor(FLinearColor::Transparent);
+		DefaultColor = CategoryButton->BackgroundColor;
 	}
 	if (CategoryImageTexture)
 	{
@@ -26,7 +21,7 @@ void URpmCategoryButton::NativeConstruct()
 	}
 }
 
-void URpmCategoryButton::Initialize(FString Category, UTexture2D* Image)
+void URpmCategoryButton::InitializeButton(FString Category, UTexture2D* Image)
 {
 	AssetCategoryName = Category;
 
@@ -40,11 +35,10 @@ void URpmCategoryButton::Initialize(FString Category, UTexture2D* Image)
 void URpmCategoryButton::SetSelected(bool bInIsSelected)
 {
 	bIsSelected = bInIsSelected;
-
-	if (SelectionBorder)
+	if (CategoryButton)
 	{
-		const FLinearColor NewColor = bInIsSelected ? SelectedColor : FLinearColor::Transparent;
-		SelectionBorder->SetBrushColor(NewColor);
+		const FLinearColor NewColor = bInIsSelected ? SelectedColor : DefaultColor;
+		CategoryButton->SetBackgroundColor(NewColor);
 	}
 }
 
@@ -52,7 +46,7 @@ void URpmCategoryButton::HandleButtonClicked()
 {
 	SetSelected(!bIsSelected);
 
-	OnCategoryClicked.Broadcast(AssetCategoryName);
+	OnCategoryClicked.Broadcast(this);
 }
 
 #if WITH_EDITOR
