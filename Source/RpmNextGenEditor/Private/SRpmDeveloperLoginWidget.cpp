@@ -14,10 +14,13 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "IImageWrapperModule.h"
+#include "Api/Characters/CharacterApi.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/DeveloperLoginRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
+
+DEFINE_LOG_CATEGORY(ReadyPlayerMe);
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -231,6 +234,15 @@ void SRpmDeveloperLoginWidget::Initialize()
 	}
 }
 
+SRpmDeveloperLoginWidget::~SRpmDeveloperLoginWidget()
+{
+	for (const auto Texture : CharacterStyleTextures)
+	{
+		Texture->RemoveFromRoot();
+	}
+}
+
+
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
 	TSharedPtr<SImage> ImageWidget;
@@ -303,8 +315,11 @@ void SRpmDeveloperLoginWidget::DownloadImage(const FString& Url, TFunction<void(
 			{
 				// Create a texture from the image data
 				UTexture2D* Texture = CreateTextureFromImageData(Response->GetContent());
+
 				if (Texture)
 				{
+					Texture->AddToRoot();
+					CharacterStyleTextures.Add(Texture);
 					Callback(Texture);
 				}
 			}

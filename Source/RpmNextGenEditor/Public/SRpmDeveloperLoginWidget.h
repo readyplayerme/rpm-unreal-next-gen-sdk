@@ -28,6 +28,7 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
+	virtual ~SRpmDeveloperLoginWidget() override;
 
 private:
 	TSharedPtr<SVerticalBox> ContentBox;
@@ -36,6 +37,7 @@ private:
 	TSharedPtr<STextBlock> SelectedApplicationTextBlock;
 	TSharedPtr<FString> SelectedComboBoxItem;
 	TArray<TSharedPtr<FString>> ComboBoxItems;
+	TArray<UTexture2D*> CharacterStyleTextures;
 	TMap<FString, FAsset> CharacterStyleAssets;
 
 	EVisibility GetLoginViewVisibility() const;
