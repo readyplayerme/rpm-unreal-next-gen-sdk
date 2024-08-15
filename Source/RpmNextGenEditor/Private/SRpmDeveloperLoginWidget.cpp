@@ -20,8 +20,6 @@
 #include "Settings/RpmDeveloperSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 
-DEFINE_LOG_CATEGORY(ReadyPlayerMe);
-
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
