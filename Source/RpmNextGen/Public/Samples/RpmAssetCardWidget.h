@@ -17,7 +17,10 @@ class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Asset Card")
 	virtual void InitializeCard(const FAsset& Asset);
+
+	UFUNCTION(BlueprintCallable, Category = "Asset Card")
 	void LoadImage(const FString& URL);
 
 	UPROPERTY(meta = (BindWidget))

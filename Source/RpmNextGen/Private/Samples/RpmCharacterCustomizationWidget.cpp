@@ -57,24 +57,18 @@ void URpmCharacterCustomizationWidget::InitializeCustomizationOptions()
         OnAssetsFetched(FAssetListResponse(), false);  // Call with empty response on failure
     });
     HttpRequest->ProcessRequest();
-    
-    UE_LOG(LogTemp, Warning, TEXT("Made request"));
 }
 
 void URpmCharacterCustomizationWidget::OnAssetsFetched(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnAssetsFetched called. Success: %s"), bWasSuccessful ? TEXT("true") : TEXT("false"));
-
     if (AssetListResponse.Data.Num() > 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Number of assets fetched: %d"), AssetListResponse.Data.Num());
         AssetDataArray = AssetListResponse.Data;
     }
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("No assets fetched"));
     }
-    // Broadcast the delegate to notify Blueprints
     OnAssetsFetchedDelegate.Broadcast(bWasSuccessful, AssetDataArray);
 }
 
@@ -154,6 +148,5 @@ void URpmCharacterCustomizationWidget::OnAssetButtonClicked(const URpmAssetButto
 {
     const FAsset& AssetData = AssetButton->GetAssetData();
     const FString GlbUrl = AssetData.GlbUrl;
-    UE_LOG(LogTemp, Log, TEXT("Asset Button Clicked: %s"), *GlbUrl);
     OnAssetButtonSelected.Broadcast(AssetData);
 }

@@ -4,6 +4,7 @@
 #include "RpmImageLoader.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/SizeBox.h"
 
 void URpmAssetButtonWidget::NativeConstruct()
 {
@@ -16,7 +17,7 @@ void URpmAssetButtonWidget::NativeConstruct()
 }
 
 void URpmAssetButtonWidget::InitializeButton(const FAsset& InAssetData, const FVector2D& InImageSize)
-{
+{    
     AssetData = InAssetData;
 
     if (AssetImage)

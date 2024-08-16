@@ -8,14 +8,19 @@
 void URpmAssetCardWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+	this->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void URpmAssetCardWidget::InitializeCard(const FAsset& Asset)
 {
+	this->SetVisibility(ESlateVisibility::Visible);
 	AssetData = Asset;
 	AssetCategoryText->SetText(FText::FromString(AssetData.Type));
 	AssetNameText->SetText(FText::FromString(AssetData.Name));
+
+	AssetNameText->SetVisibility( AssetData.Name.IsEmpty() ? ESlateVisibility::Hidden : ESlateVisibility::Visible );
+	
+	
 	AssetIdText->SetText(FText::FromString(AssetData.Id));
 	LoadImage(AssetData.IconUrl);
 }

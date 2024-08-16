@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetButtonWidget.generated.h"
 
+class USizeBox;
 class UBorder;
 class UImage;
 class UButton;
@@ -22,6 +23,7 @@ class RPMNEXTGEN_API URpmAssetButtonWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	
 	UPROPERTY(meta = (BindWidget))
 	UButton* AssetButton;
 

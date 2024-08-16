@@ -7,6 +7,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Components/PanelWidget.h"
+#include "Components/SizeBox.h"
 #include "Samples/RpmAssetButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -23,14 +24,15 @@ void URpmAssetPanel::NativeConstruct()
 	}
 	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanel::OnAssetListResponse);
+
+	ButtonSize = FVector2D(200, 200);
+	ImageSize = FVector2D(200, 200);
 }
 
 void URpmAssetPanel::OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
 	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Asset Fetch Success."));
-
 		CreateButtonsFromAssets(AssetListResponse.Data);
 
 		return;
@@ -42,9 +44,10 @@ void URpmAssetPanel::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
 	for (auto Asset : Assets)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Creating button."));
 		CreateButton(Asset);
+		return;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("No assets found") );
 }
 
 void URpmAssetPanel::ClearAllButtons()
@@ -70,31 +73,38 @@ void URpmAssetPanel::CreateButton(const FAsset& AssetData)
 {
 	if (AssetButtonBlueprint)
 	{
-		// Get the current world context
-		UWorld* World = GetWorld(); // or whatever provides your current world context
+		UWorld* World = GetWorld();
         
 		if (World)
 		{
-			// Create the widget instance
-			URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint->GetClass());
+			URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint);
 
 			if (AssetButtonInstance)
 			{
-				// Do something with the instance, e.g., add it to a parent widget or initialize it
-				AssetButtonInstance->InitializeButton(AssetData, ImageSize); // Pass any required parameters here
-
-				// If you have a UMG parent widget:
-				if(ButtonContainer)
+				USizeBox* ButtonSizeBox = NewObject<USizeBox>(this);
+				if (ButtonSizeBox && ButtonContainer)
 				{
-					ButtonContainer->AddChild(AssetButtonInstance);
+					ButtonSizeBox->SetWidthOverride(ButtonSize.X);
+					ButtonSizeBox->SetHeightOverride(ButtonSize.Y);
+
+					ButtonSizeBox->AddChild(AssetButtonInstance);
+					ButtonContainer->AddChild(ButtonSizeBox);
 				}
-				UE_LOG(LogTemp, Warning, TEXT("Button created and added."));
-				AssetButtons.Add(AssetButtonInstance->GetClass());
+				
+				AssetButtonInstance->InitializeButton(AssetData, ImageSize);
+
+				AssetButtons.Add(AssetButtonBlueprint);
+
 				AssetButtonInstance->OnAssetButtonClicked.AddDynamic(this, &URpmAssetPanel::OnAssetButtonClicked);
 			}
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AssetButtonBlueprint is not set!"));
+	}
 }
+
 
 
 void URpmAssetPanel::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)

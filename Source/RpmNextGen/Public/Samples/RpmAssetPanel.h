@@ -33,18 +33,21 @@ public:
 	URpmAssetButtonWidget* SelectedAssetButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Button" )
+	FVector2D ButtonSize;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Button" )
 	FVector2D ImageSize;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events" )
 	FOnAssetSelected OnAssetSelected;
 	
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
+	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void CreateButtonsFromAssets(TArray<FAsset> Assets);
 
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
+	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void ClearAllButtons();
 	
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
+	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void UpdateSelectedButton(URpmAssetButtonWidget* AssetButton);
 
 	UFUNCTION()
@@ -53,7 +56,7 @@ public:
 	UFUNCTION()
 	void OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
+	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void LoadAssetsOfType(const FString& AssetType);
 	
 	void CreateButton(const FAsset& AssetData);

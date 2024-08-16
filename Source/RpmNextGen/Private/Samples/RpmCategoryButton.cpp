@@ -57,7 +57,6 @@ void URpmCategoryButton::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(URpmCategoryButton, CategoryImageTexture))
 	{
-		// Apply the texture to the CategoryImage widget
 		if (CategoryImage && CategoryImageTexture)
 		{
 			CategoryImage->SetBrushFromTexture(CategoryImageTexture);
