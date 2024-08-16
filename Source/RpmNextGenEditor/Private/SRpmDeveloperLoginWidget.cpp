@@ -233,6 +233,11 @@ void SRpmDeveloperLoginWidget::Initialize()
 
 SRpmDeveloperLoginWidget::~SRpmDeveloperLoginWidget()
 {
+	ClearLoadedCharacterModelImages();
+}
+
+void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
+{
 	for (const auto Texture : CharacterStyleTextures)
 	{
 		Texture->RemoveFromRoot();
@@ -563,6 +568,7 @@ FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 	}
 	ComboBoxItems.Empty();
 
+	ClearLoadedCharacterModelImages();
 	DevAuthTokenCache::ClearAuthData();
 	SetLoggedInState(false);
 	return FReply::Handled();

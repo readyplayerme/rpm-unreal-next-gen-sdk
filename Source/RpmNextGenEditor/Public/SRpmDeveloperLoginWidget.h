@@ -64,6 +64,7 @@ private:
 	static void SetImageFromTexture(UTexture2D* Texture, const TSharedPtr<SImage>& ImageWidget);
 	void Initialize();
 	void GetOrgList();
+	void ClearLoadedCharacterModelImages();
 	void LoadBaseModelList();
 	void HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful);
 	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
