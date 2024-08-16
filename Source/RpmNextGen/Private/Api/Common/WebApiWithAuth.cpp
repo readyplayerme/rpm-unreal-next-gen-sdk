@@ -14,18 +14,13 @@ FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrate
 
 void FWebApiWithAuth::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy)
 {
-    if(AuthenticationStrategy != nullptr)
-    {
-        AuthenticationStrategy->OnAuthComplete.Unbind();
-        AuthenticationStrategy->OnTokenRefreshed.Unbind();
-    }
     AuthenticationStrategy = InAuthenticationStrategy;
-    if(AuthenticationStrategy == nullptr)
+
+    if (AuthenticationStrategy != nullptr)
     {
-        return;
+        AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
+        AuthenticationStrategy->OnTokenRefreshed.BindRaw(this, &FWebApiWithAuth::OnAuthTokenRefreshed);
     }
-    AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
-    AuthenticationStrategy->OnTokenRefreshed.BindRaw(this, &FWebApiWithAuth::OnAuthTokenRefreshed);
 }
 
 void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)

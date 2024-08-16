@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "RpmCategoryButton.generated.h"
+#include "RpmCategoryButtonWidget.generated.h"
 
 class UImage;
 class UBorder;
 class UButton;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategoryClicked, URpmCategoryButton*, CategoryButton);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategoryClicked, URpmCategoryButtonWidget*, CategoryButton);
 
 /**
  * 
  */
 UCLASS()
-class RPMNEXTGEN_API URpmCategoryButton : public UUserWidget
+class RPMNEXTGEN_API URpmCategoryButtonWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	

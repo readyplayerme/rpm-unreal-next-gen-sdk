@@ -34,6 +34,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AssetIdText;
+	
 private:
 	FAsset AssetData;
 };

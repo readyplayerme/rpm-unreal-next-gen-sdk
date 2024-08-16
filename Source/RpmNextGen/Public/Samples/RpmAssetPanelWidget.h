@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Blueprint/UserWidget.h"
-#include "RpmAssetPanel.generated.h"
+#include "RpmAssetPanelWidget.generated.h"
 
 class FAssetApi;
 struct FAsset;
@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetSelected, const FAsset&, Ass
  * 
  */
 UCLASS()
-class RPMNEXTGEN_API URpmAssetPanel : public UUserWidget
+class RPMNEXTGEN_API URpmAssetPanelWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:

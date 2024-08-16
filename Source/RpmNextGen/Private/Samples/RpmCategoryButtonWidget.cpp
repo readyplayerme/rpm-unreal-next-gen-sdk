@@ -1,18 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Samples/RpmCategoryButton.h"
+#include "Samples/RpmCategoryButtonWidget.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
 
-void URpmCategoryButton::NativeConstruct()
+void URpmCategoryButtonWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	if (CategoryButton)
 	{
-		CategoryButton->OnClicked.AddDynamic(this, &URpmCategoryButton::HandleButtonClicked);
+		CategoryButton->OnClicked.AddDynamic(this, &URpmCategoryButtonWidget::HandleButtonClicked);
 		DefaultColor = CategoryButton->BackgroundColor;
 	}
 	if (CategoryImageTexture)
@@ -21,7 +21,7 @@ void URpmCategoryButton::NativeConstruct()
 	}
 }
 
-void URpmCategoryButton::InitializeButton(FString Category, UTexture2D* Image)
+void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Image)
 {
 	AssetCategoryName = Category;
 
@@ -32,7 +32,7 @@ void URpmCategoryButton::InitializeButton(FString Category, UTexture2D* Image)
 	}	
 }
 
-void URpmCategoryButton::SetSelected(bool bIsSelected)
+void URpmCategoryButtonWidget::SetSelected(bool bIsSelected)
 {
 	if (CategoryButton)
 	{
@@ -41,7 +41,7 @@ void URpmCategoryButton::SetSelected(bool bIsSelected)
 	}
 }
 
-void URpmCategoryButton::HandleButtonClicked()
+void URpmCategoryButtonWidget::HandleButtonClicked()
 {
 	SetSelected(true);
 
@@ -49,13 +49,13 @@ void URpmCategoryButton::HandleButtonClicked()
 }
 
 #if WITH_EDITOR
-void URpmCategoryButton::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void URpmCategoryButtonWidget::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(URpmCategoryButton, CategoryImageTexture))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(URpmCategoryButtonWidget, CategoryImageTexture))
 	{
 		if (CategoryImage && CategoryImageTexture)
 		{
@@ -67,7 +67,7 @@ void URpmCategoryButton::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 }
 #endif
 
-void URpmCategoryButton::SynchronizeProperties()
+void URpmCategoryButtonWidget::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
 	if (CategoryImage && CategoryImageTexture)

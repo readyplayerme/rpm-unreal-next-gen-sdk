@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Samples/RpmAssetCardWidget.h"
 #include "RpmImageLoader.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Components/TextBlock.h"
-#include "Samples/RpmAssetCardWidget.h"
 
 void URpmAssetCardWidget::NativeConstruct()
 {
@@ -15,13 +15,12 @@ void URpmAssetCardWidget::InitializeCard(const FAsset& Asset)
 {
 	this->SetVisibility(ESlateVisibility::Visible);
 	AssetData = Asset;
+	
 	AssetCategoryText->SetText(FText::FromString(AssetData.Type));
 	AssetNameText->SetText(FText::FromString(AssetData.Name));
-
 	AssetNameText->SetVisibility( AssetData.Name.IsEmpty() ? ESlateVisibility::Hidden : ESlateVisibility::Visible );
-	
-	
 	AssetIdText->SetText(FText::FromString(AssetData.Id));
+	
 	LoadImage(AssetData.IconUrl);
 }
 

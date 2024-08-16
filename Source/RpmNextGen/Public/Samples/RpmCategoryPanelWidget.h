@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmCategoryPanelWidget.generated.h"
 
-class URpmCategoryButton;
+class URpmCategoryButtonWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategorySelected, const FString&, CategoryName);
 
@@ -22,16 +22,16 @@ public:
 	virtual void NativeConstruct() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
-	URpmCategoryButton* SelectedCategoryButton;
+	URpmCategoryButtonWidget* SelectedCategoryButton;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnCategorySelected OnCategorySelected;
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
-	virtual void UpdateSelectedButton(URpmCategoryButton* CategoryButton);
+	virtual void UpdateSelectedButton(URpmCategoryButtonWidget* CategoryButton);
 
 	UFUNCTION()
-	virtual void OnCategoryButtonClicked(URpmCategoryButton* CategoryButton);
+	virtual void OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton);
 
 private:
 	void InitializeCategoryButtons();
