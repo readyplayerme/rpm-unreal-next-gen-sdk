@@ -2,7 +2,39 @@
 
 #include "Samples/RpmCategoryPanelWidget.h"
 
+#include "Blueprint/WidgetTree.h"
 #include "Samples/RpmCategoryButton.h"
+
+void URpmCategoryPanelWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	InitializeCategoryButtons();
+}
+
+void URpmCategoryPanelWidget::InitializeCategoryButtons()
+{
+	TArray<UWidget*> Widgets;
+	WidgetTree->GetAllWidgets(Widgets);
+
+	for (UWidget* Widget : Widgets)
+	{
+		if (URpmCategoryButton* CategoryButton = Cast<URpmCategoryButton>(Widget))
+		{
+			CategoryButton->InitializeButton(CategoryButton->AssetCategoryName, CategoryButton->CategoryImageTexture);
+			CategoryButton->OnCategoryClicked.AddDynamic(this, &URpmCategoryPanelWidget::OnCategoryButtonClicked);
+		}
+	}
+}
+
+void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButton* CategoryButton)
+{
+	if(SelectedCategoryButton && SelectedCategoryButton != CategoryButton)
+	{
+		SelectedCategoryButton->SetSelected(false);
+
+	}
+	SelectedCategoryButton = CategoryButton;
+}
 
 void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButton* CategoryButton)
 {
@@ -10,29 +42,3 @@ void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButton* Catego
 	OnCategorySelected.Broadcast(CategoryButton->AssetCategoryName);
 }
 
-void URpmCategoryPanelWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-	if(CategoryButtons.Num() > 0)
-	{
-		for(auto CategoryButton : CategoryButtons)
-		{
-			if(CategoryButton == nullptr)
-			{
-				continue;
-			}
-			URpmCategoryButton* Button = CreateWidget<URpmCategoryButton>(this, CategoryButton->GetClass());
-			Button->InitializeButton(Button->AssetCategoryName, Button->CategoryImageTexture);
-			Button->OnCategoryClicked.AddDynamic(this, &URpmCategoryPanelWidget::OnCategoryButtonClicked);
-		}
-	}
-}
-
-void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButton* CategoryButton)
-{
-	if(SelectedCategoryButton)
-	{
-		SelectedCategoryButton->SetSelected(false);
-	}
-	SelectedCategoryButton = CategoryButton;
-}

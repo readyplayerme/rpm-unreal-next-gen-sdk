@@ -31,14 +31,14 @@ void URpmAssetPanel::OnAssetListResponse(const FAssetListResponse& AssetListResp
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Asset Fetch Success."));
 
-		LoadAssetsAndCreateButtons(AssetListResponse.Data);
+		CreateButtonsFromAssets(AssetListResponse.Data);
 
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to fetch assets"));
 }
 
-void URpmAssetPanel::LoadAssetsAndCreateButtons(TArray<FAsset> Assets)
+void URpmAssetPanel::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
 	for (auto Asset : Assets)
 	{
@@ -58,10 +58,9 @@ void URpmAssetPanel::ClearAllButtons()
 
 void URpmAssetPanel::UpdateSelectedButton(URpmAssetButtonWidget* AssetButton)
 {
-	if(SelectedAssetButton)
+	if(SelectedAssetButton && SelectedAssetButton != AssetButton)
 	{
 		SelectedAssetButton->SetSelected(false);
-		UE_LOG(LogTemp, Warning, TEXT("Setting old button to false"));
 
 	}
 	SelectedAssetButton = AssetButton;
@@ -104,12 +103,12 @@ void URpmAssetPanel::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButt
 	OnAssetSelected.Broadcast(AssetButton->GetAssetData());
 }
 
-void URpmAssetPanel::FetchAssets(const FString& AssetType)
+void URpmAssetPanel::LoadAssetsOfType(const FString& AssetType)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = Settings->ApplicationId;
-	const FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);	
 }

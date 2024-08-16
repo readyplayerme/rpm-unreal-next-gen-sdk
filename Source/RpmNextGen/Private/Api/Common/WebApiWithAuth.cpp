@@ -32,6 +32,7 @@ void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)
 {
     if(bWasSuccessful && ApiRequestData != nullptr)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Auth complete, running request to %s"), *ApiRequestData->Url);
         DispatchRaw(*ApiRequestData);
         return;
     }
@@ -62,8 +63,11 @@ void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
     if (AuthenticationStrategy == nullptr)
     {
         DispatchRaw(Data);
+        UE_LOG(LogTemp, Warning, TEXT("Auth Strategy is null, running request"));
         return;
     }
+    UE_LOG(LogTemp, Warning, TEXT("Auth Strategy is NOT null, running request"));
+
     AuthenticationStrategy->AddAuthToRequest(this->ApiRequestData);
 }
 

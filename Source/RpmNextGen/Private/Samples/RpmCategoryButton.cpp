@@ -32,19 +32,18 @@ void URpmCategoryButton::InitializeButton(FString Category, UTexture2D* Image)
 	}	
 }
 
-void URpmCategoryButton::SetSelected(bool bInIsSelected)
+void URpmCategoryButton::SetSelected(bool bIsSelected)
 {
-	bIsSelected = bInIsSelected;
 	if (CategoryButton)
 	{
-		const FLinearColor NewColor = bInIsSelected ? SelectedColor : DefaultColor;
+		const FLinearColor NewColor = bIsSelected ? SelectedColor : DefaultColor;
 		CategoryButton->SetBackgroundColor(NewColor);
 	}
 }
 
 void URpmCategoryButton::HandleButtonClicked()
 {
-	SetSelected(!bIsSelected);
+	SetSelected(true);
 
 	OnCategoryClicked.Broadcast(this);
 }

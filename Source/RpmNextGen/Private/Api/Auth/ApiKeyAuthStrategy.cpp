@@ -10,7 +10,8 @@ FApiKeyAuthStrategy::FApiKeyAuthStrategy()
 void FApiKeyAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
-	Request->Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);	
+	Request->Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);
+	UE_LOG(LogTemp, Warning, TEXT("Adding ApiKey to request, onauthcomplete bound: %d"), OnAuthComplete.IsBound());
 	OnAuthComplete.ExecuteIfBound(true);
 }
 

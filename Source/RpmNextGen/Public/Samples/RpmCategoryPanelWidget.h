@@ -24,9 +24,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
 	URpmCategoryButton* SelectedCategoryButton;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
-	TArray<URpmCategoryButton*> CategoryButtons;
-
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnCategorySelected OnCategorySelected;
 	
@@ -35,4 +32,7 @@ public:
 
 	UFUNCTION()
 	virtual void OnCategoryButtonClicked(URpmCategoryButton* CategoryButton);
+
+private:
+	void InitializeCategoryButtons();
 };

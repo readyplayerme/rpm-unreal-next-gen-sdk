@@ -22,8 +22,9 @@ class RPMNEXTGEN_API URpmAssetPanel : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel" )
-	URpmAssetButtonWidget* AssetButtonBlueprint;
+	TSubclassOf<URpmAssetButtonWidget> AssetButtonBlueprint;
 
 	UPROPERTY(meta = (BindWidget))
 	UPanelWidget* ButtonContainer;
@@ -38,7 +39,7 @@ public:
 	FOnAssetSelected OnAssetSelected;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
-	void LoadAssetsAndCreateButtons(TArray<FAsset> Assets);
+	void CreateButtonsFromAssets(TArray<FAsset> Assets);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
 	void ClearAllButtons();
@@ -53,7 +54,7 @@ public:
 	void OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|Asset Panel")
-	void FetchAssets(const FString& AssetType);
+	void LoadAssetsOfType(const FString& AssetType);
 	
 	void CreateButton(const FAsset& AssetData);
 private:

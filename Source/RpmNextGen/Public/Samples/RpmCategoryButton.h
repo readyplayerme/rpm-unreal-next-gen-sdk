@@ -42,7 +42,7 @@ public:
 	virtual void InitializeButton(FString Category, UTexture2D* Image);
 
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
-	virtual void SetSelected(bool bInIsSelected);
+	virtual void SetSelected(bool bIsSelected);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Button" )
 	FString AssetCategoryName;
@@ -56,7 +56,6 @@ public:
 private:
 	UFUNCTION()
 	virtual void HandleButtonClicked();
-
-	bool bIsSelected;
+	
 	FLinearColor DefaultColor;
 };
