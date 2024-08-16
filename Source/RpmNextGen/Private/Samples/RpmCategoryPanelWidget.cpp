@@ -31,7 +31,6 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 	if(SelectedCategoryButton && SelectedCategoryButton != CategoryButton)
 	{
 		SelectedCategoryButton->SetSelected(false);
-
 	}
 	SelectedCategoryButton = CategoryButton;
 }

@@ -64,7 +64,6 @@ void URpmAssetPanelWidget::UpdateSelectedButton(URpmAssetButtonWidget* AssetButt
 	if(SelectedAssetButton && SelectedAssetButton != AssetButton)
 	{
 		SelectedAssetButton->SetSelected(false);
-
 	}
 	SelectedAssetButton = AssetButton;
 }
@@ -77,24 +76,19 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
         
 		if (World)
 		{
-			URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint);
-
-			if (AssetButtonInstance)
+			if (URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint))
 			{
 				USizeBox* ButtonSizeBox = NewObject<USizeBox>(this);
 				if (ButtonSizeBox && ButtonContainer)
 				{
 					ButtonSizeBox->SetWidthOverride(ButtonSize.X);
 					ButtonSizeBox->SetHeightOverride(ButtonSize.Y);
-
 					ButtonSizeBox->AddChild(AssetButtonInstance);
 					ButtonContainer->AddChild(ButtonSizeBox);
 				}
 				
 				AssetButtonInstance->InitializeButton(AssetData, ImageSize);
-
 				AssetButtons.Add(AssetButtonBlueprint);
-
 				AssetButtonInstance->OnAssetButtonClicked.AddDynamic(this, &URpmAssetPanelWidget::OnAssetButtonClicked);
 			}
 		}

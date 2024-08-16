@@ -49,12 +49,14 @@ void URpmCategoryButtonWidget::HandleButtonClicked()
 }
 
 #if WITH_EDITOR
+// This function is called when a property is changed in the editor, it enables the CategoryImageTexture to be updated in the editor
 void URpmCategoryButtonWidget::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
+	// If the property that was changed is the CategoryImageTexture apply the new texture to the CategoryImage
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(URpmCategoryButtonWidget, CategoryImageTexture))
 	{
 		if (CategoryImage && CategoryImageTexture)
@@ -67,6 +69,7 @@ void URpmCategoryButtonWidget::PostEditChangeProperty(FPropertyChangedEvent& Pro
 }
 #endif
 
+// This is also required to update the CategoryImageTexture in the editor
 void URpmCategoryButtonWidget::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
