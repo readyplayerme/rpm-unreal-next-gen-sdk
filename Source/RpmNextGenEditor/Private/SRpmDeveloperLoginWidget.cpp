@@ -231,6 +231,20 @@ void SRpmDeveloperLoginWidget::Initialize()
 	}
 }
 
+SRpmDeveloperLoginWidget::~SRpmDeveloperLoginWidget()
+{
+	ClearLoadedCharacterModelImages();
+}
+
+void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
+{
+	for (const auto Texture : CharacterStyleTextures)
+	{
+		Texture->RemoveFromRoot();
+	}
+}
+
+
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
 	TSharedPtr<SImage> ImageWidget;
@@ -303,8 +317,11 @@ void SRpmDeveloperLoginWidget::DownloadImage(const FString& Url, TFunction<void(
 			{
 				// Create a texture from the image data
 				UTexture2D* Texture = CreateTextureFromImageData(Response->GetContent());
+
 				if (Texture)
 				{
+					Texture->AddToRoot();
+					CharacterStyleTextures.Add(Texture);
 					Callback(Texture);
 				}
 			}
@@ -551,6 +568,7 @@ FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 	}
 	ComboBoxItems.Empty();
 
+	ClearLoadedCharacterModelImages();
 	DevAuthTokenCache::ClearAuthData();
 	SetLoggedInState(false);
 	return FReply::Handled();
