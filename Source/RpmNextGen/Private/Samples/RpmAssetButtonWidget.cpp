@@ -25,7 +25,7 @@ void URpmAssetButtonWidget::InitializeButton(const FAsset& InAssetData, const FV
         AssetImage->SetDesiredSizeOverride(InImageSize);
 
         FRpmImageLoader ImageLoader;
-        ImageLoader.LoadImageFromURL(AssetImage, AssetData.IconUrl);
+        ImageLoader.LoadUImageFromURL(AssetImage, AssetData.IconUrl);
     }
 }
 

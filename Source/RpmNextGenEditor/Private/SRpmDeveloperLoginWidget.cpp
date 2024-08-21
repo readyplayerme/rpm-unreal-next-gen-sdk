@@ -277,7 +277,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	   ];
 
 	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadImageFromURL(ImageWidget, StyleAsset.IconUrl);
+	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl);
 }
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)

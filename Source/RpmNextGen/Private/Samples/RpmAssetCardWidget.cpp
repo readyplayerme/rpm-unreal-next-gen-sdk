@@ -27,6 +27,6 @@ void URpmAssetCardWidget::InitializeCard(const FAsset& Asset)
 void URpmAssetCardWidget::LoadImage(const FString& URL)
 {
 	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadImageFromURL(AssetImage, URL);
+	ImageLoader.LoadUImageFromURL(AssetImage, URL);
 }
 

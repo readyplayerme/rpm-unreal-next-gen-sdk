@@ -11,12 +11,11 @@ class RPMNEXTGEN_API FRpmImageLoader
 {
 public:
 	FRpmImageLoader() = default;
-
-	void LoadImageFromURL(UImage* Image, const FString& URL);
-	void LoadImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL);
+	void LoadUImageFromURL(UImage* Image, const FString& URL);
+	void LoadSImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL);
 
 private:
-	void OnImageDownloadedForUImage(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TWeakObjectPtr<UImage> Image);
-	void OnImageDownloadedForSImage(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSharedPtr<SImage> ImageWidget);
+	void DownloadImage(const FString& URL, TFunction<void(UTexture2D*)> OnImageDownloaded);
+	void OnImageDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TFunction<void(UTexture2D*)> OnImageDownloaded);
 	UTexture2D* CreateTextureFromImageData(const TArray<uint8>& ImageData);
 };
