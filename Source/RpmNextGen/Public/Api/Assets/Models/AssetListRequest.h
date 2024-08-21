@@ -27,6 +27,17 @@ struct RPMNEXTGEN_API FAssetListRequest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	FAssetListQueryParams Params;
 
+	// Default constructor
+	FAssetListRequest()
+	{
+	}
+
+	// Constructor that accepts FAssetListQueryParams
+	FAssetListRequest(const FAssetListQueryParams& InParams)
+		: Params(InParams)
+	{
+	}
+
 	FString BuildQueryString() const;
 };
 
