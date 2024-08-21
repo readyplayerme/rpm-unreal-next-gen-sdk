@@ -30,8 +30,8 @@ public class RpmNextGen : ModuleRules
 				"DeveloperSettings",
 				"glTFRuntime",
 				"UnrealEd",
-				"UMG",
-				"ImageWrapper"
+				"Slate",
+				"SlateCore",
 			}
 			);
 			
@@ -40,12 +40,12 @@ public class RpmNextGen : ModuleRules
 			new string[]
 			{
 				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",				
+				"Engine",		
 				"Json",
 				"JsonUtilities",
 				"HTTP",
+				"UMG",
+				"ImageWrapper",
 			}
 			);
 		

@@ -61,7 +61,6 @@ private:
 	FReply OnUseDemoAccountClicked();
 	FReply OnLogoutClicked();
 
-	static void SetImageFromTexture(UTexture2D* Texture, const TSharedPtr<SImage>& ImageWidget);
 	void Initialize();
 	void GetOrgList();
 	void ClearLoadedCharacterModelImages();
@@ -75,6 +74,4 @@ private:
 	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
 	void AddCharacterStyle(const FAsset& StyleAsset);
-	void DownloadImage(const FString& Url, TFunction<void(UTexture2D*)> Callback);
-	UTexture2D* CreateTextureFromImageData(const TArray<uint8>& ImageData);
 };

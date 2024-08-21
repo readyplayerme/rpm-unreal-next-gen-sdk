@@ -10,7 +10,7 @@ FApiKeyAuthStrategy::FApiKeyAuthStrategy()
 void FApiKeyAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
-	Request->Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);	
+	Request->Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);
 	OnAuthComplete.ExecuteIfBound(true);
 }
 
@@ -20,7 +20,6 @@ void FApiKeyAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenResponse& Re
 
 void FApiKeyAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 {
-	UE_LOG(LogTemp, Log, TEXT("Trying refresh"));
 }
 
 

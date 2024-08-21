@@ -34,10 +34,11 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
 			OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
 			return;
 		}
+		UE_LOG(LogTemp, Error, TEXT("Failed to parse API response"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("API Response was unsuccessful or failed to parse"));
+		UE_LOG(LogTemp, Error, TEXT("API Response was unsuccessful"));
 	}
 	OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 }
