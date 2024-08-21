@@ -19,7 +19,7 @@ void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeA
 	if(bWasSuccessful)
 	{
 		LoadGltfAssetToWorld(gltfAsset);
-		SaveAsUAsset(gltfAsset, FilePath);
+		//SaveAsUAsset(gltfAsset, FilePath);
 	}
 }
 
@@ -71,7 +71,6 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
 		}
- //return;
 
 
 	}

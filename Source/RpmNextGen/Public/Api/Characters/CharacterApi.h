@@ -11,8 +11,11 @@
 #include "Models/CharacterUpdateRequest.h"
 #include "Models/CharacterUpdateResponse.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(ReadyPlayerMe, Log, All);
+
 UENUM(BlueprintType)
-enum ECharacterResponseType { 	
+enum ECharacterResponseType
+{
 	Create,
 	Update,
 	FindById
@@ -22,7 +25,7 @@ DECLARE_DELEGATE_TwoParams(FOnCharacterCreateResponse, FCharacterCreateResponse,
 DECLARE_DELEGATE_TwoParams(FOnCharacterUpdatResponse, FCharacterUpdateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse, bool);
 
-class RPMNEXTGEN_API FCharacterApi  : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>
+class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>
 {
 public:
 	FCharacterApi();
@@ -37,19 +40,20 @@ public:
 	FOnCharacterCreateResponse OnCharacterCreateResponse;
 	FOnCharacterUpdatResponse OnCharacterUpdateResponse;
 	FOnCharacterFindResponse OnCharacterFindResponse;
-	
-	
+
 protected:
 	void DispatchRaw(const FApiRequest& Data, const ECharacterResponseType& ResponseType);
 
-	void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const ECharacterResponseType& ResponseType);
+	void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
+	                       const ECharacterResponseType& ResponseType);
 
 	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
-	
+
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
 	FHttpModule* Http;
+
 private:
 	FString BaseUrl;
 };
