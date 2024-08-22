@@ -52,7 +52,6 @@ private:
 	bool bIsInitialized = false;
 	FString UserName;
 	TArray<FApplication> UserApplications;
-	URpmDeveloperSettings* Settings;
 	FText GetWelcomeText() const;
 	FString DemoUserName = TEXT("Guest user");
 	FText GetSelectedComboBoxItemText() const;

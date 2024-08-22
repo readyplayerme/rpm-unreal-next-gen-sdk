@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SRpmDeveloperLoginWidget.h"
+#include "UI/SRpmDeveloperLoginWidget.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
 #include "SlateOptMacros.h"
@@ -24,7 +24,6 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 	DevAuthTokenCache::SetAuthData(AuthData);
 
 	bIsLoggedIn = AuthData.IsValid();
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
 	UserName = AuthData.Name;
 
 	ChildSlot
@@ -171,14 +170,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 			[
 				SAssignNew(ContentBox, SVerticalBox)
 			]
-		]
-		// + SVerticalBox::Slot()
-		// .AutoHeight()
-		// [
-		//
-		// 	SAssignNew(ContentBox, SVerticalBox)
-		// 	.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
-		// ]	
+		]	
 	];
 
 	EmailTextBox->SetText(FText::FromString(EditorCache::GetString(CacheKeyEmail)));
@@ -224,7 +216,14 @@ void SRpmDeveloperLoginWidget::Initialize()
 	bIsInitialized = true;
 	if (bIsLoggedIn)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Logged in getting org list"));
 		GetOrgList();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not logged in, logging out"));
+
+		OnLogoutClicked();
 	}
 }
 
@@ -240,7 +239,6 @@ void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
 		Texture->RemoveFromRoot();
 	}
 }
-
 
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
@@ -366,6 +364,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 			UE_LOG(LogTemp, Error, TEXT("No organizations found"));
 			return;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Orgs found"));
 
 		FApplicationListRequest Request;
 		Request.Params.Add("organizationId", Response.Data[0].Id);
@@ -383,13 +382,16 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 {
 	if (bWasSuccessful)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("HandleApplicationListResponse"));
+
+		URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
 		UserApplications = Response.Data;
 		FString Active;
 		TArray<FString> Items;
 		for (const FApplication& App : UserApplications)
 		{
 			Items.Add(App.Name);
-			if (App.Id == Settings->ApplicationId)
+			if (App.Id == RpmSettings->ApplicationId)
 			{
 				Active = App.Name;
 			}
@@ -405,6 +407,7 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to list applications"));
+		
 	}
 	LoadBaseModelList();
 }
@@ -446,9 +449,8 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {
-	// TODO find a better way to get the latest settings
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Settings->SetupDemoAccount();
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	RpmSettings->SetupDemoAccount();
 	FDeveloperAuth AuthData = FDeveloperAuth();
 	AuthData.Name = DemoUserName;
 	AuthData.IsDemo = true;
@@ -466,10 +468,8 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 
 FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 {
-	// TODO find a better way to get the latest settings
-
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Settings->Reset();
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	RpmSettings->Reset();
 
 	// Clear the content box to remove all child widgets
 	if (ContentBox.IsValid())

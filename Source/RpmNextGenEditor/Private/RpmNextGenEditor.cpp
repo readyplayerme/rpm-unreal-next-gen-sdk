@@ -2,11 +2,11 @@
 
 #include "RpmNextGenEditor.h"
 
-#include "CharacterLoaderWidget.h"
+#include "UI/CharacterLoaderWidget.h"
 #include "LevelEditor.h"
-#include "LoaderWindowCommands.h"
-#include "LoginWindowCommands.h"
-#include "SRpmDeveloperLoginWidget.h"
+#include "UI/LoaderWindowCommands.h"
+#include "UI/LoginWindowCommands.h"
+#include "UI/SRpmDeveloperLoginWidget.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
@@ -133,32 +133,6 @@ void FRpmNextGenEditorModule::PluginButtonClicked()
 {
 	FGlobalTabmanager::Get()->TryInvokeTab(TestWindowTabName);
 }
-
-// void FRpmNextGenEditorModule::RegisterMenus()
-// {
-// 	// Owner will be used for cleanup in call to UToolMenus::UnregisterOwner
-// 	FToolMenuOwnerScoped OwnerScoped(this);
-//
-// 	// Create a new main menu entry
-// 	UToolMenu* MainMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu");
-//
-// 	// Add a new section to the main menu for ReadyPlayerMe
-// 	FToolMenuSection& Section = MainMenu->AddSection("ReadyPlayerMe", LOCTEXT("ReadyPlayerMeMenuSection", "Ready Player Me"));
-//
-// 	// Add menu entries to your custom section
-// 	Section.AddMenuEntryWithCommandList(FLoginWindowCommands::Get().OpenPluginWindow, PluginCommands);
-// 	Section.AddMenuEntryWithCommandList(FLoaderWindowCommands::Get().OpenPluginWindow, PluginCommands);
-//
-// 	// Add the section to the toolbar as well, if you want it to appear in the toolbar
-// 	UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar");
-// 	{
-// 		FToolMenuSection& ToolbarSection = ToolbarMenu->FindOrAddSection("ReadyPlayerMe");
-// 		{
-// 			FToolMenuEntry& Entry = ToolbarSection.AddEntry(FToolMenuEntry::InitToolBarButton(FLoginWindowCommands::Get().OpenPluginWindow));
-// 			Entry.SetCommandList(PluginCommands);
-// 		}
-// 	}
-// }
 
 
 void FRpmNextGenEditorModule::OpenLoaderWindow()
