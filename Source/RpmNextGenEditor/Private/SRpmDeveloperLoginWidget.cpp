@@ -303,7 +303,7 @@ void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
 	AssetLoader = FEditorAssetLoader();
 	UE_LOG(LogTemp, Error, TEXT("Loading model from glb url %s"), *CharacterStyleAssets[StyleId].GlbUrl);
-	AssetLoader.LoadGLBFromURL(CharacterStyleAssets[StyleId].GlbUrl);
+	AssetLoader.LoadGLBFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const

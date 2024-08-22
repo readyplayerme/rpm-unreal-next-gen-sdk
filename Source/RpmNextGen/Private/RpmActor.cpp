@@ -59,7 +59,7 @@ void ARpmActor::CreateCharacter()
 
 USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* SkeletalMesh, const FString& Name)
 {
-	if(AddedMeshComponents.Num() > 0)
+	if (AddedMeshComponents.Num() > 0)
 	{
 		for (auto AddedMeshComponent : AddedMeshComponents)
 		{
@@ -70,11 +70,11 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 	USkeletalMeshComponent* NewSkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, *Name);
 	NewSkeletalMeshComponent->SetupAttachment(RootComponent);
 	NewSkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
-	NewSkeletalMeshComponent->SkeletalMesh->SetSkeleton(BaseSkeletalMeshComponent->SkeletalMesh->GetSkeleton());
+	//NewSkeletalMeshComponent->SkeletalMesh->SetSkeleton(BaseSkeletalMeshComponent->SkeletalMesh->GetSkeleton());
 	NewSkeletalMeshComponent->RegisterComponent();
 	AddInstanceComponent(NewSkeletalMeshComponent);
 	AddedMeshComponents.Add(NewSkeletalMeshComponent);
-	
+
 	if (AddedMeshComponents.Num() == 1 && AddedMeshComponents.IsValidIndex(0))
 	{
 		// Get the SkeletalMeshComponent at index 0
@@ -87,7 +87,7 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 			MeshComponent->SetAnimInstanceClass(TargetAnimBP);
 		}
 	}
-	else if(AddedMeshComponents.Num() > 1 && AddedMeshComponents.IsValidIndex(0))
+	else if (AddedMeshComponents.Num() > 1 && AddedMeshComponents.IsValidIndex(0))
 	{
 		NewSkeletalMeshComponent->SetMasterPoseComponent(AddedMeshComponents[0]);
 	}
@@ -97,7 +97,10 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 
 void ARpmActor::LoadglTFAsset(UglTFRuntimeAsset* Asset)
 {
-	Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, SkeletalMeshConfig );
+	/*Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, SkeletalMeshConfig);*/
+
+	auto mesh = Asset->LoadSkeletalMeshRecursive("", {}, SkeletalMeshConfig);
+	HandleSkeletalMeshLoaded(mesh);
 }
 
 void ARpmActor::HandleSkeletalMeshLoaded(USkeletalMesh* SkeletalMesh)
@@ -107,24 +110,26 @@ void ARpmActor::HandleSkeletalMeshLoaded(USkeletalMesh* SkeletalMesh)
 	CreateSkeletalMeshComponent(SkeletalMesh, "Asset");
 }
 
-void ARpmActor::OnAssetDataLoaded(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse,	bool bIsSuccessful)
+void ARpmActor::OnAssetDataLoaded(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse,
+                                  bool bIsSuccessful)
 {
 	if (bIsSuccessful)
-	{		
+	{
 		glTFRuntimeConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
-		UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(HttpResponse->GetContent(), glTFRuntimeConfig);
+		UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(
+			HttpResponse->GetContent(), glTFRuntimeConfig);
 		LoadglTFAsset(gltfAsset);
 	}
 }
 
 void ARpmActor::LoadAsset(FAsset AssetData)
 {
-	if(Character.Id.IsEmpty())
+	if (Character.Id.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Character Id is empty"));
 		return;
 	}
-	
+
 	PreviewAssetMap.Add(AssetData.Type, AssetData.Id);
 	FCharacterPreviewRequest PreviewRequest;
 	PreviewRequest.Id = Character.Id;

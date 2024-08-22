@@ -1,32 +1,89 @@
 ﻿#include "EditorAssetLoader.h"
 
+#include "AssetToolsModule.h"
 #include "glTFRuntimeAssetActor.h"
 #include "glTFRuntimeFunctionLibrary.h"
+#include "RpmActor.h"
 #include "TransientObjectSaverLibrary.h"
+#include "UEditorAssetNamer.h"
 #include "Animation/SkeletalMeshActor.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Factories/PhysicsAssetFactory.h"
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
-	OnAssetDownloaded.BindRaw(this, &FEditorAssetLoader::OnAssetDownloadComplete);
 }
 
 FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
+void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
+                                                 FString LoadedAssetId)
 {
-	if(bWasSuccessful)
+	if (bWasSuccessful)
 	{
-		LoadGltfAssetToWorld(gltfAsset);
-		//SaveAsUAsset(gltfAsset, FilePath);
+		//LoadGltfAssetToWorld(gltfAsset);
+		gltfAsset->AddToRoot();
+		SaveAsUAsset(gltfAsset, LoadedAssetId);
+		gltfAsset->RemoveFromRoot();
 	}
+}
+
+void FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString LoadedAssetId)
+{
+	const FglTFRuntimeSkeletonConfig SkeletonConfig = FglTFRuntimeSkeletonConfig();
+	USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, SkeletonConfig);
+
+	FglTFRuntimeSkeletalMeshConfig meshConfig = FglTFRuntimeSkeletalMeshConfig();
+	meshConfig.Skeleton = Skeleton;
+
+	USkeletalMesh* skeletalMesh = gltfAsset->LoadSkeletalMeshRecursive(TEXT(""), {}, meshConfig);
+	skeletalMesh->AddToRoot();
+	skeletalMesh->SetSkeleton(Skeleton);
+	Skeleton->SetPreviewMesh(skeletalMesh);
+
+	const FString CoreAssetPath = TEXT("/Game/ReadyPlayerMe/") + LoadedAssetId + "/";
+	const FString SkeletonAssetPath = CoreAssetPath + LoadedAssetId + TEXT("_Skeleton");
+	const FString SkeletalMeshAssetPath = CoreAssetPath + LoadedAssetId + TEXT("_SkeletalMesh");
+
+	const auto NameGenerator = NewObject<UUEditorAssetNamer>();
+	NameGenerator->SetPath(CoreAssetPath);
+
+	FTransientObjectSaverMaterialNameGenerator MaterialNameGeneratorDelegate;
+	MaterialNameGeneratorDelegate.BindUFunction(NameGenerator, FName("GenerateMaterialName"));
+	FTransientObjectSaverTextureNameGenerator TextureNameGeneratorDelegate;
+	TextureNameGeneratorDelegate.BindUFunction(NameGenerator, FName("GenerateTextureName"));
+
+	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath,
+	                                                        SkeletonAssetPath,
+	                                                        TEXT(""),
+	                                                        MaterialNameGeneratorDelegate,
+	                                                        TextureNameGeneratorDelegate);
+
+	UE_LOG(LogTemp, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
+}
+
+void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString LoadedAssetId)
+{
+	OnAssetDownloaded.BindLambda(
+		[LoadedAssetId, this](FString FilePath, UglTFRuntimeAsset* gltfAsset,
+		                      bool bWasSuccessful)
+		{
+			if (!gltfAsset)
+			{
+				UE_LOG(LogTemp, Log, TEXT("No gltf asset"));
+				return;
+			}
+			OnAssetDownloadComplete(FilePath, gltfAsset, bWasSuccessful, LoadedAssetId);
+		});
+	LoadGLBFromURL(URL);
 }
 
 
 void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 {
-	if (!GEditor) 
+	if (!GEditor)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GEditor is not available."));
 		return;
@@ -44,18 +101,15 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 	{
 		FTransform Transform = FTransform::Identity;
 		// Spawn an actor of type AglTFRuntimeAssetActor in the editor world
-		AglTFRuntimeAssetActor* NewActor = EditorWorld->SpawnActorDeferred<AglTFRuntimeAssetActor>(AglTFRuntimeAssetActor::StaticClass(), Transform);
+		ARpmActor* NewActor = EditorWorld->SpawnActorDeferred<ARpmActor>(ARpmActor::StaticClass(), Transform);
 		if (NewActor)
 		{
 			NewActor->SetFlags(RF_Transient);
-			NewActor->Asset = gltfAsset;
-			if(SkeletonToCopy)
+
+			if (SkeletonToCopy)
 			{
 				NewActor->SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom = SkeletonToCopy;
 			}
-			NewActor->bAllowSkeletalAnimations = false;
-			NewActor->bAllowNodeAnimations = false;
-			NewActor->StaticMeshConfig.bGenerateStaticMeshDescription = true;
 			NewActor->FinishSpawning(Transform);
 			NewActor->DispatchBeginPlay();
 			GEditor->SelectNone(true, true, true);
@@ -65,33 +119,16 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 			GEditor->SelectActor(NewActor, true, true);
 			GEditor->EditorUpdateComponents();
 
+			NewActor->LoadglTFAsset(gltfAsset);
 			UE_LOG(LogTemp, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 		}
 		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
 		}
-
-
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load GLB asset from file"));
 	}
-}
-
-void FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString Path)
-{
-	FglTFRuntimeSkeletonConfig skeletonConfig = FglTFRuntimeSkeletonConfig();
-	if(SkeletonToCopy)
-	{
-		skeletonConfig.CopyRotationsFrom = SkeletonToCopy;
-	}
-	USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, skeletonConfig);
-	UTransientObjectSaverLibrary::SaveTransientSkeleton(Skeleton,TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
-	// FglTFRuntimeSkeletalMeshConfig meshConfig = FglTFRuntimeSkeletalMeshConfig();
-	// USkeletalMesh* skeletalMesh = gltfAsset->LoadSkeletalMeshRecursive("", {}, meshConfig);
-	// const FTransientObjectSaverMaterialNameGenerator& MaterialNameGenerator = FTransientObjectSaverMaterialNameGenerator();
-	// const FTransientObjectSaverTextureNameGenerator& TextureNameGenerator = FTransientObjectSaverTextureNameGenerator(); 
-	// UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, TEXT("/Game/ReadyPlayerMe/TestSkeletalMesh"), TEXT("/Game/ReadyPlayerMe/TestSkeleton"), TEXT("/Game/ReadyPlayerMe/TestPhysicsAsset"), MaterialNameGenerator, TextureNameGenerator);
 }
