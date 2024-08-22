@@ -14,11 +14,18 @@ DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy()
 void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request) 
 {
 	const FString Key = TEXT("Authorization");
+	const FString Token = DevAuthTokenCache::GetAuthData().Token;
+	if(Token.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Token is empty"));
+		OnAuthComplete.ExecuteIfBound(false);
+		return;
+	}
 	if (Request->Headers.Contains(Key))
 	{
 		Request->Headers.Remove(Key);
 	}
-	Request->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *DevAuthTokenCache::GetAuthData().Token));
+	Request->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Token));
 	
 	OnAuthComplete.ExecuteIfBound(true);
 }
