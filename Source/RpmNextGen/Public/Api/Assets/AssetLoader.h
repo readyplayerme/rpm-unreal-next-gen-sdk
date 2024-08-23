@@ -16,12 +16,13 @@ class RPMNEXTGEN_API FAssetLoader : public FWebApi
 public:
 	FAssetLoader();
 	FAssetLoader(FglTFRuntimeConfig* Config);
-	virtual ~FAssetLoader();
+	virtual ~FAssetLoader() override;
 
 	void LoadGLBFromURL(const FString& URL);
-	
+
 	FOnAssetDataReceived OnAssetDataReceived;
 	FOnAssetDownloaded OnAssetDownloaded;
+
 protected:
 	FglTFRuntimeConfig* GltfConfig;
 	void virtual OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
