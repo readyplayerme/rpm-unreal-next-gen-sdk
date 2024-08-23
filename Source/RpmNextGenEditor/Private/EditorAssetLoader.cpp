@@ -45,11 +45,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	const auto NameGenerator = NewObject<UAssetNameGenerator>();
 	NameGenerator->SetPath(CoreAssetPath);
 
-	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath,
-	                                                        SkeletonAssetPath,
-	                                                        TEXT(""),
-	                                                        NameGenerator->MaterialNameGeneratorDelegate,
-	                                                        NameGenerator->TextureNameGeneratorDelegate);
+	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath, SkeletonAssetPath, TEXT(""), NameGenerator->MaterialNameGeneratorDelegate, NameGenerator->TextureNameGeneratorDelegate);
 
 	UE_LOG(LogTemp, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
 	return skeletalMesh;
