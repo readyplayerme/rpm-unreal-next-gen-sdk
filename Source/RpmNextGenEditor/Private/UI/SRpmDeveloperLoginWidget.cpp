@@ -15,6 +15,8 @@
 #include "Auth/Models/DeveloperLoginRequest.h"
 #include "DeveloperAccounts/Models/ApplicationListRequest.h"
 #include "DeveloperAccounts/Models/ApplicationListResponse.h"
+#include "DeveloperAccounts/Models/OrganizationListRequest.h"
+#include "DeveloperAccounts/Models/OrganizationListResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 

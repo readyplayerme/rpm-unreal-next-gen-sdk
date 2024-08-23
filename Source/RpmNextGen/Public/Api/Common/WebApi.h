@@ -16,13 +16,8 @@ public:
 	virtual ~FWebApi();
 	
 	FOnWebApiResponse OnApiResponse;
-protected:	
 	
-	// template <typename TRequestBody>
-	// void Dispatch(
-	// 	const FApiRequest<TRequestBody>& Data
-	// );
-
+protected:
 	void DispatchRaw(
 		const FApiRequest& Data
 	);

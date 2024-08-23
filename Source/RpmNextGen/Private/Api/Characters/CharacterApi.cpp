@@ -1,5 +1,6 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
+#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
 #include "Api/Characters/Models/CharacterUpdateRequest.h"
@@ -14,6 +15,11 @@ FCharacterApi::FCharacterApi()
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *Settings->GetApiBaseUrl());
 	Http = &FHttpModule::Get();
+	SetAuthenticationStrategy(nullptr);
+	if(!Settings->ApiKey.IsEmpty() && Settings->ApiProxyUrl.IsEmpty())
+	{
+		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+	}
 }
 
 FCharacterApi::~FCharacterApi()
@@ -26,7 +32,8 @@ void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 	ApiRequest.Url = FString::Printf(TEXT("%s"), *BaseUrl);
 	ApiRequest.Method = POST;
 	ApiRequest.Payload = ConvertToJsonString(Request);
-	DispatchRaw(ApiRequest, Create);
+	ApiRequest.Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	DispatchRawWithAuth(ApiRequest);
 }
 
 void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
@@ -35,7 +42,8 @@ void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
 	ApiRequest.Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
 	ApiRequest.Method = PATCH;
 	ApiRequest.Payload = ConvertToJsonString(Request);
-	DispatchRaw(ApiRequest, Update);
+	ApiRequest.Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	DispatchRawWithAuth(ApiRequest);
 }
 
 void FCharacterApi::FindByIdAsync(const FCharacterFindByIdRequest& Request)
@@ -43,7 +51,8 @@ void FCharacterApi::FindByIdAsync(const FCharacterFindByIdRequest& Request)
 	FApiRequest ApiRequest;
 	ApiRequest.Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
 	ApiRequest.Method = GET;
-	DispatchRaw(ApiRequest, FindById);
+	ApiRequest.Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	DispatchRawWithAuth(ApiRequest);
 }
 
 FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Request)
@@ -53,47 +62,49 @@ FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Reques
 	return url;
 }
 
-void FCharacterApi::DispatchRaw(const FApiRequest& Data, const ECharacterResponseType& ResponseType)
+void FCharacterApi::Dispatch(FApiRequest Data, const ECharacterResponseType& ResponseType)
 {
-	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-	Request->SetURL(Data.Url);
-	Request->SetVerb(Data.GetVerb());
-	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
-	//TODO move to auth strategy
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
-
-	for (const auto& Header : Data.Headers)
-	{
-		if (!Request->GetHeader(Header.Key).IsEmpty())
-		{
-			continue;
-		}
-		Request->SetHeader(Header.Key, Header.Value);
-	}
-
-	if (!Data.Payload.IsEmpty())
-	{
-		Request->SetContentAsString(Data.Payload);
-	}
-	Request->OnProcessRequestComplete().BindLambda(
-		[this, ResponseType](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("RunCallback"))
-			OnProcessResponse(Request, Response, bWasSuccessful, ResponseType);
-		});
-	Request->ProcessRequest();
+	DispatchRawWithAuth(Data);
+	
+	// TSharedRef<IHttpRequest> Request = Http->CreateRequest();
+	// Request->SetURL(Data.Url);
+	// Request->SetVerb(Data.GetVerb());
+	// Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	//
+	// //TODO move to auth strategy
+	// URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+	// Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
+	//
+	// for (const auto& Header : Data.Headers)
+	// {
+	// 	if (!Request->GetHeader(Header.Key).IsEmpty())
+	// 	{
+	// 		continue;
+	// 	}
+	// 	Request->SetHeader(Header.Key, Header.Value);
+	// }
+	//
+	// if (!Data.Payload.IsEmpty())
+	// {
+	// 	Request->SetContentAsString(Data.Payload);
+	// }
+	// Request->OnProcessRequestComplete().BindLambda(
+	// 	[this, ResponseType](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	// 	{
+	// 		UE_LOG(LogTemp, Warning, TEXT("RunCallback"))
+	// 		OnProcessResponse(Request, Response, bWasSuccessful, ResponseType);
+	// 	});
+	// Request->ProcessRequest();
 }
 
-void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
-                                      const ECharacterResponseType& ResponseType)
+void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	bool success = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+	FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful);
 	FCharacterCreateResponse CharacterCreateResponse;
 	FCharacterUpdateResponse CharacterUpdateResponse;
 	FCharacterFindByIdResponse CharacterFindByIdResponse;
-
+	bool success = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 	if (Response->GetResponseCode() == 401)
 	{
 		UE_LOG(ReadyPlayerMe, Error,
@@ -102,26 +113,68 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 		       ));
 		return;
 	}
-
-	switch (ResponseType)
+	
+	const FString Verb = Request->GetVerb();
+	if (Verb == "POST")
 	{
-	case Create:
 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
 		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, success);
-		break;
-	case Update:
+	}
+	else if (Verb == "PATCH")
+	{
 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
 		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, success);
-		break;
-	case FindById:
+	}
+	else if (Verb == "GET")
+	{
 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
 		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, success);
-		break;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unhandled verb"));
 	}
 }
+
+// void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
+//                                       const ECharacterResponseType& ResponseType)
+// {
+// 	bool success = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+// 	FCharacterCreateResponse CharacterCreateResponse;
+// 	FCharacterUpdateResponse CharacterUpdateResponse;
+// 	FCharacterFindByIdResponse CharacterFindByIdResponse;
+//
+// 	if (Response->GetResponseCode() == 401)
+// 	{
+// 		UE_LOG(ReadyPlayerMe, Error,
+// 		       TEXT(
+// 			       "The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."
+// 		       ));
+// 		return;
+// 	}
+//
+// 	switch (ResponseType)
+// 	{
+// 	case Create:
+// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+// 			Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
+// 		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, success);
+// 		break;
+// 	case Update:
+// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+// 			Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
+// 		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, success);
+// 		break;
+// 	case FindById:
+// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+// 			Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
+// 		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, success);
+// 		break;
+// 	}
+// }
 
 FString FCharacterApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
 {

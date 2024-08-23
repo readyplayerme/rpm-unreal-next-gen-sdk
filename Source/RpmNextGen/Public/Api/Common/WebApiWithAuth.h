@@ -12,11 +12,6 @@ public:
 	FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrategy);
 
 	void SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy);
-
-	// template <typename TRequestBody>
-	// void DispatchWithAuth(
-	// 	const TFApiRequest<TRequestBody>& Data
-	// );
 	
 	void OnAuthComplete(bool bWasSuccessful); 
 	void OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful); 
