@@ -97,8 +97,6 @@ USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USkeletalMesh* Sk
 
 void ARpmActor::LoadglTFAsset(UglTFRuntimeAsset* Asset)
 {
-	/*Asset->LoadSkeletalMeshRecursiveAsync("", {}, OnSkeletalMeshCallback, SkeletalMeshConfig);*/
-
 	auto mesh = Asset->LoadSkeletalMeshRecursive("", {}, SkeletalMeshConfig);
 	HandleSkeletalMeshLoaded(mesh);
 }

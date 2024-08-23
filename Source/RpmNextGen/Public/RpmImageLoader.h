@@ -12,7 +12,7 @@ class RPMNEXTGEN_API FRpmImageLoader
 public:
 	FRpmImageLoader() = default;
 	void LoadUImageFromURL(UImage* Image, const FString& URL);
-	void LoadSImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL);
+	void LoadSImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL, TFunction<void(UTexture2D*)> OnImageUpdated);
 
 private:
 	void DownloadImage(const FString& URL, TFunction<void(UTexture2D*)> OnImageDownloaded);

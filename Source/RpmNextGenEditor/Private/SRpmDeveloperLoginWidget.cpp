@@ -239,6 +239,7 @@ void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
 	{
 		Texture->RemoveFromRoot();
 	}
+	CharacterStyleTextures.Empty();
 }
 
 
@@ -296,7 +297,11 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	];
 
 	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl);
+	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl, [this](UTexture2D* texture)
+	{
+		texture->AddToRoot();
+		CharacterStyleTextures.Add(texture);
+	});
 }
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)

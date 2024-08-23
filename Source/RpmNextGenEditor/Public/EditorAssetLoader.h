@@ -13,8 +13,12 @@ public:
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;
 
-	void LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset);
+	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset);
+	void LoadAssetToWorldAsURpmActor(USkeletalMesh* gltfAsset);
 	void LoadGLBFromURLWithId(const FString& URL, const FString AssetId);
-	void SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString Path);
+	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
 	USkeleton* SkeletonToCopy;
+
+private:
+	void LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset);
 };

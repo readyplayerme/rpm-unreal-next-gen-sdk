@@ -24,16 +24,16 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 		SNew(SVerticalBox)
 
 		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(5)
+		  .AutoHeight()
+		  .Padding(5)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString("Enter Path:"))
 		]
 
 		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(5)
+		  .AutoHeight()
+		  .Padding(5)
 		[
 			SAssignNew(PathTextBox, SEditableTextBox)
 			.Text(FText::FromString(LastSavedPath)) // Set the loaded path as the initial text
@@ -41,8 +41,8 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 		]
 
 		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(5)
+		  .AutoHeight()
+		  .Padding(5)
 		[
 			SNew(SButton)
 			.Text(FText::FromString("Load Glb"))
@@ -50,8 +50,8 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 		]
 		// Add a text block for labeling
 		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(5)
+		  .AutoHeight()
+		  .Padding(5)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString("Select Skeleton:"))
@@ -59,8 +59,8 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 
 		// Add the object property entry box
 		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(5)
+		  .AutoHeight()
+		  .Padding(5)
 		[
 			SNew(SObjectPropertyEntryBox)
 			.AllowedClass(USkeleton::StaticClass()) // Only allow USkeleton assets
@@ -96,11 +96,10 @@ void SCharacterLoaderWidget::OnPathTextChanged(const FText& NewText)
 }
 
 
-
 FReply SCharacterLoaderWidget::OnButtonClick()
 {
 	FString Path = PathText.ToString();
-	if(Path.IsEmpty())
+	if (Path.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Path is empty"));
 		return FReply::Handled();
@@ -113,14 +112,14 @@ FReply SCharacterLoaderWidget::OnButtonClick()
 void SCharacterLoaderWidget::LoadAsset(const FString& Path)
 {
 	FglTFRuntimeConfig Config = FglTFRuntimeConfig();
-	Config.SceneScale =	100.0f;
+	Config.SceneScale = 100.0f;
 	Config.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 	UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromFilename(Path, true, Config);
-	if(SelectedSkeleton)
+	if (SelectedSkeleton)
 	{
 		AssetLoader.SkeletonToCopy = SelectedSkeleton;
 	}
-	AssetLoader.LoadGltfAssetToWorld(gltfAsset);
+	AssetLoader.LoadAssetToWorldAsURpmActor(gltfAsset);
 	AssetLoader.SaveAsUAsset(gltfAsset, TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
 	//FglTFRuntimeSkeletonConfig skeletonConfig = FglTFRuntimeSkeletonConfig();
 	//USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, skeletonConfig);
