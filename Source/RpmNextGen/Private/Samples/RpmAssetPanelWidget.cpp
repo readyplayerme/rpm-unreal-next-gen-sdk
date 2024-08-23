@@ -2,7 +2,6 @@
 
 
 #include "Samples/RpmAssetPanelWidget.h"
-
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"

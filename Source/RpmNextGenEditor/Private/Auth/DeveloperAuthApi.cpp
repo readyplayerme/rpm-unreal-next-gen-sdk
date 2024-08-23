@@ -1,5 +1,4 @@
 ﻿#include "Auth/DeveloperAuthApi.h"
-
 #include "Auth/Models/DeveloperLoginRequest.h"
 #include "Auth/Models/DeveloperLoginResponse.h"
 #include "Settings/RpmDeveloperSettings.h"

@@ -1,10 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Samples/RpmCategoryButtonWidget.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
-
 
 void URpmCategoryButtonWidget::NativeConstruct()
 {

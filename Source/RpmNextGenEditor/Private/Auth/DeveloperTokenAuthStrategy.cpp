@@ -3,6 +3,7 @@
 #include "Api/Auth/ApiRequest.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
+#include "Auth/Models/DeveloperAuth.h"
 
 DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy() 
 {

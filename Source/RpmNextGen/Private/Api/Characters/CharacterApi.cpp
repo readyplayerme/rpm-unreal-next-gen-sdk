@@ -4,11 +4,8 @@
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
 #include "Api/Characters/Models/CharacterUpdateRequest.h"
-#include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
-
-DEFINE_LOG_CATEGORY(ReadyPlayerMe);
 
 FCharacterApi::FCharacterApi()
 {
@@ -62,52 +59,13 @@ FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Reques
 	return url;
 }
 
-void FCharacterApi::Dispatch(FApiRequest Data, const ECharacterResponseType& ResponseType)
-{
-
-	DispatchRawWithAuth(Data);
-	
-	// TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-	// Request->SetURL(Data.Url);
-	// Request->SetVerb(Data.GetVerb());
-	// Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	//
-	// //TODO move to auth strategy
-	// URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	// Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
-	//
-	// for (const auto& Header : Data.Headers)
-	// {
-	// 	if (!Request->GetHeader(Header.Key).IsEmpty())
-	// 	{
-	// 		continue;
-	// 	}
-	// 	Request->SetHeader(Header.Key, Header.Value);
-	// }
-	//
-	// if (!Data.Payload.IsEmpty())
-	// {
-	// 	Request->SetContentAsString(Data.Payload);
-	// }
-	// Request->OnProcessRequestComplete().BindLambda(
-	// 	[this, ResponseType](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-	// 	{
-	// 		UE_LOG(LogTemp, Warning, TEXT("RunCallback"))
-	// 		OnProcessResponse(Request, Response, bWasSuccessful, ResponseType);
-	// 	});
-	// Request->ProcessRequest();
-}
-
 void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful);
-	FCharacterCreateResponse CharacterCreateResponse;
-	FCharacterUpdateResponse CharacterUpdateResponse;
-	FCharacterFindByIdResponse CharacterFindByIdResponse;
-	bool success = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 	if (Response->GetResponseCode() == 401)
 	{
-		UE_LOG(ReadyPlayerMe, Error,
+		UE_LOG(LogTemp, Error,
 		       TEXT(
 			       "The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."
 		       ));
@@ -117,21 +75,24 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	const FString Verb = Request->GetVerb();
 	if (Verb == "POST")
 	{
-		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+		FCharacterCreateResponse CharacterCreateResponse;
+		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
-		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, success);
+		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, bSuccess);
 	}
 	else if (Verb == "PATCH")
 	{
-		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+		FCharacterUpdateResponse CharacterUpdateResponse;
+		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
-		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, success);
+		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, bSuccess);
 	}
 	else if (Verb == "GET")
 	{
-		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
+		FCharacterFindByIdResponse CharacterFindByIdResponse;
+		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
 			Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
-		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, success);
+		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, bSuccess);
 	}
 	else
 	{
@@ -139,55 +100,3 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	}
 }
 
-// void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
-//                                       const ECharacterResponseType& ResponseType)
-// {
-// 	bool success = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
-// 	FCharacterCreateResponse CharacterCreateResponse;
-// 	FCharacterUpdateResponse CharacterUpdateResponse;
-// 	FCharacterFindByIdResponse CharacterFindByIdResponse;
-//
-// 	if (Response->GetResponseCode() == 401)
-// 	{
-// 		UE_LOG(ReadyPlayerMe, Error,
-// 		       TEXT(
-// 			       "The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."
-// 		       ));
-// 		return;
-// 	}
-//
-// 	switch (ResponseType)
-// 	{
-// 	case Create:
-// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
-// 			Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
-// 		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, success);
-// 		break;
-// 	case Update:
-// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
-// 			Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
-// 		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, success);
-// 		break;
-// 	case FindById:
-// 		success = success && FJsonObjectConverter::JsonObjectStringToUStruct(
-// 			Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
-// 		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, success);
-// 		break;
-// 	}
-// }
-
-FString FCharacterApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
-{
-	FString QueryString;
-	if (QueryParams.Num() > 0)
-	{
-		QueryString.Append(TEXT("?"));
-		for (const auto& Param : QueryParams)
-		{
-			QueryString.Append(FString::Printf(TEXT("%s=%s&"), *FGenericPlatformHttp::UrlEncode(Param.Key),
-			                                   *FGenericPlatformHttp::UrlEncode(Param.Value)));
-		}
-		QueryString.RemoveFromEnd(TEXT("&"));
-	}
-	return QueryString;
-}

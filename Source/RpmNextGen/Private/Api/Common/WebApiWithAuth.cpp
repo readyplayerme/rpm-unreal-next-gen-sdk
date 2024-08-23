@@ -1,5 +1,4 @@
 ﻿#include "Api/Common/WebApiWithAuth.h"
-
 #include "Interfaces/IHttpResponse.h"
 
 FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)

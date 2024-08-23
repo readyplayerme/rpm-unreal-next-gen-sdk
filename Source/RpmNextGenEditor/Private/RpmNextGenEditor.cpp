@@ -3,7 +3,6 @@
 #include "RpmNextGenEditor.h"
 
 #include "UI/CharacterLoaderWidget.h"
-#include "LevelEditor.h"
 #include "UI/LoaderWindowCommands.h"
 #include "UI/LoginWindowCommands.h"
 #include "UI/SRpmDeveloperLoginWidget.h"

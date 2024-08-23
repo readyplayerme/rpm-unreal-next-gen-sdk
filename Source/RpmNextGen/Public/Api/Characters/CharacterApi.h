@@ -12,16 +12,6 @@
 #include "Models/CharacterUpdateRequest.h"
 #include "Models/CharacterUpdateResponse.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(ReadyPlayerMe, Log, All);
-
-UENUM(BlueprintType)
-enum ECharacterResponseType
-{
-	Create,
-	Update,
-	FindById
-};
-
 DECLARE_DELEGATE_TwoParams(FOnCharacterCreateResponse, FCharacterCreateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterUpdatResponse, FCharacterUpdateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse, bool);
@@ -43,12 +33,8 @@ public:
 	FOnCharacterFindResponse OnCharacterFindResponse;
 
 protected:
-	void Dispatch(FApiRequest Data, const ECharacterResponseType& ResponseType);
-
-	void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
-
-	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
-
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
+	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
