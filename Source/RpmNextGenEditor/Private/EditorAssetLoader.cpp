@@ -81,7 +81,7 @@ void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(USkeletalMesh* SkeletalMesh
 	this->LoadAssetToWorld(AssetId, SkeletalMesh, nullptr);
 }
 
-void FEditorAssetLoader::LoadAssetToWorld(FString ActorId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset)
 {
 	if (!GEditor)
 	{
@@ -106,7 +106,7 @@ void FEditorAssetLoader::LoadAssetToWorld(FString ActorId, USkeletalMesh* Skelet
 
 		if (NewActor)
 		{
-			NewActor->BaseModelId = ActorId;
+			NewActor->BaseModelId = AssetId;
 			NewActor->SetFlags(RF_Transient);
 
 			NewActor->FinishSpawning(Transform);

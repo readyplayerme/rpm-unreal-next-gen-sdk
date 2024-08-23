@@ -20,5 +20,5 @@ public:
 	USkeleton* SkeletonToCopy;
 
 private:
-	void LoadAssetToWorld(FString actorId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset);
+	void LoadAssetToWorld(FString AssetId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset);
 };
