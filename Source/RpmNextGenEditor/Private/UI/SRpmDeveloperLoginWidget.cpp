@@ -235,6 +235,7 @@ void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
 	{
 		Texture->RemoveFromRoot();
 	}
+	CharacterStyleTextures.Empty();
 }
 
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
@@ -291,13 +292,17 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	];
 
 	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl);
+	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl, [this](UTexture2D* texture)
+	{
+		texture->AddToRoot();
+		CharacterStyleTextures.Add(texture);
+	});
 }
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
 	AssetLoader = FEditorAssetLoader();
-	AssetLoader.LoadGLBFromURL(CharacterStyleAssets[StyleId].GlbUrl);
+	AssetLoader.LoadGLBFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const

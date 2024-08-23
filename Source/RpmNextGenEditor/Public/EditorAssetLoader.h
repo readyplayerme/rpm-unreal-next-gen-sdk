@@ -7,13 +7,17 @@
 class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetLoader
 {
 public:
-	void OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful);
+	void OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
+	                             FString LoadedAssetId);
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;
-	
-	void LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset);
 
-	void SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString Path);
+	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset);
+	void LoadAssetToWorldAsURpmActor(USkeletalMesh* gltfAsset);
+	void LoadGLBFromURLWithId(const FString& URL, const FString AssetId);
+	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
 	USkeleton* SkeletonToCopy;
-	
+
+private:
+	void LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset);
 };
