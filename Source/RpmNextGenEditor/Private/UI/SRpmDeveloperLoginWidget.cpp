@@ -173,7 +173,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 		]	
 	];
 
-	EmailTextBox->SetText(FText::FromString(EditorCache::GetString(CacheKeyEmail)));
+	EmailTextBox->SetText(FText::FromString(FEditorCache::GetString(CacheKeyEmail)));
 	Initialize();
 }
 
@@ -323,7 +323,7 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 {
 	FString Email = EmailTextBox->GetText().ToString();
 	FString Password = PasswordTextBox->GetText().ToString();
-	EditorCache::SetString(CacheKeyEmail, Email);
+	FEditorCache::SetString(CacheKeyEmail, Email);
 	Email = Email.TrimStartAndEnd();
 	Password = Password.TrimStartAndEnd();
 	DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());

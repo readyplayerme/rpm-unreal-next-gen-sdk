@@ -66,13 +66,10 @@ void FEditorAssetLoader::LoadGltfAssetToWorld(UglTFRuntimeAsset* gltfAsset)
 			GEditor->EditorUpdateComponents();
 
 			UE_LOG(LogTemp, Log, TEXT("Successfully loaded GLB asset into the editor world"));
+			return;
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
-		}
-
-
+		
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
 	}
 	else
 	{
@@ -89,9 +86,4 @@ void FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* gltfAsset, FString Path
 	}
 	USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, skeletonConfig);
 	UTransientObjectSaverLibrary::SaveTransientSkeleton(Skeleton,TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
-	// FglTFRuntimeSkeletalMeshConfig meshConfig = FglTFRuntimeSkeletalMeshConfig();
-	// USkeletalMesh* skeletalMesh = gltfAsset->LoadSkeletalMeshRecursive("", {}, meshConfig);
-	// const FTransientObjectSaverMaterialNameGenerator& MaterialNameGenerator = FTransientObjectSaverMaterialNameGenerator();
-	// const FTransientObjectSaverTextureNameGenerator& TextureNameGenerator = FTransientObjectSaverTextureNameGenerator(); 
-	// UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, TEXT("/Game/ReadyPlayerMe/TestSkeletalMesh"), TEXT("/Game/ReadyPlayerMe/TestSkeleton"), TEXT("/Game/ReadyPlayerMe/TestPhysicsAsset"), MaterialNameGenerator, TextureNameGenerator);
 }
