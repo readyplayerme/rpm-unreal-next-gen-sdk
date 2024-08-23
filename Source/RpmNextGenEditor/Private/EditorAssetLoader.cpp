@@ -3,7 +3,7 @@
 #include "glTFRuntimeFunctionLibrary.h"
 #include "RpmActor.h"
 #include "TransientObjectSaverLibrary.h"
-#include "EditorAssetNamer.h"
+#include "AssetNameGenerator.h"
 #include "glTFRuntimeAssetActor.h"
 
 FEditorAssetLoader::FEditorAssetLoader()
@@ -42,7 +42,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	const FString SkeletonAssetPath = FString::Printf(TEXT("%s%s_Skeleton"), *CoreAssetPath, *LoadedAssetId);
 	const FString SkeletalMeshAssetPath = FString::Printf(TEXT("%s%s_SkeletalMesh"), *CoreAssetPath, *LoadedAssetId);
 
-	const auto NameGenerator = NewObject<UEditorAssetNamer>();
+	const auto NameGenerator = NewObject<UAssetNameGenerator>();
 	NameGenerator->SetPath(CoreAssetPath);
 
 	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath,

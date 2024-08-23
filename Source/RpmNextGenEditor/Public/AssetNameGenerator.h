@@ -5,18 +5,18 @@
 #include "CoreMinimal.h"
 #include "TransientObjectSaverLibrary.h"
 #include "UObject/Object.h"
-#include "EditorAssetNamer.generated.h"
+#include "AssetNameGenerator.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class RPMNEXTGENEDITOR_API UEditorAssetNamer : public UObject
+class RPMNEXTGENEDITOR_API UAssetNameGenerator : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UEditorAssetNamer();
+	UAssetNameGenerator();
 	void SetPath(FString path);
 	UFUNCTION()
 	FString GenerateMaterialName(UMaterialInterface* Material, int32 MaterialIndex, const FString& SlotName) const;
