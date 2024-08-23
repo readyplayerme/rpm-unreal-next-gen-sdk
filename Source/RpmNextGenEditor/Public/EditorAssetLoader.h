@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "TransientObjectSaverLibrary.h"
 #include "Api/Assets/AssetLoader.h"
 #include "HAL/PlatformFilemanager.h"
 

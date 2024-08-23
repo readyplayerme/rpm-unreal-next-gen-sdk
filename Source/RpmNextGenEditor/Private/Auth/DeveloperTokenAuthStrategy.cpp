@@ -14,7 +14,7 @@ DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy()
 void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request) 
 {
 	const FString Key = TEXT("Authorization");
-	const FString Token = DevAuthTokenCache::GetAuthData().Token;
+	const FString Token = FDevAuthTokenCache::GetAuthData().Token;
 	if(Token.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Token is empty"));
@@ -33,8 +33,8 @@ void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Reques
 void DeveloperTokenAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 {
 	FRefreshTokenRequest RefreshRequest;
-	RefreshRequest.Data.Token = DevAuthTokenCache::GetAuthData().Token;
-	RefreshRequest.Data.RefreshToken = DevAuthTokenCache::GetAuthData().RefreshToken;
+	RefreshRequest.Data.Token = FDevAuthTokenCache::GetAuthData().Token;
+	RefreshRequest.Data.RefreshToken = FDevAuthTokenCache::GetAuthData().RefreshToken;
 
 	RefreshTokenAsync(RefreshRequest);
 }
@@ -43,10 +43,10 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 {
 	if (bWasSuccessful && !Response.Data.Token.IsEmpty())
 	{
-		FDeveloperAuth DeveloperAuth = DevAuthTokenCache::GetAuthData();
+		FDeveloperAuth DeveloperAuth = FDevAuthTokenCache::GetAuthData();
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
-		DevAuthTokenCache::SetAuthData(DeveloperAuth);
+		FDevAuthTokenCache::SetAuthData(DeveloperAuth);
 		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}

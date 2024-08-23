@@ -1,11 +1,12 @@
 ﻿#include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
+#include "Auth/Models/DeveloperAuth.h"
 #include "Misc/ConfigCacheIni.h"
 
-FDeveloperAuth DevAuthTokenCache::AuthData = FDeveloperAuth();
-bool DevAuthTokenCache::bIsInitialized = false;
+FDeveloperAuth FDevAuthTokenCache::AuthData = FDeveloperAuth();
+bool FDevAuthTokenCache::bIsInitialized = false;
 
-void DevAuthTokenCache::Initialize()
+void FDevAuthTokenCache::Initialize()
 {
 	if (!bIsInitialized)
 	{
@@ -24,13 +25,13 @@ void DevAuthTokenCache::Initialize()
 	}
 }
 
-FDeveloperAuth DevAuthTokenCache::GetAuthData()
+FDeveloperAuth FDevAuthTokenCache::GetAuthData()
 {
 	Initialize();	
 	return AuthData;
 }
 
-void DevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
+void FDevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
 {
 	AuthData = DevAuthData;
 	FEditorCache::SetString( CacheKeyName, AuthData.Name);
@@ -39,7 +40,7 @@ void DevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
 	FEditorCache::SetBool( CacheKeyIsDemo, AuthData.IsDemo);
 }
 
-void DevAuthTokenCache::ClearAuthData()
+void FDevAuthTokenCache::ClearAuthData()
 {
 	AuthData = FDeveloperAuth();
 	FEditorCache::RemoveKey(CacheKeyName);

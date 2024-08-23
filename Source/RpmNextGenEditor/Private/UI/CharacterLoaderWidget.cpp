@@ -48,7 +48,6 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 			.Text(FText::FromString("Load Glb"))
 			.OnClicked(this, &SCharacterLoaderWidget::OnButtonClick)
 		]
-		// Add a text block for labeling
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		.Padding(5)
@@ -57,7 +56,6 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 			.Text(FText::FromString("Select Skeleton:"))
 		]
 
-		// Add the object property entry box
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		.Padding(5)
@@ -70,7 +68,7 @@ void SCharacterLoaderWidget::Construct(const FArguments& InArgs)
 	];
 }
 
-// This function will be called when the user selects a skeleton
+
 void SCharacterLoaderWidget::OnSkeletonSelected(const FAssetData& AssetData)
 {
 	SelectedSkeleton = Cast<USkeleton>(AssetData.GetAsset());
@@ -80,7 +78,7 @@ void SCharacterLoaderWidget::OnSkeletonSelected(const FAssetData& AssetData)
 	}
 }
 
-// Optional: Provide the current path of the selected skeleton
+
 FString SCharacterLoaderWidget::GetCurrentSkeletonPath() const
 {
 	return SelectedSkeleton ? SelectedSkeleton->GetPathName() : FString();
@@ -94,8 +92,6 @@ void SCharacterLoaderWidget::OnPathTextChanged(const FText& NewText)
 	GConfig->SetString(*ConfigSection, *PathKeyName, *PathText.ToString(), GGameIni);
 	GConfig->Flush(false, GGameIni); // Ensure the config is saved immediately
 }
-
-
 
 FReply SCharacterLoaderWidget::OnButtonClick()
 {
@@ -122,7 +118,4 @@ void SCharacterLoaderWidget::LoadAsset(const FString& Path)
 	}
 	AssetLoader.LoadGltfAssetToWorld(gltfAsset);
 	AssetLoader.SaveAsUAsset(gltfAsset, TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
-	//FglTFRuntimeSkeletonConfig skeletonConfig = FglTFRuntimeSkeletonConfig();
-	//USkeleton* Skeleton = gltfAsset->LoadSkeleton(0, skeletonConfig);
-	//UTransientObjectSaverLibrary::SaveTransientSkeleton(Skeleton,TEXT("/Game/ReadyPlayerMe/TestSkeleton"));
 }

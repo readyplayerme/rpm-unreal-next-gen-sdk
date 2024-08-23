@@ -6,7 +6,7 @@
 #include "EditorAssetLoader.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListResponse.h"
-#include "Auth/DeveloperAccountApi.h"
+#include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
@@ -15,6 +15,7 @@ class FDeveloperAuthApi;
 class URpmDeveloperSettings;
 class UDeveloperAuthApi;
 class SEditableTextBox;
+
 /**
  * 
  */

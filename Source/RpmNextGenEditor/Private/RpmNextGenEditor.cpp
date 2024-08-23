@@ -32,20 +32,22 @@ void FRpmNextGenEditorModule::StartupModule()
 		FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::PluginButtonClicked),
 		FCanExecuteAction());
 
-	PluginCommands->MapAction(
-		FLoaderWindowCommands::Get().OpenPluginWindow,
-		FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenLoaderWindow),
-		FCanExecuteAction());
+	// Don't show Loader window in the menu
+	// PluginCommands->MapAction(
+	// 	FLoaderWindowCommands::Get().OpenPluginWindow,
+	// 	FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenLoaderWindow),
+	// 	FCanExecuteAction());
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FRpmNextGenEditorModule::RegisterMenus));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(TestWindowTabName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
-		.SetDisplayName(LOCTEXT("FRpmDevLoginWindow", "RPM Dev Login"))
+		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "RPM Dev Login"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
-
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(NewWindowTabName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnLoaderWindow))
-		.SetDisplayName(LOCTEXT("CustomEditorWindow", "Custom Editor Window"))
-		.SetMenuType(ETabSpawnerMenuType::Hidden);
+	
+	// Don't show Loader window in the menu
+	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(NewWindowTabName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnLoaderWindow))
+	// 	.SetDisplayName(LOCTEXT("CharacterLoaderWidget", "Avatar Loader"))
+	// 	.SetMenuType(ETabSpawnerMenuType::Hidden);
 }
 
 void FRpmNextGenEditorModule::RegisterMenus()
@@ -80,14 +82,15 @@ void FRpmNextGenEditorModule::FillReadyPlayerMeMenu(UToolMenu* Menu)
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::PluginButtonClicked))
 	);
-
-	Section.AddMenuEntry(
-		"OpenLoaderWindow",
-		LOCTEXT("OpenLoaderWindow", "Glb Loader"),
-		LOCTEXT("OpenLoaderWindowToolTip", "Glb Loader Window."),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenLoaderWindow))
-	);
+	
+	// Don't show Loader window in the menu
+	// Section.AddMenuEntry(
+	// 	"OpenLoaderWindow",
+	// 	LOCTEXT("OpenLoaderWindow", "Glb Loader"),
+	// 	LOCTEXT("OpenLoaderWindowToolTip", "Avatar Loader Window."),
+	// 	FSlateIcon(),
+	// 	FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenLoaderWindow))
+	// );
 }
 
 void FRpmNextGenEditorModule::ShutdownModule()
