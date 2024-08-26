@@ -3,6 +3,7 @@
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
 #include "glTFRuntimeAssetActor.h"
+#include "RpmActorBase.h"
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
@@ -19,8 +20,8 @@ void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeA
 	if (bWasSuccessful)
 	{
 		gltfAsset->AddToRoot();
-		auto SkeletalMesh = SaveAsUAsset(gltfAsset, LoadedAssetId);
-		LoadAssetToWorldAsURpmActor(SkeletalMesh, LoadedAssetId);
+		SaveAsUAsset(gltfAsset, LoadedAssetId);
+		LoadAssetToWorldAsURpmActor(gltfAsset, LoadedAssetId);
 		gltfAsset->RemoveFromRoot();
 	}
 }
@@ -68,23 +69,18 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 
 void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId)
 {
-	this->LoadAssetToWorld(AssetId, nullptr, gltfAsset);
+	this->LoadAssetToWorld(AssetId, gltfAsset);
 }
 
-void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(USkeletalMesh* SkeletalMesh, FString AssetId)
-{
-	this->LoadAssetToWorld(AssetId, SkeletalMesh, nullptr);
-}
 
-void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gltfAsset)
 {
 	if (!GEditor)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GEditor is not available."));
 		return;
 	}
-
-	// Get the editor world context
+	
 	UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
 	if (!EditorWorld)
 	{
@@ -92,31 +88,23 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* Skelet
 		return;
 	}
 
-	if (SkeletalMesh)
+	if (gltfAsset)
 	{
 		FTransform Transform = FTransform::Identity;
 
 
-		ARpmActor* NewActor = EditorWorld->SpawnActorDeferred<ARpmActor>(ARpmActor::StaticClass(), Transform);
+		ARpmActorBase* NewActor = EditorWorld->SpawnActorDeferred<ARpmActorBase>(ARpmActorBase::StaticClass(), Transform);
 
 		if (NewActor)
 		{
-			NewActor->BaseModelId = AssetId;
 			NewActor->SetFlags(RF_Transient);
-
-			NewActor->FinishSpawning(Transform);
-			NewActor->DispatchBeginPlay();
-
+			NewActor->Rename(*AssetId);
 			if (SkeletonToCopy)
 			{
 				NewActor->SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom = SkeletonToCopy;
 			}
-
-			if (SkeletalMesh)
-			{
-				NewActor->HandleSkeletalMeshLoaded(SkeletalMesh);
-			}
-
+			NewActor->FinishSpawning(Transform);
+			NewActor->DispatchBeginPlay();
 			GEditor->SelectNone(true, true, true);
 			GEditor->SelectActor(NewActor, true, true, false, true);
 
@@ -125,7 +113,7 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* Skelet
 			GEditor->EditorUpdateComponents();
 			if (gltfAsset)
 			{
-				NewActor->LoadglTFAsset(gltfAsset);
+				NewActor->LoadGltfAsset(gltfAsset);
 			}
 			UE_LOG(LogTemp, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 			return;
