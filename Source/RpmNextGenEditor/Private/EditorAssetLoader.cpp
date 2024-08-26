@@ -2,6 +2,7 @@
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
 #include "RpmActor.h"
+#include "RpmNextGen.h"
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
@@ -45,7 +46,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 
 	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath, SkeletonAssetPath, TEXT(""), NameGenerator->MaterialNameGeneratorDelegate, NameGenerator->TextureNameGeneratorDelegate);
 
-	UE_LOG(LogTemp, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
 	return skeletalMesh;
 }
 
@@ -57,7 +58,7 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 		{
 			if (!gltfAsset)
 			{
-				UE_LOG(LogTemp, Log, TEXT("No gltf asset"));
+				UE_LOG(LogReadyPlayerMe, Log, TEXT("No gltf asset"));
 				return;
 			}
 			OnAssetLoadComplete(gltfAsset, bWasSuccessful, LoadedAssetId);
@@ -75,14 +76,14 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 {
 	if (!GEditor)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GEditor is not available."));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("GEditor is not available."));
 		return;
 	}
 	
 	UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
 	if (!EditorWorld)
 	{
-		UE_LOG(LogTemp, Error, TEXT("No valid editor world found."));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No valid editor world found."));
 		return;
 	}
 
@@ -113,11 +114,11 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 			{
 				NewActor->LoadGltfAsset(gltfAsset);
 			}
-			UE_LOG(LogTemp, Log, TEXT("Successfully loaded GLB asset into the editor world"));
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 			return;
 		}
 		
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to load GLB asset from file"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load GLB asset from file"));
 }

@@ -1,5 +1,6 @@
 ﻿#include "Api/Assets/AssetLoader.h"
 #include "HttpModule.h"
+#include "RpmNextGen.h"
 #include "glTFRuntime/Public/glTFRuntimeFunctionLibrary.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/FileHelper.h"
@@ -51,7 +52,7 @@ void FAssetLoader::OnLoadComplete(FHttpRequestPtr Request, FHttpResponsePtr Resp
 
         if(bSaveToDisk && FFileHelper::SaveArrayToFile(Response->GetContent(), *FilePath))
         {
-            UE_LOG(LogTemp, Log, TEXT("Downloaded GLB file to %s"), *FilePath);
+            UE_LOG(LogReadyPlayerMe, Log, TEXT("Downloaded GLB file to %s"), *FilePath);
             AssetFileSaved = true;
         }
         if(OnGLtfAssetLoaded.IsBound())
@@ -63,7 +64,7 @@ void FAssetLoader::OnLoadComplete(FHttpRequestPtr Request, FHttpResponsePtr Resp
         OnAssetSaved.ExecuteIfBound(FilePath, AssetFileSaved);
         return;
     }
-    UE_LOG(LogTemp, Error, TEXT("Failed to load GLB from URL"));
+    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load GLB from URL"));
     OnRequestDataReceived.ExecuteIfBound(Content, Content.Num() > 0);
     OnGLtfAssetLoaded.ExecuteIfBound(gltfAsset, gltfAsset != nullptr);
     OnAssetSaved.ExecuteIfBound("", AssetFileSaved);

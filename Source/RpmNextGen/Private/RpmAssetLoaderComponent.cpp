@@ -2,6 +2,7 @@
 
 
 #include "RpmAssetLoaderComponent.h"
+#include "RpmNextGen.h"
 #include "Api/Assets/AssetLoader.h"
 
 class URpmDeveloperSettings;
@@ -28,7 +29,7 @@ void URpmAssetLoaderComponent::LoadCharacterFromUrl(const FString Url)
 		{
 			if (!gltfAsset || !bWasSuccessful)
 			{
-				UE_LOG(LogTemp, Log, TEXT("Failed to load gltf asset"));
+				UE_LOG(LogReadyPlayerMe, Log, TEXT("Failed to load gltf asset"));
 				return;
 			}
 			OnGltfAssetLoaded.Broadcast(gltfAsset);

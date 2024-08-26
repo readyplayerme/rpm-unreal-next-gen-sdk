@@ -2,6 +2,8 @@
 
 
 #include "RpmPreviewLoaderComponent.h"
+
+#include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/CharacterApi.h"
@@ -23,7 +25,7 @@ URpmPreviewLoaderComponent::URpmPreviewLoaderComponent()
 	if(RpmSettings->ApiProxyUrl.IsEmpty() && !RpmSettings->ApiKey.IsEmpty())
 	{
 		CharacterApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-		UE_LOG(LogTemp, Warning, TEXT("Adding ApiKeyAuthStrategy"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Adding ApiKeyAuthStrategy"));
 	}
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterUpdateResponse);
@@ -35,7 +37,7 @@ void URpmPreviewLoaderComponent::CreateCharacter()
 {
 	if(BaseModelId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseModelId is empty on %s"), *GetOwner()->GetName());
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("BaseModelId is empty on %s"), *GetOwner()->GetName());
 		return;
 	}
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
@@ -74,7 +76,7 @@ void URpmPreviewLoaderComponent::LoadAssetPreview(FAsset AssetData)
 {
 	if (Character.Id.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Character Id is empty"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character Id is empty"));
 		return;
 	}
 
