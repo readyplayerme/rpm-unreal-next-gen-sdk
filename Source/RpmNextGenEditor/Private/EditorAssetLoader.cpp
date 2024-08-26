@@ -6,6 +6,7 @@
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
+	SkeletonToCopy = nullptr;
 }
 
 FEditorAssetLoader::~FEditorAssetLoader()
@@ -19,7 +20,7 @@ void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeA
 	{
 		gltfAsset->AddToRoot();
 		auto SkeletalMesh = SaveAsUAsset(gltfAsset, LoadedAssetId);
-		LoadAssetToWorldAsURpmActor(SkeletalMesh);
+		LoadAssetToWorldAsURpmActor(SkeletalMesh, LoadedAssetId);
 		gltfAsset->RemoveFromRoot();
 	}
 }
@@ -65,17 +66,17 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 	LoadGLBFromURL(URL);
 }
 
-void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId)
 {
-	this->LoadAssetToWorld(nullptr, gltfAsset);
+	this->LoadAssetToWorld(AssetId, nullptr, gltfAsset);
 }
 
-void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(USkeletalMesh* SkeletalMesh)
+void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(USkeletalMesh* SkeletalMesh, FString AssetId)
 {
-	this->LoadAssetToWorld(SkeletalMesh, nullptr);
+	this->LoadAssetToWorld(AssetId, SkeletalMesh, nullptr);
 }
 
-void FEditorAssetLoader::LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* SkeletalMesh, UglTFRuntimeAsset* gltfAsset)
 {
 	if (!GEditor)
 	{
@@ -100,10 +101,17 @@ void FEditorAssetLoader::LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRunt
 
 		if (NewActor)
 		{
+			NewActor->BaseModelId = AssetId;
 			NewActor->SetFlags(RF_Transient);
 
 			NewActor->FinishSpawning(Transform);
 			NewActor->DispatchBeginPlay();
+
+			if (SkeletonToCopy)
+			{
+				NewActor->SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom = SkeletonToCopy;
+			}
+
 			if (SkeletalMesh)
 			{
 				NewActor->HandleSkeletalMeshLoaded(SkeletalMesh);
@@ -123,7 +131,7 @@ void FEditorAssetLoader::LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRunt
 			return;
 		}
 		
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to load GLB asset from file"));
 }
