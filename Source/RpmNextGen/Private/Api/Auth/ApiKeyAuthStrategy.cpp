@@ -9,7 +9,13 @@ FApiKeyAuthStrategy::FApiKeyAuthStrategy()
 
 void FApiKeyAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request)
 {
-	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>(); 
+	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
+	if(Settings->ApiKey.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("API Key is empty"));
+		OnAuthComplete.ExecuteIfBound(false);
+		return;
+	}
 	Request->Headers.Add(TEXT("X-API-KEY"), Settings->ApiKey);
 	OnAuthComplete.ExecuteIfBound(true);
 }

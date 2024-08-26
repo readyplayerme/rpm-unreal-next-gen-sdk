@@ -2,7 +2,6 @@
 
 
 #include "Samples/RpmAssetPanelWidget.h"
-
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
@@ -34,7 +33,7 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
 	{
 		CreateButtonsFromAssets(AssetListResponse.Data);
-
+		
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to fetch assets"));
@@ -45,7 +44,6 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 	for (auto Asset : Assets)
 	{
 		CreateButton(Asset);
-		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("No assets found") );
 }

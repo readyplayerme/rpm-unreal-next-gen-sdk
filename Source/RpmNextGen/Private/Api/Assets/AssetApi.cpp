@@ -11,10 +11,15 @@ FAssetApi::FAssetApi()
 
 void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 {
-	// TODO find better way to get settings (or move to editor only code)
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = Settings->GetApiBaseUrl();
-	
+
+	if(Settings->ApplicationId.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Application ID is empty"));
+		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+		return;
+	}
 	FString QueryString = Request.BuildQueryString();
 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *QueryString);
 	FApiRequest ApiRequest = FApiRequest();

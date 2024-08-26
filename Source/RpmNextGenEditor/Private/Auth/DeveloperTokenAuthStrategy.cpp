@@ -3,6 +3,7 @@
 #include "Api/Auth/ApiRequest.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
+#include "Auth/Models/DeveloperAuth.h"
 
 DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy() 
 {
@@ -14,11 +15,18 @@ DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy()
 void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request) 
 {
 	const FString Key = TEXT("Authorization");
+	const FString Token = FDevAuthTokenCache::GetAuthData().Token;
+	if(Token.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Token is empty"));
+		OnAuthComplete.ExecuteIfBound(false);
+		return;
+	}
 	if (Request->Headers.Contains(Key))
 	{
 		Request->Headers.Remove(Key);
 	}
-	Request->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *DevAuthTokenCache::GetAuthData().Token));
+	Request->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Token));
 	
 	OnAuthComplete.ExecuteIfBound(true);
 }
@@ -26,8 +34,8 @@ void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Reques
 void DeveloperTokenAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 {
 	FRefreshTokenRequest RefreshRequest;
-	RefreshRequest.Data.Token = DevAuthTokenCache::GetAuthData().Token;
-	RefreshRequest.Data.RefreshToken = DevAuthTokenCache::GetAuthData().RefreshToken;
+	RefreshRequest.Data.Token = FDevAuthTokenCache::GetAuthData().Token;
+	RefreshRequest.Data.RefreshToken = FDevAuthTokenCache::GetAuthData().RefreshToken;
 
 	RefreshTokenAsync(RefreshRequest);
 }
@@ -36,10 +44,10 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 {
 	if (bWasSuccessful && !Response.Data.Token.IsEmpty())
 	{
-		FDeveloperAuth DeveloperAuth = DevAuthTokenCache::GetAuthData();
+		FDeveloperAuth DeveloperAuth = FDevAuthTokenCache::GetAuthData();
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
-		DevAuthTokenCache::SetAuthData(DeveloperAuth);
+		FDevAuthTokenCache::SetAuthData(DeveloperAuth);
 		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}

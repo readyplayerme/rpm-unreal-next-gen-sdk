@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
 #include "Api/Common/WebApi.h"
+#include "Api/Common/WebApiWithAuth.h"
 #include "Models/CharacterCreateRequest.h"
 #include "Models/CharacterCreateResponse.h"
 #include "Models/CharacterFindByIdRequest.h"
@@ -11,25 +12,15 @@
 #include "Models/CharacterUpdateRequest.h"
 #include "Models/CharacterUpdateResponse.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(ReadyPlayerMe, Log, All);
-
-UENUM(BlueprintType)
-enum ECharacterResponseType
-{
-	Create,
-	Update,
-	FindById
-};
-
 DECLARE_DELEGATE_TwoParams(FOnCharacterCreateResponse, FCharacterCreateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterUpdatResponse, FCharacterUpdateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse, bool);
 
-class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>
+class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>, public FWebApiWithAuth
 {
 public:
 	FCharacterApi();
-	virtual ~FCharacterApi();
+	virtual ~FCharacterApi() override;
 	FOnWebApiResponse OnApiResponse;
 
 	void CreateAsync(const FCharacterCreateRequest& Request);
@@ -42,13 +33,8 @@ public:
 	FOnCharacterFindResponse OnCharacterFindResponse;
 
 protected:
-	void DispatchRaw(const FApiRequest& Data, const ECharacterResponseType& ResponseType);
-
-	void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
-	                       const ECharacterResponseType& ResponseType);
-
-	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
-
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
+	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 

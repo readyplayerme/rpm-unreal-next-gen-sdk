@@ -1,5 +1,9 @@
-﻿#include "Auth/DeveloperAccountApi.h"
+﻿#include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "JsonObjectConverter.h"
+#include "DeveloperAccounts/Models/ApplicationListRequest.h"
+#include "DeveloperAccounts/Models/ApplicationListResponse.h"
+#include "DeveloperAccounts/Models/OrganizationListRequest.h"
+#include "DeveloperAccounts/Models/OrganizationListResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy) : FWebApiWithAuth(InAuthenticationStrategy)

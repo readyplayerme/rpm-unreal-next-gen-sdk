@@ -1,8 +1,7 @@
-﻿#include "AuthApi.h"
-
+﻿#include "Api/Auth/AuthApi.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Models/RefreshTokenRequest.h"
-#include "Models/RefreshTokenResponse.h"
+#include "Api/Auth/Models/RefreshTokenRequest.h"
+#include "Api/Auth/Models/RefreshTokenResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FAuthApi::FAuthApi()

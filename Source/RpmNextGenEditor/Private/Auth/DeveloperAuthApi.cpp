@@ -1,6 +1,6 @@
 ﻿#include "Auth/DeveloperAuthApi.h"
-#include "Auth/DeveloperLoginRequest.h"
-#include "Auth/DeveloperLoginResponse.h"
+#include "Auth/Models/DeveloperLoginRequest.h"
+#include "Auth/Models/DeveloperLoginResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FDeveloperAuthApi::FDeveloperAuthApi()

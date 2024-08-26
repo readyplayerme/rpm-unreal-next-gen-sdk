@@ -1,18 +1,19 @@
 ﻿#include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
+#include "Auth/Models/DeveloperAuth.h"
 #include "Misc/ConfigCacheIni.h"
 
-FDeveloperAuth DevAuthTokenCache::AuthData = FDeveloperAuth();
-bool DevAuthTokenCache::bIsInitialized = false;
+FDeveloperAuth FDevAuthTokenCache::AuthData = FDeveloperAuth();
+bool FDevAuthTokenCache::bIsInitialized = false;
 
-void DevAuthTokenCache::Initialize()
+void FDevAuthTokenCache::Initialize()
 {
 	if (!bIsInitialized)
 	{
-		AuthData.Name = EditorCache::GetString(CacheKeyName, FString());
-		AuthData.Token = EditorCache::GetString(CacheKeyToken, FString());
-		AuthData.RefreshToken = EditorCache::GetString(CacheKeyRefreshToken, FString());
-		AuthData.IsDemo = EditorCache::GetBool(CacheKeyIsDemo, false);
+		AuthData.Name = FEditorCache::GetString(CacheKeyName, FString());
+		AuthData.Token = FEditorCache::GetString(CacheKeyToken, FString());
+		AuthData.RefreshToken = FEditorCache::GetString(CacheKeyRefreshToken, FString());
+		AuthData.IsDemo = FEditorCache::GetBool(CacheKeyIsDemo, false);
 
 		if (!AuthData.IsValid())
 		{
@@ -24,26 +25,26 @@ void DevAuthTokenCache::Initialize()
 	}
 }
 
-FDeveloperAuth DevAuthTokenCache::GetAuthData()
+FDeveloperAuth FDevAuthTokenCache::GetAuthData()
 {
 	Initialize();	
 	return AuthData;
 }
 
-void DevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
+void FDevAuthTokenCache::SetAuthData(const FDeveloperAuth& DevAuthData)
 {
 	AuthData = DevAuthData;
-	EditorCache::SetString( CacheKeyName, AuthData.Name);
-	EditorCache::SetString( CacheKeyToken, AuthData.Token);
-	EditorCache::SetString( CacheKeyRefreshToken, AuthData.RefreshToken);
-	EditorCache::SetBool( CacheKeyIsDemo, AuthData.IsDemo);
+	FEditorCache::SetString( CacheKeyName, AuthData.Name);
+	FEditorCache::SetString( CacheKeyToken, AuthData.Token);
+	FEditorCache::SetString( CacheKeyRefreshToken, AuthData.RefreshToken);
+	FEditorCache::SetBool( CacheKeyIsDemo, AuthData.IsDemo);
 }
 
-void DevAuthTokenCache::ClearAuthData()
+void FDevAuthTokenCache::ClearAuthData()
 {
 	AuthData = FDeveloperAuth();
-	EditorCache::RemoveKey(CacheKeyName);
-	EditorCache::RemoveKey(CacheKeyToken);
-	EditorCache::RemoveKey(CacheKeyRefreshToken);
-	EditorCache::RemoveKey(CacheKeyIsDemo);
+	FEditorCache::RemoveKey(CacheKeyName);
+	FEditorCache::RemoveKey(CacheKeyToken);
+	FEditorCache::RemoveKey(CacheKeyRefreshToken);
+	FEditorCache::RemoveKey(CacheKeyIsDemo);
 }

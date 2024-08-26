@@ -10,14 +10,6 @@ FWebApi::FWebApi()
 
 FWebApi::~FWebApi() {}
 
-// template <typename TRequestBody>
-// void FWebApi::Dispatch(const FApiRequest<TRequestBody>& Data)
-// {
-//     TFApiRequestBody<TRequestBody> payload = TFApiRequestBody<TRequestBody>(Data.Payload);
-//     FString PayloadString = ConvertToJsonString(payload.Data);
-//     DispatchRaw(FApiRequest{Data.Url, Data.Method, Data.Headers, PayloadString});
-// }
-
 void FWebApi::DispatchRaw(const FApiRequest& Data)
 {
     TSharedRef<IHttpRequest> Request = Http->CreateRequest();

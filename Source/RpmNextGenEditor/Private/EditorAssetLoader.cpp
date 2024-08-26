@@ -1,5 +1,4 @@
-﻿#include "EditorAssetLoader.h"
-
+#include "EditorAssetLoader.h"
 #include "RpmActor.h"
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
@@ -45,11 +44,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	const auto NameGenerator = NewObject<UAssetNameGenerator>();
 	NameGenerator->SetPath(CoreAssetPath);
 
-	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath,
-	                                                        SkeletonAssetPath,
-	                                                        TEXT(""),
-	                                                        NameGenerator->MaterialNameGeneratorDelegate,
-	                                                        NameGenerator->TextureNameGeneratorDelegate);
+	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath, SkeletonAssetPath, TEXT(""), NameGenerator->MaterialNameGeneratorDelegate, NameGenerator->TextureNameGeneratorDelegate);
 
 	UE_LOG(LogTemp, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
 	return skeletalMesh;
@@ -133,11 +128,10 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, USkeletalMesh* Skelet
 				NewActor->LoadglTFAsset(gltfAsset);
 			}
 			UE_LOG(LogTemp, Log, TEXT("Successfully loaded GLB asset into the editor world"));
+			return;
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
-		}
+		
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to load GLB asset from file"));
 }

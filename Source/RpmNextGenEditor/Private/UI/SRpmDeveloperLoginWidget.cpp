@@ -1,18 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "SRpmDeveloperLoginWidget.h"
+#include "UI/SRpmDeveloperLoginWidget.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
 #include "SlateOptMacros.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
-#include "Auth/DeveloperAccountApi.h"
+#include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "Auth/DeveloperTokenAuthStrategy.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "RpmImageLoader.h"
 #include "Auth/DeveloperAuthApi.h"
-#include "Auth/DeveloperLoginRequest.h"
+#include "Auth/Models/DeveloperAuth.h"
+#include "Auth/Models/DeveloperLoginRequest.h"
+#include "DeveloperAccounts/Models/ApplicationListRequest.h"
+#include "DeveloperAccounts/Models/ApplicationListResponse.h"
+#include "DeveloperAccounts/Models/OrganizationListRequest.h"
+#include "DeveloperAccounts/Models/OrganizationListResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 
@@ -20,11 +24,10 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 {
-	FDeveloperAuth AuthData = DevAuthTokenCache::GetAuthData();
-	DevAuthTokenCache::SetAuthData(AuthData);
+	FDeveloperAuth AuthData = FDevAuthTokenCache::GetAuthData();
+	FDevAuthTokenCache::SetAuthData(AuthData);
 
 	bIsLoggedIn = AuthData.IsValid();
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
 	UserName = AuthData.Name;
 
 	ChildSlot
@@ -171,17 +174,10 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 			[
 				SAssignNew(ContentBox, SVerticalBox)
 			]
-		]
-		// + SVerticalBox::Slot()
-		// .AutoHeight()
-		// [
-		//
-		// 	SAssignNew(ContentBox, SVerticalBox)
-		// 	.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
-		// ]	
+		]	
 	];
 
-	EmailTextBox->SetText(FText::FromString(EditorCache::GetString(CacheKeyEmail)));
+	EmailTextBox->SetText(FText::FromString(FEditorCache::GetString(CacheKeyEmail)));
 	Initialize();
 }
 
@@ -191,7 +187,7 @@ void SRpmDeveloperLoginWidget::Initialize()
 	{
 		return;
 	}
-	const FDeveloperAuth DevAuthData = DevAuthTokenCache::GetAuthData();
+	const FDeveloperAuth DevAuthData = FDevAuthTokenCache::GetAuthData();
 	if (!DeveloperAuthApi.IsValid())
 	{
 		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
@@ -225,7 +221,9 @@ void SRpmDeveloperLoginWidget::Initialize()
 	if (bIsLoggedIn)
 	{
 		GetOrgList();
+		return;
 	}
+	OnLogoutClicked();
 }
 
 SRpmDeveloperLoginWidget::~SRpmDeveloperLoginWidget()
@@ -241,7 +239,6 @@ void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
 	}
 	CharacterStyleTextures.Empty();
 }
-
 
 void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 {
@@ -262,7 +259,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 			  .AutoHeight()
 			  .HAlign(HAlign_Left)
 			[
-				SAssignNew(ImageWidget, SImage). // The image will be set later after downloading
+				SAssignNew(ImageWidget, SImage).
 				DesiredSizeOverride(ImageSize)
 			]
 			+ SVerticalBox::Slot()
@@ -270,7 +267,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 			  .Padding(5, 5)
 			[
 				SNew(SBox)
-				.WidthOverride(100.0f) // Match button width to image width
+				.WidthOverride(100.0f)
 				[
 					SNew(SButton)
 					   .Text(FText::FromString("Load Style"))
@@ -285,14 +282,14 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 		+ SHorizontalBox::Slot()
 		  .AutoWidth()
 		  .VAlign(VAlign_Top)
-		  .Padding(10, 10, 0, 0) // Padding from the left side of the Image & Button stack
+		  .Padding(10, 10, 0, 0)
 		[
 			SNew(SEditableText)
 			   .Text(FText::FromString(FString::Printf(TEXT("ID: %s"), *StyleAsset.Id)))
-			   .IsReadOnly(true) // Prevents the text from being editable
-			   .IsCaretMovedWhenGainFocus(false) // Caret won't appear when focused, keeping it look like plain text
-			   .SelectAllTextWhenFocused(false) // Prevents selecting all text when focused
-			   .MinDesiredWidth(100.0f) // Minimum width for the text box
+			   .IsReadOnly(true)
+			   .IsCaretMovedWhenGainFocus(false)
+			   .SelectAllTextWhenFocused(false)
+			   .MinDesiredWidth(100.0f)
 		]
 	];
 
@@ -307,7 +304,6 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
 	AssetLoader = FEditorAssetLoader();
-	UE_LOG(LogTemp, Error, TEXT("Loading model from glb url %s"), *CharacterStyleAssets[StyleId].GlbUrl);
 	AssetLoader.LoadGLBFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
 }
 
@@ -330,7 +326,7 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 {
 	FString Email = EmailTextBox->GetText().ToString();
 	FString Password = PasswordTextBox->GetText().ToString();
-	EditorCache::SetString(CacheKeyEmail, Email);
+	FEditorCache::SetString(CacheKeyEmail, Email);
 	Email = Email.TrimStartAndEnd();
 	Password = Password.TrimStartAndEnd();
 	DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
@@ -352,13 +348,13 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 	{
 		UserName = Response.Data.Name;
 		FDeveloperAuth AuthData = FDeveloperAuth(Response.Data, false);
-		DevAuthTokenCache::SetAuthData(AuthData);
+		FDevAuthTokenCache::SetAuthData(AuthData);
 		SetLoggedInState(true);
 		GetOrgList();
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Login request failed"));
-	DevAuthTokenCache::ClearAuthData();
+	FDevAuthTokenCache::ClearAuthData();
 }
 
 void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizationListResponse& Response,
@@ -371,30 +367,28 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 			UE_LOG(LogTemp, Error, TEXT("No organizations found"));
 			return;
 		}
-
 		FApplicationListRequest Request;
 		Request.Params.Add("organizationId", Response.Data[0].Id);
 		DeveloperAccountApi->ListApplicationsAsync(Request);
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to list organizations"));
-	}
+
+	UE_LOG(LogTemp, Error, TEXT("Failed to list organizations"));
 }
 
 
-void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationListResponse& Response,
-                                                             bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationListResponse& Response,                                                             bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
+		URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
 		UserApplications = Response.Data;
 		FString Active;
 		TArray<FString> Items;
 		for (const FApplication& App : UserApplications)
 		{
 			Items.Add(App.Name);
-			if (App.Id == Settings->ApplicationId)
+			if (App.Id == RpmSettings->ApplicationId)
 			{
 				Active = App.Name;
 			}
@@ -451,14 +445,13 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {
-	// TODO find a better way to get the latest settings
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Settings->SetupDemoAccount();
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	RpmSettings->SetupDemoAccount();
 	FDeveloperAuth AuthData = FDeveloperAuth();
 	AuthData.Name = DemoUserName;
 	AuthData.IsDemo = true;
 	UserName = AuthData.Name;
-	DevAuthTokenCache::SetAuthData(AuthData);
+	FDevAuthTokenCache::SetAuthData(AuthData);
 	SetLoggedInState(true);
 
 	// Unset the authentication strategy for the APIs
@@ -471,10 +464,8 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 
 FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 {
-	// TODO find a better way to get the latest settings
-
-	Settings = GetMutableDefault<URpmDeveloperSettings>();
-	Settings->Reset();
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	RpmSettings->Reset();
 
 	// Clear the content box to remove all child widgets
 	if (ContentBox.IsValid())
@@ -484,7 +475,7 @@ FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 	ComboBoxItems.Empty();
 
 	ClearLoadedCharacterModelImages();
-	DevAuthTokenCache::ClearAuthData();
+	FDevAuthTokenCache::ClearAuthData();
 	SetLoggedInState(false);
 	return FReply::Handled();
 }
