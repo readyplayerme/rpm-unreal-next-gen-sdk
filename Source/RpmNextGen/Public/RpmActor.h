@@ -45,8 +45,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void LoadCharacter(FRpmCharacter CharacterData);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Ready Player Me")
-	;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Ready Player Me");
 	USkeletalMeshComponent* BaseSkeletalMeshComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")

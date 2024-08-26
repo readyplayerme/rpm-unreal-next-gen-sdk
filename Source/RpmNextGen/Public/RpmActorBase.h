@@ -19,8 +19,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-
+	
 	virtual void ProcessNode(USceneComponent* NodeParentComponent, const FName SocketName, FglTFRuntimeNode& Node);
 
 	template<typename T>
@@ -29,7 +28,9 @@ protected:
 		return MakeUniqueObjectName(this, T::StaticClass(), *Node.Name);
 	}
 
+	UPROPERTY()
 	TMap<USceneComponent*, FName> SocketMapping;
+	UPROPERTY()
 	TArray<USkeletalMeshComponent*> DiscoveredSkeletalMeshComponents;
 
 public:	
@@ -65,8 +66,17 @@ public:
 
 	virtual void PostUnregisterAllComponents() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset);
+
+	virtual void SetupAsset();
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me|glTFRuntime")
 	USceneComponent* AssetRoot;
 
+	void ProcessBoneNode(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
+	USceneComponent* CreateNewComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
+	void SetupComponentTags(USceneComponent* Component, FglTFRuntimeNode& Node, const FName SocketName);
+	void ProcessChildNodes(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
 };

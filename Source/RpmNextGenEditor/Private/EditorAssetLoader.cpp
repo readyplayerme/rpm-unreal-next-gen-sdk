@@ -52,7 +52,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 
 void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString LoadedAssetId)
 {
-	OnAssetDownloaded.BindLambda(
+	OnGLtfAssetLoaded.BindLambda(
 		[LoadedAssetId, this](FString FilePath, UglTFRuntimeAsset* gltfAsset,
 		                      bool bWasSuccessful)
 		{

@@ -20,8 +20,8 @@ public:
 
 	void LoadGLBFromURL(const FString& URL);
 
-	FOnAssetDataReceived OnAssetDataReceived;
-	FOnAssetDownloaded OnAssetDownloaded;
+	FOnAssetDataReceived OnRequestDataReceived;
+	FOnAssetDownloaded OnGLtfAssetLoaded;
 
 protected:
 	FglTFRuntimeConfig* GltfConfig;
