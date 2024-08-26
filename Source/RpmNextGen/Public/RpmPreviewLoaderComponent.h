@@ -7,6 +7,7 @@
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "RpmPreviewLoaderComponent.generated.h"
 
+class FCharacterApi;
 struct FCharacterCreateResponse;
 struct FCharacterUpdateResponse;
 struct FCharacterFindByIdResponse;

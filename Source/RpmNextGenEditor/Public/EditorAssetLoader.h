@@ -7,7 +7,7 @@
 class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetLoader
 {
 public:
-	void OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
+	void OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
 	                             FString LoadedAssetId);
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;

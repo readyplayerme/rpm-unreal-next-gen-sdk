@@ -24,7 +24,7 @@ void URpmAssetLoaderComponent::BeginPlay()
 void URpmAssetLoaderComponent::LoadCharacterFromUrl(const FString Url)
 {	
 	AssetLoader->OnGLtfAssetLoaded.BindLambda(
-		[this](FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
+		[this](UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
 		{
 			if (!gltfAsset || !bWasSuccessful)
 			{

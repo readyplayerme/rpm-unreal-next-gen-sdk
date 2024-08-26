@@ -1,9 +1,7 @@
 #include "EditorAssetLoader.h"
-#include "RpmActor.h"
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
-#include "glTFRuntimeAssetActor.h"
-#include "RpmActorBase.h"
+#include "RpmActor.h"
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
@@ -14,7 +12,7 @@ FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetDownloadComplete(FString FilePath, UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
+void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
                                                  FString LoadedAssetId)
 {
 	if (bWasSuccessful)
@@ -54,7 +52,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString LoadedAssetId)
 {
 	OnGLtfAssetLoaded.BindLambda(
-		[LoadedAssetId, this](FString FilePath, UglTFRuntimeAsset* gltfAsset,
+		[LoadedAssetId, this]( UglTFRuntimeAsset* gltfAsset,
 		                      bool bWasSuccessful)
 		{
 			if (!gltfAsset)
@@ -62,7 +60,7 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 				UE_LOG(LogTemp, Log, TEXT("No gltf asset"));
 				return;
 			}
-			OnAssetDownloadComplete(FilePath, gltfAsset, bWasSuccessful, LoadedAssetId);
+			OnAssetLoadComplete(gltfAsset, bWasSuccessful, LoadedAssetId);
 		});
 	LoadGLBFromURL(URL);
 }
@@ -93,7 +91,7 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 		FTransform Transform = FTransform::Identity;
 
 
-		ARpmActorBase* NewActor = EditorWorld->SpawnActorDeferred<ARpmActorBase>(ARpmActorBase::StaticClass(), Transform);
+		ARpmActor* NewActor = EditorWorld->SpawnActorDeferred<ARpmActor>(ARpmActor::StaticClass(), Transform);
 
 		if (NewActor)
 		{

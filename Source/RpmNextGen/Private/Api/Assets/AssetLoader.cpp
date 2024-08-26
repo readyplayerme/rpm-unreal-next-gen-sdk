@@ -31,36 +31,40 @@ void FAssetLoader::LoadGLBFromURL(const FString& URL)
 {
     // TODO replace this with use of WebApi class
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-    HttpRequest->OnProcessRequestComplete().BindRaw(this, &FAssetLoader::OnDownloadComplete);
+    HttpRequest->OnProcessRequestComplete().BindRaw(this, &FAssetLoader::OnLoadComplete);
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("GET"));
     HttpRequest->ProcessRequest();
 }
 
-void FAssetLoader::OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FAssetLoader::OnLoadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    
+    TArray<uint8> Content = TArray<uint8>();
+    UglTFRuntimeAsset* gltfAsset = nullptr;
+    bool AssetFileSaved = false;
     if (bWasSuccessful && Response.IsValid())
     {
-        const TArray<uint8> Content = Response->GetContent();
-        OnRequestDataReceived.ExecuteIfBound(Content, true);
+        Content = Response->GetContent();
 
         const FString FileName = FPaths::GetCleanFilename(Request->GetURL());
         const FString FilePath = DownloadDirectory / FileName;
-        
-        if (FFileHelper::SaveArrayToFile(Response->GetContent(), *FilePath))
+
+        if(bSaveToDisk && FFileHelper::SaveArrayToFile(Response->GetContent(), *FilePath))
         {
             UE_LOG(LogTemp, Log, TEXT("Downloaded GLB file to %s"), *FilePath);
-            UglTFRuntimeAsset* gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Content, *GltfConfig);
-            OnGLtfAssetLoaded.ExecuteIfBound(FilePath, gltfAsset, true);
-            return;
+            AssetFileSaved = true;
         }
-        
-        UE_LOG(LogTemp, Error, TEXT("Failed to save GLB file to %s"), *FilePath);
-        OnGLtfAssetLoaded.ExecuteIfBound(FString(), nullptr, false);
+        if(OnGLtfAssetLoaded.IsBound())
+        {
+            gltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Content, *GltfConfig);
+        }
+        OnRequestDataReceived.ExecuteIfBound(Content, Content.Num() > 0);
+        OnGLtfAssetLoaded.ExecuteIfBound(gltfAsset, gltfAsset != nullptr);
+        OnAssetSaved.ExecuteIfBound(FilePath, AssetFileSaved);
         return;
     }
-    UE_LOG(LogTemp, Error, TEXT("Failed to download GLB file from URL"));
-    OnRequestDataReceived.ExecuteIfBound(TArray<uint8>(), false);
-    OnGLtfAssetLoaded.ExecuteIfBound(FString(), nullptr, false);
+    UE_LOG(LogTemp, Error, TEXT("Failed to load GLB from URL"));
+    OnRequestDataReceived.ExecuteIfBound(Content, Content.Num() > 0);
+    OnGLtfAssetLoaded.ExecuteIfBound(gltfAsset, gltfAsset != nullptr);
+    OnAssetSaved.ExecuteIfBound("", AssetFileSaved);
 }
