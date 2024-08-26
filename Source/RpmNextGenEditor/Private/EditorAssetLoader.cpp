@@ -123,7 +123,7 @@ void FEditorAssetLoader::LoadAssetToWorld(USkeletalMesh* SkeletalMesh, UglTFRunt
 			return;
 		}
 		
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn AglTFRuntimeAssetActor in the editor world"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn ARpmActor in the editor world"));
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to load GLB asset from file"));
 }
