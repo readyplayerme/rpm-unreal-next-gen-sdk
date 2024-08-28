@@ -1,20 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "RpmNextGenEditor.h"
-
 #include "UI/CharacterLoaderWidget.h"
-#include "UI/LoaderWindowCommands.h"
-#include "UI/LoginWindowCommands.h"
+#include "UI/Commands/LoaderWindowCommands.h"
+#include "UI/Commands/LoginWindowCommands.h"
 #include "UI/SRpmDeveloperLoginWidget.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
+#include "UI/LoginWindowStyle.h"
+#include "UI/SCacheEditorWidget.h"
+#include "UI/Commands/CacheWindowCommands.h"
 
-static const FName TestWindowTabName("LoginWindow");
-
+static const FName DeveloperWindowName("LoginWindow");
+static const FName LoaderWindowName("LoaderWindow");
+static const FName CacheWindowName("CacheWindow");
 #define LOCTEXT_NAMESPACE "RpmNextGenEditorModule"
-static const FName NewWindowTabName("CustomEditorWindow");
+
 
 void FRpmNextGenEditorModule::StartupModule()
 {
@@ -22,13 +25,20 @@ void FRpmNextGenEditorModule::StartupModule()
 	FLoginWindowStyle::ReloadTextures();
 
 	FLoginWindowCommands::Register();
-	FLoaderWindowCommands::Register();  // Don't forget to register the other command set
+	FLoaderWindowCommands::Register();
+	FCacheWindowCommands::Register();
 
 	PluginCommands = MakeShareable(new FUICommandList);
 
 	PluginCommands->MapAction(
 		FLoginWindowCommands::Get().OpenPluginWindow,
 		FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::PluginButtonClicked),
+		FCanExecuteAction());
+
+
+	PluginCommands->MapAction(
+		FCacheWindowCommands::Get().OpenPluginWindow,
+		FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenCacheEditorWindow),
 		FCanExecuteAction());
 
 	// Don't show Loader window in the menu
@@ -39,8 +49,12 @@ void FRpmNextGenEditorModule::StartupModule()
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FRpmNextGenEditorModule::RegisterMenus));
 
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(TestWindowTabName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(DeveloperWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "RPM Dev Login"))
+		.SetMenuType(ETabSpawnerMenuType::Hidden);
+	
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(CacheWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnCacheWindow))
+		.SetDisplayName(LOCTEXT("CacheEditorWidget", "Cache Editor"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 	
 	// Don't show Loader window in the menu
@@ -81,6 +95,15 @@ void FRpmNextGenEditorModule::FillReadyPlayerMeMenu(UToolMenu* Menu)
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::PluginButtonClicked))
 	);
+
+
+	Section.AddMenuEntry(
+		"OpenCacheEditorWindow",
+		LOCTEXT("OpenCacheEditorWindow", "Cache Editor"),
+		LOCTEXT("OpenLoaderWindowToolTip", "Cache Editor Window."),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenCacheEditorWindow))
+	);
 	
 	// Don't show Loader window in the menu
 	// Section.AddMenuEntry(
@@ -100,10 +123,13 @@ void FRpmNextGenEditorModule::ShutdownModule()
 	FLoginWindowStyle::Shutdown();
 
 	FLoginWindowCommands::Unregister();
-	FLoaderWindowCommands::Unregister(); // Unregister custom commands
+	FLoaderWindowCommands::Unregister();
 
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TestWindowTabName);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(NewWindowTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(DeveloperWindowName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(CacheWindowName);
+	
+	// Don't show Loader window in the menu
+	//FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(LoaderWindowName);
 }
 
 TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
@@ -131,15 +157,29 @@ TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnLoaderWindow(const FSpawnTa
 		];
 }
 
+TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnCacheWindow(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(NomadTab)
+		[
+			SNew(SCacheEditorWidget)
+		];
+}
+
 void FRpmNextGenEditorModule::PluginButtonClicked()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(TestWindowTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(DeveloperWindowName);
 }
 
 
 void FRpmNextGenEditorModule::OpenLoaderWindow()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(NewWindowTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(LoaderWindowName);
+}
+
+void FRpmNextGenEditorModule::OpenCacheEditorWindow()
+{
+	FGlobalTabmanager::Get()->TryInvokeTab(CacheWindowName);
 }
 
 #undef LOCTEXT_NAMESPACE

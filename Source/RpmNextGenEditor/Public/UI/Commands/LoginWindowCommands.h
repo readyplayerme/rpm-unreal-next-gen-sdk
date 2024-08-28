@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Framework/Commands/Commands.h"
-#include "LoginWindowStyle.h"
+#include "UI/LoginWindowStyle.h"
 
 class RPMNEXTGENEDITOR_API FLoginWindowCommands: public TCommands<FLoginWindowCommands>
 {
