@@ -14,6 +14,10 @@ URpmAssetLoaderComponent::URpmAssetLoaderComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 	AssetLoader = MakeShared<FAssetLoader>();
+	AssetLoader->OnGLtfAssetLoaded.BindUObject(
+		this,
+		&URpmAssetLoaderComponent::HandleGLtfAssetLoaded
+	);
 }
 
 // Called when the game starts
@@ -24,21 +28,19 @@ void URpmAssetLoaderComponent::BeginPlay()
 
 void URpmAssetLoaderComponent::LoadCharacterFromUrl(const FString Url)
 {	
-	AssetLoader->OnGLtfAssetLoaded.BindLambda(
-		[this](UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
-		{
-			if (!gltfAsset || !bWasSuccessful)
-			{
-				UE_LOG(LogReadyPlayerMe, Log, TEXT("Failed to load gltf asset"));
-				return;
-			}
-			OnGltfAssetLoaded.Broadcast(gltfAsset);
-		});
-
 	AssetLoader->LoadGLBFromURL(Url);
 }
 
-
+void URpmAssetLoaderComponent::HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
+{
+	if (!gltfAsset || !bWasSuccessful)
+	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Failed to load gltf asset"));
+		OnGltfAssetLoaded.Broadcast(nullptr);
+		return;
+	}
+	OnGltfAssetLoaded.Broadcast(gltfAsset);
+}
 
 // Called every frame
 void URpmAssetLoaderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

@@ -5,7 +5,6 @@
 
 #include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Api/Characters/Models/CharacterCreateResponse.h"
 #include "Api/Characters/Models/CharacterFindByIdResponse.h"
@@ -21,16 +20,10 @@ URpmPreviewLoaderComponent::URpmPreviewLoaderComponent()
 	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
 	AppId = RpmSettings->ApplicationId;
 	CharacterApi = MakeShared<FCharacterApi>();
-	// TODO -  add smarter setting of auth strategy
-	if(RpmSettings->ApiProxyUrl.IsEmpty() && !RpmSettings->ApiKey.IsEmpty())
-	{
-		CharacterApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Adding ApiKeyAuthStrategy"));
-	}
+	PreviewAssetMap = TMap<FString, FString>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterUpdateResponse);
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterFindResponse);
-	PreviewAssetMap = TMap<FString, FString>();
 }
 
 void URpmPreviewLoaderComponent::CreateCharacter()

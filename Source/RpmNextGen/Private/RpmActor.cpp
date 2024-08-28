@@ -33,8 +33,28 @@ void ARpmActor::BeginPlay()
 
 void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset)
 {
+	// Before loading a new asset, clear existing components
+	ClearLoadedComponents();
+	
 	Asset = GltfAsset;
 	SetupAsset();
+}
+
+void ARpmActor::ClearLoadedComponents()
+{
+	if (RootComponent)
+	{
+		TArray<USceneComponent*> ChildComponents;
+		RootComponent->GetChildrenComponents(true, ChildComponents);
+
+		for (USceneComponent* ChildComponent : ChildComponents)
+		{
+			if (ChildComponent && ChildComponent != RootComponent)
+			{
+				ChildComponent->DestroyComponent();
+			}
+		}
+	}
 }
 
 void ARpmActor::SetupAsset()

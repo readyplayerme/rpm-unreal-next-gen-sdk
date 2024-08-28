@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "RpmAssetLoaderComponent.generated.h"
 
+class UglTFRuntimeAsset;
 class FAssetLoader;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGltfAssetLoaded, UglTFRuntimeAsset*, Asset);
 
@@ -19,6 +20,8 @@ public:
 	URpmAssetLoaderComponent();
 	
 	virtual void LoadCharacterFromUrl(FString Url);
+	
+
 
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnGltfAssetLoaded OnGltfAssetLoaded;
@@ -27,6 +30,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
+	virtual void HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful);
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

@@ -68,6 +68,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset);
+	void ClearLoadedComponents();
 
 	virtual void SetupAsset();
 
