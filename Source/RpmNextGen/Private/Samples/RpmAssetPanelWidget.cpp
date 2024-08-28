@@ -107,6 +107,11 @@ void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* Ass
 
 void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 {
+	if (!AssetApi.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("AssetApi is null or invalid"));
+		return;
+	}
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;

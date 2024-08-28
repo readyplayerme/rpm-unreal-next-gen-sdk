@@ -2,6 +2,8 @@
 
 #include "RpmNextGen.h"
 
+DEFINE_LOG_CATEGORY(LogReadyPlayerMe);
+
 #define LOCTEXT_NAMESPACE "FRpmNextGenModule"
 
 void FRpmNextGenModule::StartupModule()

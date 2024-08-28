@@ -9,7 +9,9 @@ struct FglTFRuntimeConfig;
 class UglTFRuntimeAsset;
 
 DECLARE_DELEGATE_TwoParams(FOnAssetDataReceived, TArray<uint8>, bool);
-DECLARE_DELEGATE_ThreeParams(FOnAssetDownloaded, FString, UglTFRuntimeAsset*, bool);
+DECLARE_DELEGATE_TwoParams(FOnAssetSaved, FString, bool);
+DECLARE_DELEGATE_TwoParams(FOnAssetDownloaded, UglTFRuntimeAsset*, bool);
+
 
 class RPMNEXTGEN_API FAssetLoader : public FWebApi
 {
@@ -20,11 +22,13 @@ public:
 
 	void LoadGLBFromURL(const FString& URL);
 
-	FOnAssetDataReceived OnAssetDataReceived;
-	FOnAssetDownloaded OnAssetDownloaded;
+	FOnAssetDataReceived OnRequestDataReceived;
+	FOnAssetDownloaded OnGLtfAssetLoaded;
+	FOnAssetSaved OnAssetSaved;
+	bool bSaveToDisk = false;
 
 protected:
 	FglTFRuntimeConfig* GltfConfig;
-	void virtual OnDownloadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void virtual OnLoadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	FString DownloadDirectory;
 };
