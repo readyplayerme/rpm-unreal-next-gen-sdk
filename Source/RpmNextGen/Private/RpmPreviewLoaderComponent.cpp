@@ -4,6 +4,7 @@
 #include "RpmPreviewLoaderComponent.h"
 
 #include "RpmNextGen.h"
+#include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Api/Characters/Models/CharacterCreateResponse.h"
@@ -35,7 +36,7 @@ void URpmPreviewLoaderComponent::CreateCharacter()
 	}
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
 	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
-	CharacterCreateRequest.Data.Assets.Add("baseModel", BaseModelId);
+	CharacterCreateRequest.Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
 	CharacterCreateRequest.Data.ApplicationId = AppId;
 
 	CharacterApi->CreateAsync(CharacterCreateRequest);

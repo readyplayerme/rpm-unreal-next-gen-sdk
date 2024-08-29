@@ -1,6 +1,5 @@
 ﻿#include "UI/SCacheEditorWidget.h"
 #include "Widgets/Input/SButton.h"
-#include "Widgets/Input/SSlider.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "EditorStyleSet.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -12,62 +11,19 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
     [
         SNew(SScrollBox) // Make the entire content scrollable
         + SScrollBox::Slot()
+        .Padding(10)
         [
             SNew(SVerticalBox)
 
-            // Title/Label "Get Cache from Remote URL"
+            // Title/Label "Local Cache Generator"
             + SVerticalBox::Slot()
             .Padding(5)
             .AutoHeight()
             [
                 SNew(STextBlock)
-                .Text(FText::FromString("Get Cache from Remote URL"))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 24))
+                .Text(FText::FromString("Local Cache Generator"))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 16))
             ]
-
-            // Editable text field with label "Cache Url"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(SHorizontalBox)
-                + SHorizontalBox::Slot()
-                .AutoWidth()
-                .VAlign(VAlign_Center)
-                [
-                    SNew(STextBlock)
-                    .Text(FText::FromString("Cache URL:"))
-                ]
-                + SHorizontalBox::Slot()
-                .Padding(5, 0, 0, 0)
-                .FillWidth(1.0f)
-                [
-                    SNew(SBox)
-                    .HeightOverride(30) // Set text box height
-                    [
-                        SNew(SEditableTextBox)
-                        .Text(FText::FromString("http://"))
-                        .OnTextCommitted(this, &SCacheEditorWidget::OnCacheUrlTextCommitted)
-                    ]
-                ]
-            ]
-
-            // Button "Download Remote Cache"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(SBox)
-                .HeightOverride(40) // Set button height
-                [
-                    SNew(SButton)
-                    .Text(FText::FromString("Download Remote Cache"))
-                    .OnClicked(this, &SCacheEditorWidget::OnDownloadRemoteCacheClicked)
-                    .HAlign(HAlign_Center)
-                    .VAlign(VAlign_Center)
-                ]
-            ]
-
             // Integer Slider with label "Items per category"
             + SVerticalBox::Slot()
             .Padding(5)
@@ -137,6 +93,59 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                     SNew(SButton)
                     .Text(FText::FromString("Open Local Cache Folder"))
                     .OnClicked(this, &SCacheEditorWidget::OnOpenLocalCacheFolderClicked)
+                    .HAlign(HAlign_Center)
+                    .VAlign(VAlign_Center)
+                ]
+            ]
+
+            // Title/Label "Remote Cache Downloader"
+            + SVerticalBox::Slot()
+            .Padding(5)
+            .AutoHeight()
+            [
+                SNew(STextBlock)
+                .Text(FText::FromString("Remote Cache Downloader"))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 16))
+            ]
+
+            // Editable text field with label "Cache Url"
+            + SVerticalBox::Slot()
+            .Padding(5)
+            .AutoHeight()
+            [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot()
+                .AutoWidth()
+                .VAlign(VAlign_Center)
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString("Cache URL:"))
+                ]
+                + SHorizontalBox::Slot()
+                .Padding(5, 0, 0, 0)
+                .FillWidth(1.0f)
+                [
+                    SNew(SBox)
+                    .HeightOverride(30) // Set text box height
+                    [
+                        SNew(SEditableTextBox)
+                        .Text(FText::FromString("http://"))
+                        .OnTextCommitted(this, &SCacheEditorWidget::OnCacheUrlTextCommitted)
+                    ]
+                ]
+            ]
+
+            // Button "Download Remote Cache"
+            + SVerticalBox::Slot()
+            .Padding(5)
+            .AutoHeight()
+            [
+                SNew(SBox)
+                .HeightOverride(40) // Set button height
+                [
+                    SNew(SButton)
+                    .Text(FText::FromString("Download Remote Cache"))
+                    .OnClicked(this, &SCacheEditorWidget::OnDownloadRemoteCacheClicked)
                     .HAlign(HAlign_Center)
                     .VAlign(VAlign_Center)
                 ]

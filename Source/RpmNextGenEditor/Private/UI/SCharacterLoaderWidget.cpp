@@ -1,4 +1,4 @@
-#include "UI/CharacterLoaderWidget.h"
+#include "UI/SCharacterLoaderWidget.h"
 
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SButton.h"

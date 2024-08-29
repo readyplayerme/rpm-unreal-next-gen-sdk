@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "EditorAssetLoader.h"
-#include "Api/Assets/AssetLoader.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 
@@ -35,6 +34,6 @@ private:
 	TSharedPtr<SEditableTextBox> PathTextBox;
 
 	// Store the selected skeleton
-	USkeleton* SelectedSkeleton;
+	USkeleton* SelectedSkeleton = nullptr;
 	FString GetCurrentSkeletonPath() const;
 };

@@ -491,7 +491,7 @@ void SRpmDeveloperLoginWidget::LoadBaseModelList()
 	FAssetListRequest Request = FAssetListRequest();
 	FAssetListQueryParams Params = FAssetListQueryParams();
 	Params.ApplicationId = RpmSettings->ApplicationId;
-	Params.Type = "baseModel";
+	Params.Type = FAssetApi::BaseModelType;
 	Request.Params = Params;
 	AssetApi->ListAssetsAsync(Request);
 }

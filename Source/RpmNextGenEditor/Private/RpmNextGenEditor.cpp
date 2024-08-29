@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "RpmNextGenEditor.h"
-#include "UI/CharacterLoaderWidget.h"
+#include "UI/SCharacterLoaderWidget.h"
 #include "UI/Commands/LoaderWindowCommands.h"
 #include "UI/Commands/LoginWindowCommands.h"
 #include "UI/SRpmDeveloperLoginWidget.h"
