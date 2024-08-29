@@ -16,7 +16,6 @@ struct RPMNEXTGEN_API FAssetTypeListQueryParams
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "excludeTypes"))
 	FString ExcludeTypes;
-	
 };
 
 USTRUCT(BlueprintType)
@@ -27,14 +26,35 @@ struct RPMNEXTGEN_API FAssetTypeListRequest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	FAssetTypeListQueryParams Params;
 
-	// Default constructor
+
 	FAssetTypeListRequest()
 	{
 	}
-
-	// Constructor that accepts FAssetListQueryParams
+	
 	FAssetTypeListRequest(const FAssetTypeListQueryParams& InParams)
 		: Params(InParams)
 	{
 	}
+
+	FString BuildQueryString() const;
 };
+
+inline FString FAssetTypeListRequest::BuildQueryString() const
+{
+	if (Params.ApplicationId.IsEmpty() && Params.Type.IsEmpty() && Params.ExcludeTypes.IsEmpty()) return FString();
+	FString QueryString = TEXT("?");
+	if (!Params.ApplicationId.IsEmpty())
+	{
+		QueryString += TEXT("applicationId=") + Params.ApplicationId + TEXT("&");
+	}
+	if (!Params.Type.IsEmpty())
+	{
+		QueryString += TEXT("type=") + Params.Type + TEXT("&");
+	}
+	if (!Params.ExcludeTypes.IsEmpty())
+	{
+		QueryString += TEXT("excludeTypes=") + Params.ExcludeTypes + TEXT("&");
+	}
+	QueryString.RemoveFromEnd(TEXT("&"));
+	return QueryString;
+}

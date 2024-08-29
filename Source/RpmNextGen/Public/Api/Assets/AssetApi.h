@@ -2,6 +2,7 @@
 #include "Api/Common/WebApiWithAuth.h"
 #include "Models/AssetTypeListResponse.h"
 
+struct FAssetTypeListRequest;
 struct FAssetListRequest;
 struct FAssetListResponse;
 
@@ -13,7 +14,7 @@ class RPMNEXTGEN_API FAssetApi : public FWebApiWithAuth
 public:
 	FAssetApi();
 	void ListAssetsAsync(const FAssetListRequest& Request);
-	void ListAssetTypesAsync(const FAssetListRequest& Request);
+	void ListAssetTypesAsync(const FAssetTypeListRequest& Request);
 	FOnListAssetsResponse OnListAssetsResponse;
 	FOnListAssetTypeResponse OnListAssetTypeResponse;
 	static const FString BaseModelType;

@@ -2,7 +2,9 @@
 #include "Settings/RpmDeveloperSettings.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
+#include "Api/Assets/Models/AssetTypeListRequest.h"
 
+struct FAssetTypeListRequest;
 const FString FAssetApi::BaseModelType = TEXT("baseModel");
 
 FAssetApi::FAssetApi()
@@ -36,7 +38,7 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 	DispatchRawWithAuth(ApiRequest);
 }
 
-void FAssetApi::ListAssetTypesAsync(const FAssetListRequest& Request)
+void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = Settings->GetApiBaseUrl();
