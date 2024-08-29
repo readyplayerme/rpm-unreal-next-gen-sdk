@@ -28,7 +28,6 @@ public class RpmNextGen : ModuleRules
 				"Core",
 				"glTFRuntime",
 				"DeveloperSettings",
-				"glTFRuntime",
 				"Slate",
 				"SlateCore",
 			}
