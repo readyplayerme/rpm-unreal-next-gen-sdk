@@ -29,7 +29,6 @@ public class RpmNextGen : ModuleRules
 				"glTFRuntime",
 				"DeveloperSettings",
 				"glTFRuntime",
-				"UnrealEd",
 				"Slate",
 				"SlateCore",
 			}
