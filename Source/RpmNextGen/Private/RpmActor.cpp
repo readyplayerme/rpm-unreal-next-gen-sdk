@@ -173,7 +173,7 @@ USceneComponent* ARpmActor::CreateNewComponent(USceneComponent* NodeParentCompon
         SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
 
         // Attach and register the component
-        SkeletalMeshComponent->SetupAttachment(NodeParentComponent ? NodeParentComponent : RootComponent);
+        SkeletalMeshComponent->SetupAttachment(NodeParentComponent == nullptr ? NodeParentComponent : RootComponent);
         SkeletalMeshComponent->RegisterComponent();
         SkeletalMeshComponent->SetRelativeTransform(Node.Transform);
 
