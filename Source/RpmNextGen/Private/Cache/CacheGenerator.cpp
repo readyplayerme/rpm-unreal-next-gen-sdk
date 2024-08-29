@@ -3,6 +3,7 @@
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
+#include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -15,6 +16,7 @@ const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectContentDir() / T
 const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
+	: CurrentBaseModelIndex(0), ItemsPerCategory(10)
 {
 	Http = &FHttpModule::Get();
 }
@@ -35,6 +37,11 @@ void FCacheGenerator::GenerateLocalCache(int InItemsPerCategory)
 	FetchBaseModels();
 }
 
+void FCacheGenerator::ProcessNextRequest()
+{
+	
+}
+
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
 	if(bWasSuccessful && AssetListResponse.IsSuccess)
@@ -47,9 +54,32 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 			FetchAssetTypes();
 			return;
 		}
-
-		Assets.Append(AssetListResponse.Data);
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d assets"), AssetListResponse.Data.Num());
+
+		if(AssetListResponse.Data.Num() > 0)
+		{
+			FAsset BaseModelID = BaseModelAssets[CurrentBaseModelIndex];
+			if (!BaseModelAssetsMap.Contains(BaseModelID.Id))
+			{
+				BaseModelAssetsMap.Add(BaseModelID.Id, AssetListResponse.Data);
+			}
+			else
+			{
+				BaseModelAssetsMap[BaseModelID.Id].Append(AssetListResponse.Data);
+			}
+		}
+		
+		// // Check if more asset types need to be requested for the current base model
+		// CurrentBaseModelIndex++;
+		// if (CurrentBaseModelIndex < BaseModelAssets.Num())
+		// {
+		// 	FetchAssetsForBaseModel(BaseModelAssets[CurrentBaseModelIndex].Id);
+		// }
+		// else
+		// {
+		// 	UE_LOG(LogTemp, Log, TEXT("All assets have been fetched successfully."));
+		// 	// Final processing or callback can go here
+		// }
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
@@ -57,12 +87,24 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 	
 }
 
+void FCacheGenerator::FetchAssetsForEachBaseModel()
+{
+	for (FAsset& BaseModel : BaseModelAssets)
+	{
+		for(FString AssetType : AssetTypes)
+		{
+			FetchAssetsForBaseModel(BaseModel.Id, AssetType);
+		}
+	}
+}
+
 void FCacheGenerator::OnListAssetTypesResponse(const FAssetTypeListResponse& AssetListResponse, bool bWasSuccessful)
 {
 	if(bWasSuccessful && AssetListResponse.IsSuccess)
 	{
-		Assets.Append(AssetListResponse.Data);
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d asset types"), AssetListResponse.Data.Num());
+		AssetTypes.Append(AssetListResponse.Data);
+		FetchAssetsForEachBaseModel();
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch asset types"));
@@ -122,8 +164,8 @@ void FCacheGenerator::ExtractCache()
 void FCacheGenerator::FetchBaseModels()
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	FAssetListRequest AssetListRequest;
-	FAssetListQueryParams QueryParams;
+	FAssetListRequest AssetListRequest = FAssetListRequest();
+	FAssetListQueryParams QueryParams = FAssetListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
 	QueryParams.Type = FAssetApi::BaseModelType;
 	AssetListRequest.Params = QueryParams;
@@ -131,15 +173,23 @@ void FCacheGenerator::FetchBaseModels()
 }
 
 void FCacheGenerator::FetchAssetTypes()
-{	
-	AssetApi->ListAssetTypesAsync(FAssetListRequest());
+{
+	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+	FAssetTypeListRequest AssetListRequest;
+	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
+	QueryParams.ApplicationId = Settings->ApplicationId;
+	AssetListRequest.Params = QueryParams;
+	AssetApi->ListAssetTypesAsync(AssetListRequest);
 }
 
-void FCacheGenerator::FetchAssetsForBaseModel(const FString& BaseModelID)
+void FCacheGenerator::FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType)
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
-	FAssetListQueryParams QueryParams;
+	FAssetListQueryParams QueryParams = FAssetListQueryParams();
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = Settings->ApplicationId;
+	QueryParams.CharacterModelAssetId = BaseModelID;
+	QueryParams.Limit = ItemsPerCategory;
 	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+	AssetApi->ListAssetsAsync(AssetListRequest);
 }

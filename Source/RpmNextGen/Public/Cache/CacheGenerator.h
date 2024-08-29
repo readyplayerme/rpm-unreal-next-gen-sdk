@@ -24,12 +24,11 @@ public:
 protected:
 	void FetchBaseModels();
 	void FetchAssetTypes();
-	void FetchAssetsForBaseModel(const FString& BaseModelID);
+	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType);
 
 	virtual void OnRequestCacheAssetsComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
-
-	TArray<FAsset> Assets = TArray<FAsset>();
+	
 	TSharedPtr<FAssetApi> AssetApi;
 
 	TArray<FAsset> BaseModelAssets;
@@ -38,8 +37,10 @@ protected:
 	int32 CurrentBaseModelIndex;
 	
 private:
+	void ProcessNextRequest();
 	
 	void OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
+	void FetchAssetsForEachBaseModel();
 	void OnListAssetTypesResponse(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
 	static const FString CacheFolderPath;
 	static const FString ZipFileName;
