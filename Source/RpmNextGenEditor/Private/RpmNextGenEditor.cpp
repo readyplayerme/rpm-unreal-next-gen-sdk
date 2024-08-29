@@ -50,7 +50,7 @@ void FRpmNextGenEditorModule::StartupModule()
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FRpmNextGenEditorModule::RegisterMenus));
 
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(DeveloperWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
-		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "RPM Dev Login"))
+		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "Ready Player Me"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(CacheWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnCacheWindow))

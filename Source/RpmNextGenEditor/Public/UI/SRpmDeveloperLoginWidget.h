@@ -10,6 +10,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
+struct FApplication;
 struct FDeveloperLoginResponse;
 class FDeveloperAuthApi;
 class URpmDeveloperSettings;
@@ -54,7 +55,7 @@ private:
 	FString UserName;
 	TArray<FApplication> UserApplications;
 	FText GetWelcomeText() const;
-	FString DemoUserName = TEXT("Guest user");
+	const FString DemoUserName = TEXT("Guest user");
 	FText GetSelectedComboBoxItemText() const;
 
 	FReply OnLoginClicked();

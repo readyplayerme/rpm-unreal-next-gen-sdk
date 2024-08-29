@@ -1,12 +1,12 @@
 # Ready Player Me NextGen SDK for Unreal Engine
 
-This is the Unreal Engine SDK for Ready Player Me's NextGen avatars. It allows you to easily integrate our avatars into your Unreal Engine project.
+This is the Unreal Engine SDK for Ready Player Me NextGen avatars. It allows you to easily integrate our avatars into your Unreal Engine project.
 
 ### Requirements
 - Unreal Engine 5.0 or later
 - Visual Studio 2022
 - glTFRuntime plugin available here: https://github.com/rdeioris/glTFRuntime
-- TransientObjectSaver plugin available here: https://github.com/rdeioris/TransientObjectSaver
+- TransientObjectSaver plugin available here: https://github.com/readyplayerme/TransientObjectSaver
 
 ### Installation
 1. Download the latest release from the [Releases](https://github.com/readyplayerme/rpm-unreal-next-gen-sdk/releases) page.
