@@ -6,8 +6,8 @@
 
 FAuthApi::FAuthApi()
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	ApiUrl = FString::Printf(TEXT("%s/refresh"), *Settings->ApiBaseAuthUrl);
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+	ApiUrl = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
 }
 
 void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)

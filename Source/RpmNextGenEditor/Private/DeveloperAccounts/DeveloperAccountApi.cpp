@@ -17,8 +17,8 @@ FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthentica
 void FDeveloperAccountApi::ListApplicationsAsync(const FApplicationListRequest& Request)
 {
     // TODO find better way to get settings (or move to editor only code)
-    URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-    ApiBaseUrl = Settings->GetApiBaseUrl();
+    const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+    ApiBaseUrl = RpmSettings->GetApiBaseUrl();
     const FString QueryString = BuildQueryString(Request.Params);
     const FString Url = FString::Printf(TEXT("%s/v1/applications%s"), *ApiBaseUrl, *QueryString);
     FApiRequest ApiRequest;
@@ -30,8 +30,8 @@ void FDeveloperAccountApi::ListApplicationsAsync(const FApplicationListRequest& 
 void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest& Request)
 {
     // TODO find better way to get settings (or move to editor only code)
-    URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-    ApiBaseUrl = Settings->GetApiBaseUrl();
+    const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+    ApiBaseUrl = RpmSettings->GetApiBaseUrl();
     const FString QueryString = BuildQueryString(Request.Params);
     const FString Url = FString::Printf(TEXT("%s/v1/organizations%s"), *ApiBaseUrl, *QueryString);
     FApiRequest ApiRequest;

@@ -13,10 +13,10 @@
 void URpmAssetPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AssetApi = MakeShared<FAssetApi>();
 	// TODO -  add smarter setting of auth strategy
-	if(Settings->ApiProxyUrl.IsEmpty() && !Settings->ApiKey.IsEmpty())
+	if(RpmSettings->ApiProxyUrl.IsEmpty() && !RpmSettings->ApiKey.IsEmpty())
 	{
 		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 		UE_LOG(LogTemp, Warning, TEXT("Adding ApiKeyAuthStrategy"));
@@ -112,10 +112,10 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 		UE_LOG(LogTemp, Error, TEXT("AssetApi is null or invalid"));
 		return;
 	}
-	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
-	QueryParams.ApplicationId = Settings->ApplicationId;
+	QueryParams.ApplicationId = RpmSettings->ApplicationId;
 	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);	
 }

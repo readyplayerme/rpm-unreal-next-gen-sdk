@@ -17,7 +17,7 @@ class URpmDeveloperSettings;
 URpmPreviewLoaderComponent::URpmPreviewLoaderComponent()
 {	
 	PrimaryComponentTick.bCanEverTick = false;
-	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AppId = RpmSettings->ApplicationId;
 	CharacterApi = MakeShared<FCharacterApi>();
 	PreviewAssetMap = TMap<FString, FString>();

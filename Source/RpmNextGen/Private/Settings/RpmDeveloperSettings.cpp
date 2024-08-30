@@ -4,18 +4,16 @@
 
 URpmDeveloperSettings::URpmDeveloperSettings()
 {
+	LoadConfig();
 	ApiBaseUrl = TEXT("https://api.readyplayer.me");
 	ApiBaseAuthUrl = TEXT("https://readyplayer.me/api/auth");
-	ApplicationId = TEXT("");
-	ApiKey = TEXT("");
-	ApiProxyUrl = TEXT("");
 }
 
 void URpmDeveloperSettings::SetupDemoAccount()
 {
 	ApplicationId = DemoAppId;
 	ApiProxyUrl = DemoProxyUrl;
-	this->SaveConfig();
+	SaveConfig();
 }
 
 void URpmDeveloperSettings::Reset()
@@ -28,10 +26,11 @@ void URpmDeveloperSettings::Reset()
 	{
 		ApiProxyUrl = TEXT("");
 	}
-	this->SaveConfig();
+	
+	SaveConfig();
 }
 
-FString URpmDeveloperSettings::GetApiBaseUrl()
+FString URpmDeveloperSettings::GetApiBaseUrl() const
 {
 	return ApiProxyUrl.IsEmpty() ? ApiBaseUrl : ApiProxyUrl;
 }
