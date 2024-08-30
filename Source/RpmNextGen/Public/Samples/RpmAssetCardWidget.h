@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Api/Assets/Models/Asset.h"
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetCardWidget.generated.h"
 
