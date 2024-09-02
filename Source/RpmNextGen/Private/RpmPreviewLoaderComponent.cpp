@@ -26,13 +26,8 @@ URpmPreviewLoaderComponent::URpmPreviewLoaderComponent()
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmPreviewLoaderComponent::HandleCharacterFindResponse);
 }
 
-void URpmPreviewLoaderComponent::CreateCharacter()
+void URpmPreviewLoaderComponent::CreateCharacter(const FString& BaseModelId)
 {
-	if(BaseModelId.IsEmpty())
-	{
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("BaseModelId is empty on %s"), *GetOwner()->GetName());
-		return;
-	}
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
 	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
 	CharacterCreateRequest.Data.Assets.Add("baseModel", BaseModelId);
