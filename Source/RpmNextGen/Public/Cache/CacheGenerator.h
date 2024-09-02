@@ -14,6 +14,7 @@ DECLARE_DELEGATE_OneParam(FOnDownloadRemoteCache, bool);
 class RPMNEXTGEN_API FCacheGenerator
 {
 public:
+	virtual ~FCacheGenerator() = default;
 	FCacheGenerator();
 	void DownloadRemoteCacheFromUrl(const FString& Url);
 	void GenerateLocalCache(int InItemsPerCategory);
@@ -29,7 +30,7 @@ protected:
 	virtual void OnRequestCacheAssetsComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
 	
-	TSharedPtr<FAssetApi> AssetApi;
+	TUniquePtr<FAssetApi> AssetApi;
 
 	TArray<FAsset> BaseModelAssets;
 	TArray<FString> AssetTypes;

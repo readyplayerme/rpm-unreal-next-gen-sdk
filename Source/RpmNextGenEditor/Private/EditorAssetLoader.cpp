@@ -13,8 +13,7 @@ FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
-                                                 FString LoadedAssetId)
+void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful, FString LoadedAssetId)
 {
 	if (bWasSuccessful)
 	{

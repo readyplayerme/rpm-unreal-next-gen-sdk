@@ -29,7 +29,7 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 		return;
 	}
 	FString QueryString = Request.BuildQueryString();
-	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets/types%s"), *ApiBaseUrl, *QueryString);
+	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *QueryString);
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
@@ -41,7 +41,6 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = Settings->GetApiBaseUrl();
-
 	if(Settings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Application ID is empty"));
@@ -49,7 +48,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 		return;
 	}
 	FString QueryString = Request.BuildQueryString();
-	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *QueryString);
+	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets/types%s"), *ApiBaseUrl, *QueryString);
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
@@ -62,20 +61,24 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
 	if(bWasSuccessful)
 	{
 		FAssetListResponse AssetListResponse = FAssetListResponse();
+		FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
 		if(FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, 0))
 		{
 			OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
 			return;
 		}
-		UE_LOG(LogTemp, Error, TEXT("Failed to parse API response"));
+		if(FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, 0))
+		{
+			OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
+			return;
+		}
+		UE_LOG(LogTemp, Error, TEXT("Failed to parse API from response %s"), *Response);;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("API Response was unsuccessful"));
 	}
 	OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+	OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
 }
 
-void FAssetApi::HandleListAssetTypeResponse(FString Response, bool bWasSuccessful)
-{
-}

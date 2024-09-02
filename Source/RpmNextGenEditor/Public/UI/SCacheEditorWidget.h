@@ -3,21 +3,27 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+class FCacheGenerator;
+
 class SCacheEditorWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SCacheEditorWidget) {}
 	SLATE_END_ARGS()
-
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
 private:
+
+	TUniquePtr<FCacheGenerator> CacheGenerator;
 	// Callback functions for your buttons
 	FReply OnGenerateOfflineCacheClicked();
 	FReply OnExtractCacheClicked();
 	FReply OnOpenLocalCacheFolderClicked();
 	FReply OnDownloadRemoteCacheClicked();
+
+	void OnGenerateLocalCacheComplete(bool bWasSuccessful);
+	void OnDownloadRemoteCacheComplete(bool bWasSuccessful);
 
 	TOptional<int32> GetItemsPerCategory() const
 	{

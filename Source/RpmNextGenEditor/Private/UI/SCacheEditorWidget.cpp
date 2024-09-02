@@ -2,11 +2,18 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "EditorStyleSet.h"
+#include "Cache/CacheGenerator.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 
 void SCacheEditorWidget::Construct(const FArguments& InArgs)
 {
+    if(!CacheGenerator)
+    {
+        CacheGenerator = MakeUnique<FCacheGenerator>();
+        CacheGenerator->OnGenerateLocalCacheDelegate.BindRaw(this, &SCacheEditorWidget::OnGenerateLocalCacheComplete);
+        CacheGenerator->OnDownloadRemoteCacheDelegate.BindRaw(this, &SCacheEditorWidget::OnDownloadRemoteCacheComplete);
+    }
     ChildSlot
     [
         SNew(SScrollBox) // Make the entire content scrollable
@@ -157,7 +164,7 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
 
 FReply SCacheEditorWidget::OnGenerateOfflineCacheClicked()
 {
-    // Handle generating the offline cache
+    CacheGenerator->GenerateLocalCache(ItemsPerCategory);
     return FReply::Handled();
 }
 
@@ -178,6 +185,15 @@ FReply SCacheEditorWidget::OnDownloadRemoteCacheClicked()
     // Handle downloading the remote cache
     return FReply::Handled();
 }
+
+void SCacheEditorWidget::OnGenerateLocalCacheComplete(bool bWasSuccessful)
+{
+}
+
+void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
+{
+}
+
 
 void SCacheEditorWidget::OnItemsPerCategoryChanged(float NewValue)
 {

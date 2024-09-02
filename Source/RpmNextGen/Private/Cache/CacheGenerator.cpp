@@ -4,6 +4,7 @@
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
+#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -19,6 +20,15 @@ FCacheGenerator::FCacheGenerator()
 	: CurrentBaseModelIndex(0), ItemsPerCategory(10)
 {
 	Http = &FHttpModule::Get();
+	AssetApi = MakeUnique<FAssetApi>();
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
+	
+	if(!Settings->ApiKey.IsEmpty())
+	{
+		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+	}
+	AssetApi->OnListAssetsResponse.BindRaw(this, &FCacheGenerator::OnListAssetsResponse);
+	AssetApi->OnListAssetTypeResponse.BindRaw(this, &FCacheGenerator::OnListAssetTypesResponse);
 }
 
 void FCacheGenerator::DownloadRemoteCacheFromUrl(const FString& Url)
@@ -26,7 +36,6 @@ void FCacheGenerator::DownloadRemoteCacheFromUrl(const FString& Url)
 	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
 	Request->SetURL(Url);
 	Request->SetVerb(TEXT("GET"));
-
 	Request->OnProcessRequestComplete().BindRaw(this, &FCacheGenerator::OnDownloadRemoteCacheComplete);
 	Request->ProcessRequest();
 }
@@ -44,8 +53,10 @@ void FCacheGenerator::ProcessNextRequest()
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("OnListAssetsResponse ") );
 	if(bWasSuccessful && AssetListResponse.IsSuccess)
 	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Success ") );
 		if (AssetListResponse.Data.Num() > 0 && AssetListResponse.Data[0].Type == FAssetApi::BaseModelType)
 		{
 			BaseModelAssets.Empty();
@@ -170,6 +181,7 @@ void FCacheGenerator::FetchBaseModels()
 	QueryParams.Type = FAssetApi::BaseModelType;
 	AssetListRequest.Params = QueryParams;
 	AssetApi->ListAssetsAsync(AssetListRequest);
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetching base models") );
 }
 
 void FCacheGenerator::FetchAssetTypes()
@@ -178,6 +190,7 @@ void FCacheGenerator::FetchAssetTypes()
 	FAssetTypeListRequest AssetListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
+	QueryParams.ExcludeTypes = "baseModel";
 	AssetListRequest.Params = QueryParams;
 	AssetApi->ListAssetTypesAsync(AssetListRequest);
 }

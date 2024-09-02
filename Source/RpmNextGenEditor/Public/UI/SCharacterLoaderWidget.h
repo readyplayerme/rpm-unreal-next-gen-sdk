@@ -14,9 +14,10 @@ public:
 	SLATE_BEGIN_ARGS(SCharacterLoaderWidget) {}
 	SLATE_END_ARGS()
 
-	void OnSkeletonSelected(const FAssetData& AssetData);
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
+
+	void OnSkeletonSelected(const FAssetData& AssetData);
 
 private:
 	/** Callback for when the button is clicked */
