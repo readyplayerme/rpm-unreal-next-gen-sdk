@@ -5,8 +5,8 @@
 
 FDeveloperAuthApi::FDeveloperAuthApi()
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	ApiUrl = FString::Printf(TEXT("%s/login"), *Settings->ApiBaseAuthUrl);
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+	ApiUrl = FString::Printf(TEXT("%s/login"), *RpmSettings->ApiBaseAuthUrl);
 	OnApiResponse.BindRaw(this, &FDeveloperAuthApi::HandleLoginResponse);
 }
 

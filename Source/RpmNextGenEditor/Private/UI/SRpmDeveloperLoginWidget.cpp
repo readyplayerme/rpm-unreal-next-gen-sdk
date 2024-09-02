@@ -324,6 +324,8 @@ FText SRpmDeveloperLoginWidget::GetWelcomeText() const
 
 FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 {
+	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	RpmSettings->Reset();
 	FString Email = EmailTextBox->GetText().ToString();
 	FString Password = PasswordTextBox->GetText().ToString();
 	FEditorCache::SetString(CacheKeyEmail, Email);
@@ -381,7 +383,7 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 {
 	if (bWasSuccessful)
 	{
-		URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+		const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 		UserApplications = Response.Data;
 		FString Active;
 		TArray<FString> Items;
@@ -457,7 +459,6 @@ FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 	// Unset the authentication strategy for the APIs
 	DeveloperAccountApi->SetAuthenticationStrategy(nullptr);
 	AssetApi->SetAuthenticationStrategy(nullptr);
-
 	GetOrgList();
 	return FReply::Handled();
 }
@@ -482,7 +483,7 @@ FReply SRpmDeveloperLoginWidget::OnLogoutClicked()
 
 void SRpmDeveloperLoginWidget::LoadBaseModelList()
 {
-	URpmDeveloperSettings* RpmSettings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	if (RpmSettings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Application ID is empty, unable to load base models."));

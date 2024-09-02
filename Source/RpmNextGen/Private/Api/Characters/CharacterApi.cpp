@@ -9,11 +9,11 @@
 
 FCharacterApi::FCharacterApi()
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *Settings->GetApiBaseUrl());
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *RpmSettings->GetApiBaseUrl());
 	Http = &FHttpModule::Get();
 	SetAuthenticationStrategy(nullptr);
-	if(!Settings->ApiKey.IsEmpty() && Settings->ApiProxyUrl.IsEmpty())
+	if(!RpmSettings->ApiKey.IsEmpty() && RpmSettings->ApiProxyUrl.IsEmpty())
 	{
 		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 	}
@@ -65,10 +65,10 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 	if (Response->GetResponseCode() == 401)
 	{
-		UE_LOG(LogTemp, Error,
-		       TEXT(
-			       "The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."
-		       ));
+		URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+		
+		UE_LOG(LogTemp, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
+		UE_LOG(LogTemp, Error,TEXT("API Key: %s. Proxy url = %s"), *Settings->ApiKey, *Settings->ApiProxyUrl);
 		return;
 	}
 	

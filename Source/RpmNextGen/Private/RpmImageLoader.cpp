@@ -8,6 +8,7 @@
 #include "Modules/ModuleManager.h"
 #include "Engine/Texture2D.h"
 #include "Components/Image.h"
+#include "Widgets/Images/SImage.h"
 
 void FRpmImageLoader::LoadUImageFromURL(UImage* Image, const FString& URL)
 {
