@@ -16,10 +16,9 @@ void URpmAssetPanelWidget::NativeConstruct()
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AssetApi = MakeShared<FAssetApi>();
 	// TODO -  add smarter setting of auth strategy
-	if(RpmSettings->ApiProxyUrl.IsEmpty() && !RpmSettings->ApiKey.IsEmpty())
+	if(!RpmSettings->ApiKey.IsEmpty() || RpmSettings->ApiProxyUrl.IsEmpty())
 	{
 		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-		UE_LOG(LogTemp, Warning, TEXT("Adding ApiKeyAuthStrategy"));
 	}
 	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
@@ -33,7 +32,6 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
 	{
 		CreateButtonsFromAssets(AssetListResponse.Data);
-		
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to fetch assets"));
