@@ -58,27 +58,77 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 
 void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
 {
-	if(bWasSuccessful)
-	{
-		FAssetListResponse AssetListResponse = FAssetListResponse();
-		FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
-		if(FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, 0))
-		{
-			OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
-			return;
-		}
-		if(FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, 0))
-		{
-			OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
-			return;
-		}
-		UE_LOG(LogTemp, Error, TEXT("Failed to parse API from response %s"), *Response);;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("API Response was unsuccessful"));
-	}
-	OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
-	OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
+    if (bWasSuccessful)
+    {
+        #if ENGINE_MAJOR_VERSION < 5 || ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 1 // Manual parsing for Unreal Engine 5.0 and earlier
+    	
+        TSharedPtr<FJsonObject> JsonObject;
+        TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response);
+
+        if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+        {
+            // Check if the "data" field is an array
+            const TArray<TSharedPtr<FJsonValue>>* DataArray;
+            if (JsonObject->TryGetArrayField(TEXT("data"), DataArray))
+            {
+                if (DataArray->Num() > 0)
+                {
+                    // Check the type of the first element to determine the response type
+                    const TSharedPtr<FJsonValue>& FirstElement = (*DataArray)[0];
+
+                    if (FirstElement->Type == EJson::Object)
+                    {
+                        // Assume this is an FAssetListResponse
+                        FAssetListResponse AssetListResponse;
+                        if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &AssetListResponse, 0, 0))
+                        {
+                            OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
+                            return;
+                        }
+                    }
+                    else if (FirstElement->Type == EJson::String)
+                    {
+                        // Assume this is an FAssetTypeListResponse
+                        FAssetTypeListResponse AssetTypeListResponse;
+                        if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &AssetTypeListResponse, 0, 0))
+                        {
+                            OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        UE_LOG(LogTemp, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
+
+        #else
+
+        // Use EStructJsonFlags::SkipMissingProperties for Unreal Engine 5.1 and later
+        FAssetListResponse AssetListResponse = FAssetListResponse();
+        FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, EStructJsonFlags::SkipMissingProperties))
+        {
+            OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
+            return;
+        }
+        if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, EStructJsonFlags::SkipMissingProperties))
+        {
+            OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
+            return;
+        }
+
+        UE_LOG(LogTemp, Error, TEXT("Failed to parse API from response %s"), *Response);
+
+        #endif
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("API Response was unsuccessful"));
+    }
+
+    // If all parsing attempts fail, execute with default/empty responses
+    OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+    OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
 }
 

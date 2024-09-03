@@ -2,7 +2,10 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "EditorStyleSet.h"
+#include "IPlatformFilePak.h"
+#include "RpmNextGen.h"
 #include "Cache/CacheGenerator.h"
+#include "Misc/FileHelper.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 
@@ -11,8 +14,9 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
     if(!CacheGenerator)
     {
         CacheGenerator = MakeUnique<FCacheGenerator>();
-        CacheGenerator->OnGenerateLocalCacheDelegate.BindRaw(this, &SCacheEditorWidget::OnGenerateLocalCacheComplete);
+        CacheGenerator->OnCacheDataLoaded.BindRaw(this, &SCacheEditorWidget::OnFetchCacheDataComplete);
         CacheGenerator->OnDownloadRemoteCacheDelegate.BindRaw(this, &SCacheEditorWidget::OnDownloadRemoteCacheComplete);
+        CacheGenerator->OnLocalCacheGenerated.BindRaw(this, &SCacheEditorWidget::OnGenerateLocalCacheCompleted);
     }
     ChildSlot
     [
@@ -42,7 +46,7 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                 .VAlign(VAlign_Center)
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString("Items per category:"))
+                    .Text(FText::FromString("Max items per category:"))
                 ]
                 + SHorizontalBox::Slot()
                 .Padding(5, 0, 0, 0)
@@ -53,7 +57,8 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                     .OnValueChanged(this, &SCacheEditorWidget::OnItemsPerCategoryChanged)
                     .AllowSpin(true) // Slider-like behavior
                     .MinValue(1)
-                    .MaxValue(100)
+                    .MaxValue(30)
+                    .SliderExponent(1.0f)
                 ]
             ]
 
@@ -186,14 +191,31 @@ FReply SCacheEditorWidget::OnDownloadRemoteCacheClicked()
     return FReply::Handled();
 }
 
-void SCacheEditorWidget::OnGenerateLocalCacheComplete(bool bWasSuccessful)
+void SCacheEditorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 {
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed fetching assets"));
+    CacheGenerator->LoadAndStoreAssets();
 }
 
 void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
 {
 }
 
+void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
+{
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
+    FString FolderToPak = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
+    FString PakFilePath = FPaths::ProjectSavedDir() / TEXT("LocalCacheAssets.pak");
+    FString ResponseFilePath = FPaths::ProjectSavedDir() / TEXT("RpmCache_ResponseFile.txt");
+
+    // const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
+    // const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
+    // Generate the response file
+    GeneratePakResponseFile(ResponseFilePath, FolderToPak);
+
+    // Create the pak file using the UnrealPak tool
+    CreatePakFile(PakFilePath, ResponseFilePath);
+}
 
 void SCacheEditorWidget::OnItemsPerCategoryChanged(float NewValue)
 {
@@ -205,4 +227,48 @@ void SCacheEditorWidget::OnCacheUrlChanged(const FText& NewText)
 {
     CacheUrl = NewText.ToString();
     // Handle cache URL text change
+}
+
+void SCacheEditorWidget::CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath)
+{
+    // Path to the UnrealPak executable
+    FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
+
+    // Arguments for the UnrealPak tool
+    FString CommandLineArgs = FString::Printf(TEXT("%s -Create=%s"), *PakFilePath, *ResponseFilePath);
+
+    // Launch the UnrealPak process
+    FProcHandle ProcHandle = FPlatformProcess::CreateProc(*UnrealPakPath, *CommandLineArgs, true, false, false, nullptr, 0, nullptr, nullptr);
+
+    if (ProcHandle.IsValid())
+    {
+        FPlatformProcess::WaitForProc(ProcHandle);
+        FPlatformProcess::CloseProc(ProcHandle);
+
+        UE_LOG(LogTemp, Log, TEXT("Pak file created successfully: %s"), *PakFilePath);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create Pak file: %s"), *PakFilePath);
+    }
+}
+
+
+void SCacheEditorWidget::GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak)
+{
+    TArray<FString> Files;
+    IFileManager::Get().FindFilesRecursive(Files, *FolderToPak, TEXT("*.*"), true, false);
+
+    FString ResponseFileContent;
+    int FileCount = 0;
+    for (const FString& File : Files)
+    {
+        FString RelativePath = File;
+        FPaths::MakePathRelativeTo(RelativePath, *FolderToPak);
+        ResponseFileContent += FString::Printf(TEXT("\"%s\" \"%s\"\n"), *File, *RelativePath);
+        FileCount++;
+    }
+    FFileHelper::SaveStringToFile(ResponseFileContent, *ResponseFilePath);
+    // print number of files added to the response file
+    UE_LOG(LogTemp, Log, TEXT("Response file created with %d files"), FileCount);
 }

@@ -17,7 +17,7 @@ const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectContentDir() / T
 const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
-	: CurrentBaseModelIndex(0), ItemsPerCategory(10)
+	: CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
 {
 	Http = &FHttpModule::Get();
 	AssetApi = MakeUnique<FAssetApi>();
@@ -42,18 +42,96 @@ void FCacheGenerator::DownloadRemoteCacheFromUrl(const FString& Url)
 
 void FCacheGenerator::GenerateLocalCache(int InItemsPerCategory)
 {
-	ItemsPerCategory = InItemsPerCategory;
+	MaxItemsPerCategory = InItemsPerCategory;
 	FetchBaseModels();
 }
 
-void FCacheGenerator::ProcessNextRequest()
+void FCacheGenerator::LoadAndStoreAssets()
 {
-	
+	int RefittedAssetCount = 0;
+	for (auto BaseModel : BaseModelAssets)
+	{
+		for (auto Pairs : BaseModelAssetsMap)
+		{
+			RefittedAssetCount += Pairs.Value.Num();
+		}
+	}	
+	RequiredAssetDownloadRequest = 2 * RefittedAssetCount + 2 * BaseModelAssets.Num();
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets to fetch: %d"), RequiredAssetDownloadRequest, RequiredRefittedAssetRequests);
+	for (auto BaseModel : BaseModelAssets)
+	{
+		const FString BaseModeFolder = CacheFolderPath / BaseModel.Id;
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		const FString DirectoryPath = FPaths::GetPath(BaseModeFolder);
+		if (!PlatformFile.DirectoryExists(*DirectoryPath))
+		{
+			PlatformFile.CreateDirectoryTree(*DirectoryPath);
+		}
+		
+		LoadAndStoreAssetFromUrl(BaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *BaseModel.Id));
+		LoadAndStoreAssetFromUrl(BaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *BaseModel.Id));
+		for (auto Pairs : BaseModelAssetsMap)
+		{
+			for (auto AssetForBaseModel : Pairs.Value)
+			{
+				LoadAndStoreAssetFromUrl(AssetForBaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *AssetForBaseModel.Id));
+				LoadAndStoreAssetFromUrl(AssetForBaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *AssetForBaseModel.Id));
+			}
+		}
+	}	
+}
+
+void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& AssetFileUrl, const FString& FilePath)
+{
+	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
+	Request->SetURL(AssetFileUrl);
+	Request->SetVerb(TEXT("GET"));
+	Request->OnProcessRequestComplete().BindLambda([this, FilePath](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	{
+		this->OnAssetDataLoaded(Request, Response, bWasSuccessful, FilePath);
+	});
+	Request->ProcessRequest();
+}
+
+void FCacheGenerator::OnAssetDataLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath)
+{
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		// Get the response data
+		const TArray<uint8>& Data = Response->GetContent();
+
+		// Save the data as a .zip file
+		if (FFileHelper::SaveArrayToFile(Data, *FilePath))
+		{
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully saved asset in local cache to: %s"), *FilePath);
+		}
+		else
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to saved asset local cache to: %s"), *FilePath);
+
+		}
+		AssetDownloadRequestsCompleted++;
+		if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
+		{
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, AssetDownloadRequestsCompleted);
+
+			OnLocalCacheGenerated.ExecuteIfBound(true);
+		}
+		return;
+	}
+	AssetDownloadRequestsCompleted++;
+	if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
+	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, AssetDownloadRequestsCompleted);
+		OnLocalCacheGenerated.ExecuteIfBound(true);
+	}
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to download the remote cache"));
+
 }
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
-	UE_LOG(LogReadyPlayerMe, Log, TEXT("OnListAssetsResponse ") );
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("OnListAssetsResponse") );
 	if(bWasSuccessful && AssetListResponse.IsSuccess)
 	{
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Success ") );
@@ -79,27 +157,24 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 				BaseModelAssetsMap[BaseModelID.Id].Append(AssetListResponse.Data);
 			}
 		}
-		
-		// // Check if more asset types need to be requested for the current base model
-		// CurrentBaseModelIndex++;
-		// if (CurrentBaseModelIndex < BaseModelAssets.Num())
-		// {
-		// 	FetchAssetsForBaseModel(BaseModelAssets[CurrentBaseModelIndex].Id);
-		// }
-		// else
-		// {
-		// 	UE_LOG(LogTemp, Log, TEXT("All assets have been fetched successfully."));
-		// 	// Final processing or callback can go here
-		// }
+		RefittedAssetRequestsCompleted++;
+		if(RefittedAssetRequestsCompleted >= RequiredRefittedAssetRequests)
+		{
+			OnCacheDataLoaded.ExecuteIfBound(true);
+		}
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
-	OnGenerateLocalCacheDelegate.ExecuteIfBound(false);
-	
+	RefittedAssetRequestsCompleted++;
+	if(RefittedAssetRequestsCompleted >= RequiredRefittedAssetRequests)
+	{
+		OnCacheDataLoaded.ExecuteIfBound(true);
+	}
 }
 
 void FCacheGenerator::FetchAssetsForEachBaseModel()
 {
+	RequiredRefittedAssetRequests = AssetTypes.Num() * BaseModelAssets.Num();
 	for (FAsset& BaseModel : BaseModelAssets)
 	{
 		for(FString AssetType : AssetTypes)
@@ -119,7 +194,7 @@ void FCacheGenerator::OnListAssetTypesResponse(const FAssetTypeListResponse& Ass
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch asset types"));
-	OnGenerateLocalCacheDelegate.ExecuteIfBound(false);
+	OnCacheDataLoaded.ExecuteIfBound(false);
 }
 
 void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful)
@@ -157,16 +232,6 @@ void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Req
 	OnDownloadRemoteCacheDelegate.ExecuteIfBound(false);
 }
 
-void FCacheGenerator::OnRequestCacheAssetsComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful)
-{
-	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-	{
-		OnGenerateLocalCacheDelegate.ExecuteIfBound(true);
-		return;
-	}
-	OnGenerateLocalCacheDelegate.ExecuteIfBound(false);
-}
-
 void FCacheGenerator::ExtractCache()
 {
 	
@@ -202,7 +267,7 @@ void FCacheGenerator::FetchAssetsForBaseModel(const FString& BaseModelID, const 
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = Settings->ApplicationId;
 	QueryParams.CharacterModelAssetId = BaseModelID;
-	QueryParams.Limit = ItemsPerCategory;
+	QueryParams.Limit = MaxItemsPerCategory;
 	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);
 }

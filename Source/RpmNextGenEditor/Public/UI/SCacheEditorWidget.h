@@ -22,9 +22,10 @@ private:
 	FReply OnOpenLocalCacheFolderClicked();
 	FReply OnDownloadRemoteCacheClicked();
 
-	void OnGenerateLocalCacheComplete(bool bWasSuccessful);
+	void OnFetchCacheDataComplete(bool bWasSuccessful);
 	void OnDownloadRemoteCacheComplete(bool bWasSuccessful);
-
+	void OnGenerateLocalCacheCompleted(bool bWasSuccessful);
+	
 	TOptional<int32> GetItemsPerCategory() const
 	{
 		return ItemsPerCategory;
@@ -47,4 +48,6 @@ private:
 	// Cache URL handling
 	FString CacheUrl;
 	void OnCacheUrlChanged(const FText& NewText);
+	void CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath);
+	void GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak);
 };
