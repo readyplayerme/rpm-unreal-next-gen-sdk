@@ -23,12 +23,9 @@ class RPMNEXTGEN_API URpmPreviewLoaderComponent : public URpmAssetLoaderComponen
 
 public:
 	URpmPreviewLoaderComponent();
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Ready Player Me")
-	FString BaseModelId;
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void CreateCharacter();
+	virtual void CreateCharacter(const FString& BaseModelId);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacter(FRpmCharacter CharacterData);

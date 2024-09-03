@@ -3,18 +3,17 @@
 #include "RpmNextGenEditor.h"
 
 #include "UI/CharacterLoaderWidget.h"
-#include "UI/LoaderWindowCommands.h"
-#include "UI/LoginWindowCommands.h"
+#include "UI/Commands/LoaderWindowCommands.h"
+#include "UI/Commands/LoginWindowCommands.h"
 #include "UI/SRpmDeveloperLoginWidget.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
 
-static const FName TestWindowTabName("LoginWindow");
-
+static const FName DeveloperWindowName("LoginWindow");
+static const FName LoaderWinderName("LoaderWindow");
 #define LOCTEXT_NAMESPACE "RpmNextGenEditorModule"
-static const FName NewWindowTabName("CustomEditorWindow");
 
 void FRpmNextGenEditorModule::StartupModule()
 {
@@ -39,8 +38,8 @@ void FRpmNextGenEditorModule::StartupModule()
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FRpmNextGenEditorModule::RegisterMenus));
 
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(TestWindowTabName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
-		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "RPM Dev Login"))
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(DeveloperWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnPluginTab))
+		.SetDisplayName(LOCTEXT("DeveloperLoginWidget", "Ready Player Me"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 	
 	// Don't show Loader window in the menu
@@ -100,10 +99,12 @@ void FRpmNextGenEditorModule::ShutdownModule()
 	FLoginWindowStyle::Shutdown();
 
 	FLoginWindowCommands::Unregister();
-	FLoaderWindowCommands::Unregister(); // Unregister custom commands
+	// Don't show Loader window in the menu
+	//FLoaderWindowCommands::Unregister(); 
 
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TestWindowTabName);
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(NewWindowTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(DeveloperWindowName);
+	// Don't show Loader window in the menu
+	//FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(LoaderWinderName);
 }
 
 TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
@@ -133,13 +134,13 @@ TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnLoaderWindow(const FSpawnTa
 
 void FRpmNextGenEditorModule::PluginButtonClicked()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(TestWindowTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(DeveloperWindowName);
 }
 
 
 void FRpmNextGenEditorModule::OpenLoaderWindow()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(NewWindowTabName);
+	FGlobalTabmanager::Get()->TryInvokeTab(LoaderWinderName);
 }
 
 #undef LOCTEXT_NAMESPACE

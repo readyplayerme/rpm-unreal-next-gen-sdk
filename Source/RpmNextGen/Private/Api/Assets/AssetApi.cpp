@@ -11,10 +11,9 @@ FAssetApi::FAssetApi()
 
 void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	ApiBaseUrl = Settings->GetApiBaseUrl();
-
-	if(Settings->ApplicationId.IsEmpty())
+	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+	ApiBaseUrl = RpmSettings->GetApiBaseUrl();
+	if(RpmSettings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Application ID is empty"));
 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);

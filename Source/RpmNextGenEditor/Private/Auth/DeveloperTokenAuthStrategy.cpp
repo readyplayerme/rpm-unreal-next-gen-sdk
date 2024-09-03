@@ -9,7 +9,6 @@ DeveloperTokenAuthStrategy::DeveloperTokenAuthStrategy()
 {
 	AuthApi = FAuthApi();
 	AuthApi.OnRefreshTokenResponse.BindRaw(this, &DeveloperTokenAuthStrategy::OnRefreshTokenResponse);
-	
 }
 
 void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request) 

@@ -1,4 +1,4 @@
-﻿#include "UI/LoginWindowCommands.h"
+﻿#include "UI/Commands/LoginWindowCommands.h"
 
 #define LOCTEXT_NAMESPACE "FRpmNextGenEditorModule"
 
