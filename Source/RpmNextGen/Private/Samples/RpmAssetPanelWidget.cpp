@@ -95,8 +95,6 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 	}
 }
 
-
-
 void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)
 {
 	UpdateSelectedButton(const_cast<URpmAssetButtonWidget*>(AssetButton));
