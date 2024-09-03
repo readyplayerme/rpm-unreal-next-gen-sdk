@@ -1,4 +1,4 @@
-﻿#include "AssetSaver.h"
+﻿#include "Cache/AssetSaver.h"
 #include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
@@ -16,7 +16,7 @@ FAssetSaver::~FAssetSaver()
 {
 }
 
-void FAssetSaver::SaveAssetToCache(const FString& BaseModelId, const FAsset* Asset)
+void FAssetSaver::LoadSaveAssetToCache(const FString& BaseModelId, const FAsset* Asset)
 {
 	const FString Path = CacheFolderPath / BaseModelId;
 	LoadAndSaveGlb(Asset->IconUrl, FString::Printf(TEXT("%s/%s.glb"), *Path, *Asset->Id));

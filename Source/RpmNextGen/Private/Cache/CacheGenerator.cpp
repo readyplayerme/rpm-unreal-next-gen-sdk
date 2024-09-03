@@ -87,7 +87,7 @@ void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& BaseModelId, const
 	// Use TSharedPtr instead of TSharedRef
 	TSharedPtr<FAssetSaver> AssetSaver = MakeShared<FAssetSaver>();
 	AssetSaver->OnAssetSaved.BindRaw(this, &FCacheGenerator::OnAssetSaved);
-	AssetSaver->SaveAssetToCache(BaseModelId, Asset);
+	AssetSaver->LoadSaveAssetToCache(BaseModelId, Asset);
 
 	// Store the AssetSaver in a TArray or other container to ensure its lifetime
 	//ActiveAssetSavers.Add(AssetSaver);

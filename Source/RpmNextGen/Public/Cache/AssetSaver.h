@@ -15,7 +15,7 @@ class RPMNEXTGEN_API FAssetSaver : public TSharedFromThis<FAssetSaver>
 public:
 	FAssetSaver();
 	virtual ~FAssetSaver();
-	void SaveAssetToCache(const FString& BaseModelId, const FAsset* Asset);
+	void LoadSaveAssetToCache(const FString& BaseModelId, const FAsset* Asset);
 	void LoadAndSaveImage(const FString& Url, const FString& FilePath);
 	void LoadAndSaveGlb(const FString& Url, const FString& FilePath);
 	void OnAssetLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath);
