@@ -61,8 +61,6 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                     .SliderExponent(1.0f)
                 ]
             ]
-
-            // Button "Generate offline cache"
             + SVerticalBox::Slot()
             .Padding(5)
             .AutoHeight()
@@ -77,24 +75,21 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                     .VAlign(VAlign_Center)
                 ]
             ]
-
-            // Button "Extract Cache to local folder"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(SBox)
-                .HeightOverride(40) // Set button height
-                [
-                    SNew(SButton)
-                    .Text(FText::FromString("Extract Cache to local folder"))
-                    .OnClicked(this, &SCacheEditorWidget::OnExtractCacheClicked)
-                    .HAlign(HAlign_Center)
-                    .VAlign(VAlign_Center)
-                ]
-            ]
-
-            // Button "Open Local Cache Folder"
+            // TODO re-enable once we have added unzip logic
+            // + SVerticalBox::Slot()
+            // .Padding(5)
+            // .AutoHeight()
+            // [
+            //     SNew(SBox)
+            //     .HeightOverride(40) // Set button height
+            //     [
+            //         SNew(SButton)
+            //         .Text(FText::FromString("Extract Cache to local folder"))
+            //         .OnClicked(this, &SCacheEditorWidget::OnExtractCacheClicked)
+            //         .HAlign(HAlign_Center)
+            //         .VAlign(VAlign_Center)
+            //     ]
+            // ]
             + SVerticalBox::Slot()
             .Padding(5)
             .AutoHeight()
@@ -109,59 +104,59 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                     .VAlign(VAlign_Center)
                 ]
             ]
-
-            // Title/Label "Remote Cache Downloader"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(STextBlock)
-                .Text(FText::FromString("Remote Cache Downloader"))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 16))
-            ]
-
-            // Editable text field with label "Cache Url"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(SHorizontalBox)
-                + SHorizontalBox::Slot()
-                .AutoWidth()
-                .VAlign(VAlign_Center)
-                [
-                    SNew(STextBlock)
-                    .Text(FText::FromString("Cache URL:"))
-                ]
-                + SHorizontalBox::Slot()
-                .Padding(5, 0, 0, 0)
-                .FillWidth(1.0f)
-                [
-                    SNew(SBox)
-                    .HeightOverride(30) // Set text box height
-                    [
-                        SNew(SEditableTextBox)
-                        .Text(FText::FromString("http://"))
-                        .OnTextCommitted(this, &SCacheEditorWidget::OnCacheUrlTextCommitted)
-                    ]
-                ]
-            ]
-
-            // Button "Download Remote Cache"
-            + SVerticalBox::Slot()
-            .Padding(5)
-            .AutoHeight()
-            [
-                SNew(SBox)
-                .HeightOverride(40) // Set button height
-                [
-                    SNew(SButton)
-                    .Text(FText::FromString("Download Remote Cache"))
-                    .OnClicked(this, &SCacheEditorWidget::OnDownloadRemoteCacheClicked)
-                    .HAlign(HAlign_Center)
-                    .VAlign(VAlign_Center)
-                ]
-            ]
+            // TODO implement remote cache download and unzip logic
+            // // Title/Label "Remote Cache Downloader"
+            // + SVerticalBox::Slot()
+            // .Padding(5)
+            // .AutoHeight()
+            // [
+            //     SNew(STextBlock)
+            //     .Text(FText::FromString("Remote Cache Downloader"))
+            //     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 16))
+            // ]
+            //
+            // // Editable text field with label "Cache Url"
+            // + SVerticalBox::Slot()
+            // .Padding(5)
+            // .AutoHeight()
+            // [
+            //     SNew(SHorizontalBox)
+            //     + SHorizontalBox::Slot()
+            //     .AutoWidth()
+            //     .VAlign(VAlign_Center)
+            //     [
+            //         SNew(STextBlock)
+            //         .Text(FText::FromString("Cache URL:"))
+            //     ]
+            //     + SHorizontalBox::Slot()
+            //     .Padding(5, 0, 0, 0)
+            //     .FillWidth(1.0f)
+            //     [
+            //         SNew(SBox)
+            //         .HeightOverride(30) // Set text box height
+            //         [
+            //             SNew(SEditableTextBox)
+            //             .Text(FText::FromString("http://"))
+            //             .OnTextCommitted(this, &SCacheEditorWidget::OnCacheUrlTextCommitted)
+            //         ]
+            //     ]
+            // ]
+            //
+            // // Button "Download Remote Cache"
+            // + SVerticalBox::Slot()
+            // .Padding(5)
+            // .AutoHeight()
+            // [
+            //     SNew(SBox)
+            //     .HeightOverride(40) // Set button height
+            //     [
+            //         SNew(SButton)
+            //         .Text(FText::FromString("Download Remote Cache"))
+            //         .OnClicked(this, &SCacheEditorWidget::OnDownloadRemoteCacheClicked)
+            //         .HAlign(HAlign_Center)
+            //         .VAlign(VAlign_Center)
+            //     ]
+            // ]
         ]
     ];
 }
@@ -194,7 +189,8 @@ FReply SCacheEditorWidget::OnDownloadRemoteCacheClicked()
 void SCacheEditorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed fetching assets"));
-    CacheGenerator->LoadAndStoreAssets();
+    //TODO re-nable once zip extraction is implemented
+    //CacheGenerator->LoadAndStoreAssets();
 }
 
 void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
@@ -207,13 +203,8 @@ void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
     FString FolderToPak = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
     FString PakFilePath = FPaths::ProjectSavedDir() / TEXT("LocalCacheAssets.pak");
     FString ResponseFilePath = FPaths::ProjectSavedDir() / TEXT("RpmCache_ResponseFile.txt");
-
-    // const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
-    // const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
-    // Generate the response file
+    
     GeneratePakResponseFile(ResponseFilePath, FolderToPak);
-
-    // Create the pak file using the UnrealPak tool
     CreatePakFile(PakFilePath, ResponseFilePath);
 }
 
