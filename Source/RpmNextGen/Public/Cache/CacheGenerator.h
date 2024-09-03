@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
 
+class FAssetSaver;
 struct FAssetTypeListResponse;
 class FAssetApi;
 struct FAsset;
@@ -26,7 +27,7 @@ public:
 	FOnLocalCacheGenerated OnLocalCacheGenerated;
 	
 	void LoadAndStoreAssets();
-	void LoadAndStoreAssetFromUrl(const FString& AssetFileUrl, const FString& FilePath);
+	void LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset);
 
 protected:
 	void FetchBaseModels();
@@ -35,9 +36,8 @@ protected:
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
 	virtual void OnAssetDataLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath);
-	
+	void OnAssetSaved(bool bWasSuccessful);
 	TUniquePtr<FAssetApi> AssetApi;
-
 	TArray<FAsset> BaseModelAssets;
 	TArray<FString> AssetTypes;
 	TMap<FString, TArray<FAsset>> BaseModelAssetsMap; 

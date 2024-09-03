@@ -5,6 +5,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
+#include "Cache/AssetSaver.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -56,7 +57,7 @@ void FCacheGenerator::LoadAndStoreAssets()
 			RefittedAssetCount += Pairs.Value.Num();
 		}
 	}	
-	RequiredAssetDownloadRequest = 2 * RefittedAssetCount + 2 * BaseModelAssets.Num();
+	RequiredAssetDownloadRequest = RefittedAssetCount +  BaseModelAssets.Num();
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets to fetch: %d"), RequiredAssetDownloadRequest, RequiredRefittedAssetRequests);
 	for (auto BaseModel : BaseModelAssets)
 	{
@@ -68,29 +69,39 @@ void FCacheGenerator::LoadAndStoreAssets()
 			PlatformFile.CreateDirectoryTree(*DirectoryPath);
 		}
 		
-		LoadAndStoreAssetFromUrl(BaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *BaseModel.Id));
-		LoadAndStoreAssetFromUrl(BaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *BaseModel.Id));
+		// LoadAndStoreAssetFromUrl(BaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *BaseModel.Id));
+		//LoadAndStoreAssetFromUrl(BaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *BaseModel.Id));
+		LoadAndStoreAssetFromUrl(BaseModel.Id, &BaseModel);
 		for (auto Pairs : BaseModelAssetsMap)
 		{
 			for (auto AssetForBaseModel : Pairs.Value)
 			{
-				LoadAndStoreAssetFromUrl(AssetForBaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *AssetForBaseModel.Id));
-				LoadAndStoreAssetFromUrl(AssetForBaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *AssetForBaseModel.Id));
+				LoadAndStoreAssetFromUrl(BaseModel.Id, &AssetForBaseModel);
 			}
 		}
 	}	
 }
 
-void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& AssetFileUrl, const FString& FilePath)
+void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset)
 {
-	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-	Request->SetURL(AssetFileUrl);
-	Request->SetVerb(TEXT("GET"));
-	Request->OnProcessRequestComplete().BindLambda([this, FilePath](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	// Use TSharedPtr instead of TSharedRef
+	TSharedPtr<FAssetSaver> AssetSaver = MakeShared<FAssetSaver>();
+	AssetSaver->OnAssetSaved.BindRaw(this, &FCacheGenerator::OnAssetSaved);
+	AssetSaver->SaveAssetToCache(BaseModelId, Asset);
+
+	// Store the AssetSaver in a TArray or other container to ensure its lifetime
+	//ActiveAssetSavers.Add(AssetSaver);
+}
+
+void FCacheGenerator::OnAssetSaved(bool bWasSuccessful)
+{
+	AssetDownloadRequestsCompleted++;
+	if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
 	{
-		this->OnAssetDataLoaded(Request, Response, bWasSuccessful, FilePath);
-	});
-	Request->ProcessRequest();
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, AssetDownloadRequestsCompleted);
+
+		OnLocalCacheGenerated.ExecuteIfBound(true);
+	}
 }
 
 void FCacheGenerator::OnAssetDataLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath)
@@ -234,7 +245,7 @@ void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Req
 
 void FCacheGenerator::ExtractCache()
 {
-	
+	// TODO add implementation
 }
 
 void FCacheGenerator::FetchBaseModels()
