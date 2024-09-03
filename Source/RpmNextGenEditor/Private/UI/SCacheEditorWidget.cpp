@@ -189,8 +189,7 @@ FReply SCacheEditorWidget::OnDownloadRemoteCacheClicked()
 void SCacheEditorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed fetching assets"));
-    //TODO re-nable once zip extraction is implemented
-    //CacheGenerator->LoadAndStoreAssets();
+    CacheGenerator->LoadAndStoreAssets();
 }
 
 void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
@@ -199,13 +198,16 @@ void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
 
 void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
 {
-    UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
-    FString FolderToPak = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
-    FString PakFilePath = FPaths::ProjectSavedDir() / TEXT("LocalCacheAssets.pak");
-    FString ResponseFilePath = FPaths::ProjectSavedDir() / TEXT("RpmCache_ResponseFile.txt");
-    
-    GeneratePakResponseFile(ResponseFilePath, FolderToPak);
-    CreatePakFile(PakFilePath, ResponseFilePath);
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed generating cache"));
+
+    //TODO re-nable once zip extraction is implemented
+    // UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
+    // FString FolderToPak = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache");
+    // FString PakFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("LocalCacheAssets.pak");
+    // FString ResponseFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("RpmCache_ResponseFile.txt");
+    //
+    // GeneratePakResponseFile(ResponseFilePath, FolderToPak);
+    // CreatePakFile(PakFilePath, ResponseFilePath);
 }
 
 void SCacheEditorWidget::OnItemsPerCategoryChanged(float NewValue)

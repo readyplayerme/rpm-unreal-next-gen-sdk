@@ -13,7 +13,7 @@
 #include "Misc/ScopeExit.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/LocalCache");
+const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache");
 const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
