@@ -62,7 +62,7 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 			}
 			OnAssetLoadComplete(gltfAsset, bWasSuccessful, LoadedAssetId);
 		});
-	LoadGLBFromURL(URL);
+	RequestFromUrl(URL);
 }
 
 void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId)

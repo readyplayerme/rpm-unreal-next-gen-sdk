@@ -14,8 +14,8 @@
 #include "Misc/ScopeExit.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache");
-const FString FCacheGenerator::ZipFileName = TEXT("LocalCacheAssets.zip");
+const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache/Assets");
+const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
 	: CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
@@ -84,13 +84,9 @@ void FCacheGenerator::LoadAndStoreAssets()
 
 void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset)
 {
-	// Use TSharedPtr instead of TSharedRef
 	TSharedPtr<FAssetSaver> AssetSaver = MakeShared<FAssetSaver>();
 	AssetSaver->OnAssetSaved.BindRaw(this, &FCacheGenerator::OnAssetSaved);
 	AssetSaver->LoadSaveAssetToCache(BaseModelId, Asset);
-
-	// Store the AssetSaver in a TArray or other container to ensure its lifetime
-	//ActiveAssetSavers.Add(AssetSaver);
 }
 
 void FCacheGenerator::OnAssetSaved(bool bWasSuccessful)
@@ -102,42 +98,6 @@ void FCacheGenerator::OnAssetSaved(bool bWasSuccessful)
 
 		OnLocalCacheGenerated.ExecuteIfBound(true);
 	}
-}
-
-void FCacheGenerator::OnAssetDataLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath)
-{
-	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-	{
-		// Get the response data
-		const TArray<uint8>& Data = Response->GetContent();
-
-		// Save the data as a .zip file
-		if (FFileHelper::SaveArrayToFile(Data, *FilePath))
-		{
-			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully saved asset in local cache to: %s"), *FilePath);
-		}
-		else
-		{
-			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to saved asset local cache to: %s"), *FilePath);
-
-		}
-		AssetDownloadRequestsCompleted++;
-		if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
-		{
-			UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, AssetDownloadRequestsCompleted);
-
-			OnLocalCacheGenerated.ExecuteIfBound(true);
-		}
-		return;
-	}
-	AssetDownloadRequestsCompleted++;
-	if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
-	{
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, AssetDownloadRequestsCompleted);
-		OnLocalCacheGenerated.ExecuteIfBound(true);
-	}
-	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to download the remote cache"));
-
 }
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)

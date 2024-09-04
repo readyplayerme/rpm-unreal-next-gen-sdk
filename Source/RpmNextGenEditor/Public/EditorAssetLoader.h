@@ -1,10 +1,10 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Assets/AssetLoader.h"
+#include "Api/Files/GlbLoader.h"
 #include "HAL/PlatformFilemanager.h"
 
-class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetLoader
+class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FGlbLoader
 {
 public:
 	void OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,

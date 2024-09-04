@@ -3,7 +3,7 @@
 
 #include "RpmAssetLoaderComponent.h"
 #include "RpmNextGen.h"
-#include "Api/Assets/AssetLoader.h"
+#include "Api/Files//GlbLoader.h"
 
 class URpmDeveloperSettings;
 
@@ -13,7 +13,7 @@ URpmAssetLoaderComponent::URpmAssetLoaderComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-	AssetLoader = MakeShared<FAssetLoader>();
+	AssetLoader = MakeShared<FGlbLoader>();
 	AssetLoader->OnGLtfAssetLoaded.BindUObject(
 		this,
 		&URpmAssetLoaderComponent::HandleGLtfAssetLoaded
@@ -28,7 +28,7 @@ void URpmAssetLoaderComponent::BeginPlay()
 
 void URpmAssetLoaderComponent::LoadCharacterFromUrl(const FString Url)
 {	
-	AssetLoader->LoadGLBFromURL(Url);
+	AssetLoader->RequestFromUrl(Url);
 }
 
 void URpmAssetLoaderComponent::HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)

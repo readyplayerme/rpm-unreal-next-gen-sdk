@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 
+struct FStoredAsset;
 class FHttpModule;
 class IHttpResponse;
 class IHttpRequest;
@@ -16,9 +17,9 @@ public:
 	FAssetSaver();
 	virtual ~FAssetSaver();
 	void LoadSaveAssetToCache(const FString& BaseModelId, const FAsset* Asset);
-	void LoadAndSaveImage(const FString& Url, const FString& FilePath);
-	void LoadAndSaveGlb(const FString& Url, const FString& FilePath);
-	void OnAssetLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath);
+	void LoadAndSaveImage(const FStoredAsset& StoredAsset);
+	void LoadAndSaveGlb(const FStoredAsset& StoredAsset);
+	void OnAssetLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FStoredAsset* StoredAsset);
 	void SaveToFile(const FString& FilePath, const TArray<uint8>& Data);
 
 	FOnAssetSavedToCache OnAssetSaved;

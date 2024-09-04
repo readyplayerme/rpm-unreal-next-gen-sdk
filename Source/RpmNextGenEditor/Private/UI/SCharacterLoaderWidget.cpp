@@ -5,7 +5,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "EditorStyleSet.h"
 #include "glTFRuntimeFunctionLibrary.h"
-#include "Api/Assets/AssetLoader.h"
+#include "Api/Files/GlbLoader.h"
 #include "PropertyCustomizationHelpers.h"
 #include "AssetRegistry/AssetData.h"
 

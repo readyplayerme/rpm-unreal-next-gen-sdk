@@ -35,7 +35,6 @@ protected:
 	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType);
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
-	virtual void OnAssetDataLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FString& FilePath);
 	void OnAssetSaved(bool bWasSuccessful);
 	TUniquePtr<FAssetApi> AssetApi;
 	TArray<FAsset> BaseModelAssets;

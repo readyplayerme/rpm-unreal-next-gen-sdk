@@ -7,7 +7,7 @@
 #include "RpmAssetLoaderComponent.generated.h"
 
 class UglTFRuntimeAsset;
-class FAssetLoader;
+class FGlbLoader;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGltfAssetLoaded, UglTFRuntimeAsset*, Asset);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -35,5 +35,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
-	TSharedPtr<FAssetLoader> AssetLoader;
+	TSharedPtr<FGlbLoader> AssetLoader;
 };

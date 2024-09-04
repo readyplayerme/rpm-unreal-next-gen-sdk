@@ -6,7 +6,7 @@
 #include "Widgets/DeclarativeSyntaxSupport.h"
 
 class FEditorAssetLoader;
-class FAssetLoader;
+class FGlbLoader;
 
 class SCharacterLoaderWidget : public SCompoundWidget
 {
