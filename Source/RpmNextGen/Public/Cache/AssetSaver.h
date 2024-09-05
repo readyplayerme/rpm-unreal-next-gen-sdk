@@ -19,13 +19,12 @@ public:
 	void LoadSaveAssetToCache(const FString& BaseModelId, const FAsset* Asset);
 	void LoadAndSaveImage(const FStoredAsset& StoredAsset);
 	void LoadAndSaveGlb(const FStoredAsset& StoredAsset);
-	void OnAssetLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FStoredAsset* StoredAsset);
+	void OnGlbLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FStoredAsset* StoredAsset);
+	void OnImageLoaded(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const FStoredAsset* StoredAsset);
 	void SaveToFile(const FString& FilePath, const TArray<uint8>& Data);
 
 	FOnAssetSavedToCache OnAssetSaved;
 private:
-	bool bIsImageLoaded;
-	bool bIsGlbLoaded;
 	static const FString CacheFolderPath;
 	FHttpModule* Http;
 };
