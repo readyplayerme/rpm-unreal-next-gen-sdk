@@ -1,35 +1,85 @@
 ﻿#include "Api/Assets/AssetLoader.h"
+
+#include "HttpModule.h"
 #include "Api/Assets/Models/Asset.h"
+#include "Cache/AssetStorageManager.h"
+#include "Interfaces/IHttpResponse.h"
 #include "RpmNextGenEditor/Public/EditorAssetLoader.h"
 
-void FAssetLoader::LoadAsset(FAsset* Asset, bool bStoreInCache)
+FAssetLoader::FAssetLoader()
 {
-	LoadAssetModel(Asset, bStoreInCache);
-	LoadAssetImage(Asset, bStoreInCache);
+	Http = &FHttpModule::Get();
 }
 
-void FAssetLoader::FileRequestComplete(TArray<uint8>* Data, FAsset* Asset)
-{
+FAssetLoader::~FAssetLoader()
+{	
 }
 
-void FAssetLoader::LoadAssetModel(FAsset* Asset, bool bStoreInCache)
+void FAssetLoader::LoadAsset(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
-	TSharedPtr<FFileApi> FileApi = MakeShareable(new FFileApi());
+	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
+	LoadAssetImage(Context);
+}
+
+void FAssetLoader::LoadAssetImage(TSharedRef<FAssetLoadingContext> Context)
+{
+	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
+	Request->SetURL(Context->Asset.IconUrl);
+	Request->SetVerb(TEXT("GET"));
+
 	TSharedPtr<FAssetLoader> ThisPtr = SharedThis(this);
-	FileApi->OnFileRequestComplete.BindLambda([ThisPtr, Asset](TArray<uint8>* Data)
+	Request->OnProcessRequestComplete().BindLambda([ThisPtr, Context](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 	{
-		ThisPtr->FileRequestComplete(Data, Asset);
+		ThisPtr->AssetImageLoaded(Response, bWasSuccessful, Context);
 	});
-	FileApi->RequestFromUrl(Asset->GlbUrl);
+	Request->ProcessRequest();
 }
 
-void FAssetLoader::LoadAssetImage(FAsset* Asset, bool bStoreInCache)
+void FAssetLoader::AssetImageLoaded(TSharedPtr<IHttpResponse> Response, const bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context)
 {
-	TSharedPtr<FFileApi> FileApi = MakeShareable(new FFileApi());
-	TSharedPtr<FAssetLoader> ThisPtr = SharedThis(this);
-	FileApi->OnFileRequestComplete.BindLambda([ThisPtr, Asset](TArray<uint8>* Data)
+	if (bWasSuccessful && Response.IsValid())
 	{
-		ThisPtr->FileRequestComplete(Data, Asset);
+		Context->ImageData = Response->GetContent();
+		LoadAssetModel(Context);
+		OnAssetImageLoaded.ExecuteIfBound(Context->ImageData);
+		return;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Failed to load image from URL: %s"), *Context->Asset.IconUrl);
+	LoadAssetModel(Context);
+	OnAssetImageLoaded.ExecuteIfBound(TArray<uint8>());
+}
+
+void FAssetLoader::LoadAssetModel(TSharedRef<FAssetLoadingContext> Context)
+{
+	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
+	Request->SetURL(Context->Asset.GlbUrl);
+	Request->SetVerb(TEXT("GET"));
+
+	TSharedPtr<FAssetLoader> ThisPtr = SharedThis(this);
+	Request->OnProcessRequestComplete().BindLambda([ThisPtr, Context](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	{
+		ThisPtr->AssetModelLoaded(Response, bWasSuccessful, Context);
 	});
-	FileApi->RequestFromUrl(Asset->IconUrl);
+	Request->ProcessRequest();
+}
+
+void FAssetLoader::AssetModelLoaded(TSharedPtr<IHttpResponse> Response, const bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context)
+{
+	if (bWasSuccessful && Response.IsValid())
+	{
+		Context->GlbData = Response->GetContent();
+
+		if (Context->bStoreInCache)
+		{
+			FAssetStorageManager::Get().SaveAssetAndTrack(*Context);
+			OnAssetSaved.ExecuteIfBound(FAssetSaveData(Context->Asset, Context->BaseModelId));
+		}
+		OnAssetGlbLoaded.ExecuteIfBound(Context->GlbData);
+
+		UE_LOG(LogTemp, Log, TEXT("Asset loaded successfully."));
+		return;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Failed to load .glb model from URL: %s"), *Context->Asset.GlbUrl);
+	OnAssetGlbLoaded.ExecuteIfBound(TArray<uint8>());
+	OnAssetSaved.ExecuteIfBound(FAssetSaveData());
 }

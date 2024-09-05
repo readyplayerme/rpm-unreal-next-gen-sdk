@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
 
+struct FAssetSaveData;
 class FAssetSaver;
 struct FAssetTypeListResponse;
 class FAssetApi;
@@ -13,7 +14,7 @@ DECLARE_DELEGATE_OneParam(FOnCacheDataLoaded, bool);
 DECLARE_DELEGATE_OneParam(FOnLocalCacheGenerated, bool);
 DECLARE_DELEGATE_OneParam(FOnDownloadRemoteCache, bool);
 
-class RPMNEXTGEN_API FCacheGenerator
+class RPMNEXTGEN_API FCacheGenerator : public TSharedFromThis<FCacheGenerator>
 {
 public:
 	virtual ~FCacheGenerator() = default;
@@ -30,12 +31,12 @@ public:
 	void LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset);
 
 protected:
-	void FetchBaseModels();
-	void FetchAssetTypes();
-	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType);
+	void FetchBaseModels() const;
+	void FetchAssetTypes() const;
+	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType) const;
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
-	void OnAssetSaved(bool bWasSuccessful);
+	void OnAssetSaved(const FAssetSaveData& AssetSaveData);
 	TUniquePtr<FAssetApi> AssetApi;
 	TArray<FAsset> BaseModelAssets;
 	TArray<FString> AssetTypes;

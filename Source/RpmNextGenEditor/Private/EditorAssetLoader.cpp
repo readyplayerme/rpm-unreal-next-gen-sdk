@@ -13,14 +13,14 @@ FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful, FString LoadedAssetId)
+void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, bool bWasSuccessful, FString LoadedAssetId)
 {
 	if (bWasSuccessful)
 	{
-		gltfAsset->AddToRoot();
-		SaveAsUAsset(gltfAsset, LoadedAssetId);
-		LoadAssetToWorldAsURpmActor(gltfAsset, LoadedAssetId);
-		gltfAsset->RemoveFromRoot();
+		GltfAsset->AddToRoot();
+		SaveAsUAsset(GltfAsset, LoadedAssetId);
+		LoadAssetToWorldAsURpmActor(GltfAsset, LoadedAssetId);
+		GltfAsset->RemoveFromRoot();
 	}
 }
 
@@ -49,7 +49,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	return skeletalMesh;
 }
 
-void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString LoadedAssetId)
+void FEditorAssetLoader::LoadGlbFromURLWithId(const FString& URL, FString LoadedAssetId)
 {
 	OnGLtfAssetLoaded.BindLambda(
 		[LoadedAssetId, this]( UglTFRuntimeAsset* gltfAsset,
@@ -65,13 +65,13 @@ void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString Loaded
 	RequestFromUrl(URL);
 }
 
-void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId)
+void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId)
 {
-	this->LoadAssetToWorld(AssetId, gltfAsset);
+	this->LoadAssetToWorld(AssetId, GltfAsset);
 }
 
 
-void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAsset* GltfAsset)
 {
 	if (!GEditor)
 	{
@@ -86,7 +86,7 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 		return;
 	}
 
-	if (gltfAsset)
+	if (GltfAsset)
 	{
 		FTransform Transform = FTransform::Identity;
 
@@ -109,9 +109,9 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 			// Register the actor in the editor world and update the editor
 			GEditor->SelectActor(NewActor, true, true);
 			GEditor->EditorUpdateComponents();
-			if (gltfAsset)
+			if (GltfAsset)
 			{
-				NewActor->LoadGltfAsset(gltfAsset);
+				NewActor->LoadGltfAsset(GltfAsset);
 			}
 			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 			return;

@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "RpmNextGen.h"
-#include "StoredAsset.h"
+#include "AssetSaveData.h"
+#include "AssetSaver.h"
+#include "Api/Assets/AssetLoader.h"
 
 class FAssetStorageManager
 {
@@ -11,29 +13,38 @@ public:
 		return Instance;
 	}
 
-	void TrackStoredAsset(const FAsset& Asset, const FString& GlbFilePath, const FString& IconFilePath, const bool bSaveManifest = true)
+	void SaveAssetAndTrack(const FAssetLoadingContext& Context)
 	{
-		FStoredAsset& StoredAsset = StoredAssets.FindOrAdd(Asset.Id);
-		StoredAsset.Asset = Asset;
-		StoredAsset.GlbFilePath = GlbFilePath;
-		StoredAsset.IconFilePath = IconFilePath;
+		const FAssetSaveData& StoredAsset = FAssetSaveData(Context.Asset, Context.BaseModelId);
 
-		if(bSaveManifest)
-		{
-			SaveManifest(); 
-		}
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *Asset.Id, *GlbFilePath, *IconFilePath);
+		FAssetSaver AssetSaver = FAssetSaver();
+		AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.ImageData);
+		AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.GlbData);
+		TrackStoredAsset(StoredAsset);
 	}
 
-	void TrackStoredAsset(const FStoredAsset& StoredAsset, const bool bSaveManifest = true)
+	void TrackStoredAsset(const FAssetSaveData& StoredAsset, const bool bSaveManifest = true)
 	{
-		StoredAssets.Add(StoredAsset.Asset.Id, StoredAsset);
+		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
+		if(ExistingStoredAsset != nullptr)
+		{
+			// Update existing stored asset with new values if present
+			if(ExistingStoredAsset->GlbFilePath.IsEmpty() && !StoredAsset.GlbFilePath.IsEmpty())
+			{
+				ExistingStoredAsset->GlbFilePath = StoredAsset.GlbFilePath;
+			}
+			if(ExistingStoredAsset->IconFilePath.IsEmpty() && !StoredAsset.IconFilePath.IsEmpty())
+			{
+				ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
+			}
+		}
+		StoredAssets.Add(StoredAsset.Id, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
 
 		if(bSaveManifest)
 		{
 			SaveManifest(); 
 		}
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *StoredAsset.Asset.Id, *StoredAsset.GlbFilePath, *StoredAsset.IconFilePath);
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *StoredAsset.Id, *StoredAsset.GlbFilePath, *StoredAsset.IconFilePath);
 	}
 
 	void LoadManifest()
@@ -51,8 +62,8 @@ public:
 				TArray<TSharedPtr<FJsonValue>> AssetsArray = ManifestJson->GetArrayField(TEXT("TrackedAssets"));
 				for (const TSharedPtr<FJsonValue>& AssetValue : AssetsArray)
 				{
-					FStoredAsset StoredAsset = FStoredAsset::FromJson(AssetValue->AsObject());
-					StoredAssets.Add(StoredAsset.Asset.Id, StoredAsset);
+					FAssetSaveData StoredAsset = FAssetSaveData::FromJson(AssetValue->AsObject());
+					StoredAssets.Add(StoredAsset.Id, StoredAsset);
 				}
 
 				UE_LOG(LogReadyPlayerMe, Log, TEXT("Loaded manifest with %d assets"), StoredAssets.Num());
@@ -82,12 +93,12 @@ public:
 		FFileHelper::SaveStringToFile(OutputString, *ManifestFilePath);
 	}
 
-	const TMap<FString, FStoredAsset>& GetStoredAssets() const
+	const TMap<FString, FAssetSaveData>& GetStoredAssets() const
 	{
 		return StoredAssets;
 	}
 
 private:
 	FAssetStorageManager() {}
-	TMap<FString, FStoredAsset> StoredAssets; 
+	TMap<FString, FAssetSaveData> StoredAssets; 
 };

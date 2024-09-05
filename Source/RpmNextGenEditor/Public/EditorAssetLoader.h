@@ -4,19 +4,19 @@
 #include "Api/Files/GlbLoader.h"
 #include "HAL/PlatformFilemanager.h"
 
-class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FGlbLoader
+class FEditorAssetLoader : public FGlbLoader
 {
 public:
-	void OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
-	                             FString LoadedAssetId);
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;
 
-	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId = "");
-	void LoadGLBFromURLWithId(const FString& URL, const FString AssetId);
+	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId = "");
+	void LoadGlbFromURLWithId(const FString& URL, const FString AssetId);
+	void OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, bool bWasSuccessful, FString LoadedAssetId);
+	
 	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
 	USkeleton* SkeletonToCopy;
 
 private:
-	void LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gltfAsset);
+	void LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAsset* GltfAsset);
 };

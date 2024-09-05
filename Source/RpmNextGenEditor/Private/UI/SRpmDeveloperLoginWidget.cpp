@@ -304,7 +304,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
 {
 	AssetLoader = FEditorAssetLoader();
-	AssetLoader.LoadGLBFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
+	AssetLoader.LoadGlbFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const

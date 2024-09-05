@@ -2,10 +2,10 @@
 #include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
+#include "Api/Assets/AssetLoader.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
-#include "Cache/AssetSaver.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -14,7 +14,7 @@
 #include "Misc/ScopeExit.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache/Assets");
+const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
 const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
@@ -68,9 +68,7 @@ void FCacheGenerator::LoadAndStoreAssets()
 		{
 			PlatformFile.CreateDirectoryTree(*DirectoryPath);
 		}
-		
-		// LoadAndStoreAssetFromUrl(BaseModel.GlbUrl, BaseModeFolder / FString::Printf( TEXT("%s.glb"), *BaseModel.Id));
-		//LoadAndStoreAssetFromUrl(BaseModel.IconUrl, BaseModeFolder / FString::Printf( TEXT("%s.png"), *BaseModel.Id));
+
 		LoadAndStoreAssetFromUrl(BaseModel.Id, &BaseModel);
 		for (auto Pairs : BaseModelAssetsMap)
 		{
@@ -84,12 +82,12 @@ void FCacheGenerator::LoadAndStoreAssets()
 
 void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset)
 {
-	TSharedPtr<FAssetSaver> AssetSaver = MakeShared<FAssetSaver>();
-	AssetSaver->OnAssetSaved.BindRaw(this, &FCacheGenerator::OnAssetSaved);
-	AssetSaver->LoadSaveAssetToCache(BaseModelId, Asset);
+	TSharedPtr<FAssetLoader> AssetLoader = MakeShared<FAssetLoader>();
+	AssetLoader->OnAssetSaved.BindRaw( this, &FCacheGenerator::OnAssetSaved);
+	AssetLoader->LoadAsset(*Asset, BaseModelId, true);
 }
 
-void FCacheGenerator::OnAssetSaved(bool bWasSuccessful)
+void FCacheGenerator::OnAssetSaved(const FAssetSaveData& AssetSaveData)
 {
 	AssetDownloadRequestsCompleted++;
 	if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
@@ -208,7 +206,7 @@ void FCacheGenerator::ExtractCache()
 	// TODO add implementation
 }
 
-void FCacheGenerator::FetchBaseModels()
+void FCacheGenerator::FetchBaseModels() const
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	FAssetListRequest AssetListRequest = FAssetListRequest();
@@ -220,7 +218,7 @@ void FCacheGenerator::FetchBaseModels()
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetching base models") );
 }
 
-void FCacheGenerator::FetchAssetTypes()
+void FCacheGenerator::FetchAssetTypes() const
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	FAssetTypeListRequest AssetListRequest;
@@ -231,7 +229,7 @@ void FCacheGenerator::FetchAssetTypes()
 	AssetApi->ListAssetTypesAsync(AssetListRequest);
 }
 
-void FCacheGenerator::FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType)
+void FCacheGenerator::FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType) const
 {
 	URpmDeveloperSettings *Settings = GetMutableDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams = FAssetListQueryParams();

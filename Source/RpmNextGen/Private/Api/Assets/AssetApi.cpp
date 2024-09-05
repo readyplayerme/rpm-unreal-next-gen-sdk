@@ -132,3 +132,8 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
     OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
 }
 
+void FAssetApi::HandleListAssetTypeResponse(FString Response, bool bWasSuccessful)
+{
+	
+}
+
