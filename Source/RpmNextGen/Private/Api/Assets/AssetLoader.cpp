@@ -18,7 +18,39 @@ FAssetLoader::~FAssetLoader()
 void FAssetLoader::LoadAsset(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
+	Context->bLoadGlb = true;
+	Context->bLoadImage = true;
 	LoadAssetImage(Context);
+}
+
+void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
+{
+	FAssetSaveData StoredAsset;
+	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
+	{
+		TArray<uint8> glbData;
+		FFileHelper::LoadFileToArray(glbData, *StoredAsset.GlbFilePath);
+		OnAssetGlbLoaded.ExecuteIfBound(Asset, glbData);
+		return;
+	}
+	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
+	Context->bLoadGlb = true;
+	LoadAssetImage(Context);
+}
+
+void FAssetLoader::LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
+{
+	FAssetSaveData StoredAsset;
+	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
+	{
+		TArray<uint8> iconData;
+		FFileHelper::LoadFileToArray(iconData, *StoredAsset.IconFilePath);
+		OnAssetGlbLoaded.ExecuteIfBound(Asset, iconData);
+		return;
+	}
+	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
+	Context->bLoadImage = true;
+	LoadAssetGlb(Context);
 }
 
 void FAssetLoader::LoadAssetImage(TSharedRef<FAssetLoadingContext> Context)
@@ -40,16 +72,23 @@ void FAssetLoader::AssetImageLoaded(TSharedPtr<IHttpResponse> Response, const bo
 	if (bWasSuccessful && Response.IsValid())
 	{
 		Context->ImageData = Response->GetContent();
-		LoadAssetModel(Context);
-		OnAssetImageLoaded.ExecuteIfBound(Context->ImageData);
+		if(!Context->bLoadGlb)
+		{
+			FAssetStorageManager::Get().SaveAssetAndTrack(*Context);
+			OnAssetImageLoaded.ExecuteIfBound(Context->Asset, Context->ImageData);
+			OnAssetSaved.ExecuteIfBound(FAssetSaveData(Context->Asset, Context->BaseModelId));
+			return;
+		}
+		LoadAssetGlb(Context);
+		OnAssetImageLoaded.ExecuteIfBound(Context->Asset, Context->ImageData);
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to load image from URL: %s"), *Context->Asset.IconUrl);
-	LoadAssetModel(Context);
-	OnAssetImageLoaded.ExecuteIfBound(TArray<uint8>());
+	LoadAssetGlb(Context);
+	OnAssetImageLoaded.ExecuteIfBound(Context->Asset, TArray<uint8>());
 }
 
-void FAssetLoader::LoadAssetModel(TSharedRef<FAssetLoadingContext> Context)
+void FAssetLoader::LoadAssetGlb(TSharedRef<FAssetLoadingContext> Context)
 {
 	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
 	Request->SetURL(Context->Asset.GlbUrl);
@@ -74,12 +113,12 @@ void FAssetLoader::AssetModelLoaded(TSharedPtr<IHttpResponse> Response, const bo
 			FAssetStorageManager::Get().SaveAssetAndTrack(*Context);
 			OnAssetSaved.ExecuteIfBound(FAssetSaveData(Context->Asset, Context->BaseModelId));
 		}
-		OnAssetGlbLoaded.ExecuteIfBound(Context->GlbData);
+		OnAssetGlbLoaded.ExecuteIfBound(Context->Asset, Context->GlbData);
 
 		UE_LOG(LogTemp, Log, TEXT("Asset loaded successfully."));
 		return;
 	}
 	UE_LOG(LogTemp, Error, TEXT("Failed to load .glb model from URL: %s"), *Context->Asset.GlbUrl);
-	OnAssetGlbLoaded.ExecuteIfBound(TArray<uint8>());
+	OnAssetGlbLoaded.ExecuteIfBound(Context->Asset, TArray<uint8>());
 	OnAssetSaved.ExecuteIfBound(FAssetSaveData());
 }

@@ -21,8 +21,6 @@ public:
 	
 	virtual void LoadCharacterFromUrl(FString Url);
 	
-
-
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnGltfAssetLoaded OnGltfAssetLoaded;
 	

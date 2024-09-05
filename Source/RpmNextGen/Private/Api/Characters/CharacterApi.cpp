@@ -25,6 +25,7 @@ FCharacterApi::~FCharacterApi()
 
 void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 {
+	AssetByType.Append(Request.Data.Assets);
 	FApiRequest ApiRequest;
 	ApiRequest.Url = FString::Printf(TEXT("%s"), *BaseUrl);
 	ApiRequest.Method = POST;
@@ -35,6 +36,7 @@ void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 
 void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
 {
+	AssetByType.Append(Request.Payload.Assets);
 	FApiRequest ApiRequest;
 	ApiRequest.Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
 	ApiRequest.Method = PATCH;

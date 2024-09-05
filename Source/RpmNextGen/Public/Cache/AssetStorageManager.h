@@ -98,7 +98,26 @@ public:
 		return StoredAssets;
 	}
 
+	bool IsAssetCached(const FString& AssetId) const
+	{
+		return StoredAssets.Contains(AssetId);
+	}
+
+	bool GetCachedAsset(const FString& AssetId, FAssetSaveData& OutAsset) const
+	{
+		const FAssetSaveData* StoredAsset = StoredAssets.Find(AssetId);
+		if(StoredAsset != nullptr)
+		{
+			OutAsset = *StoredAsset;
+			return true;
+		}
+		return false;
+	}
+
 private:
-	FAssetStorageManager() {}
+	FAssetStorageManager()
+	{
+		LoadManifest();
+	}
 	TMap<FString, FAssetSaveData> StoredAssets; 
 };
