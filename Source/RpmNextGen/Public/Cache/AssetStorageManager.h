@@ -13,19 +13,41 @@ public:
 		return Instance;
 	}
 
-	void SaveAssetAndTrack(const FAssetLoadingContext& Context)
+	static void StoreAssetTypes(const TArray<FString>& TypeList)
+	{
+		FString TypeListFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache/TypeList.json");
+
+		// Convert the TArray<FString> to TArray<TSharedPtr<FJsonValue>>
+		TArray<TSharedPtr<FJsonValue>> JsonValues;
+		for (const FString& Type : TypeList)
+		{
+			JsonValues.Add(MakeShared<FJsonValueString>(Type));
+		}
+
+		FString OutputString;
+		const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+
+		// Serialize the array of TSharedPtr<FJsonValue>
+		FJsonSerializer::Serialize(JsonValues, Writer);
+
+		// Save the resulting JSON string to file
+		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath);
+	}
+
+	void StoreAndTrackAsset(const FAssetLoadingContext& Context)
 	{
 		const FAssetSaveData& StoredAsset = FAssetSaveData(Context.Asset, Context.BaseModelId);
 
 		FAssetSaver AssetSaver = FAssetSaver();
-		AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.ImageData);
-		AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.GlbData);
-		TrackStoredAsset(StoredAsset);
+		AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.D);
+		AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.Data);
+		StoreAndTrackAsset(StoredAsset);
 	}
 
-	void TrackStoredAsset(const FAssetSaveData& StoredAsset, const bool bSaveManifest = true)
+	void StoreAndTrackAsset(const FAssetSaveData& StoredAsset, const bool bSaveManifest = true)
 	{
-		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
+		FString CombinedId = StoredAsset.Id + StoredAsset.BaseModelId;
+		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(CombinedId);
 		if(ExistingStoredAsset != nullptr)
 		{
 			// Update existing stored asset with new values if present
@@ -38,7 +60,7 @@ public:
 				ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
 			}
 		}
-		StoredAssets.Add(StoredAsset.Id, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
+		StoredAssets.Add(CombinedId, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
 
 		if(bSaveManifest)
 		{
@@ -59,11 +81,13 @@ public:
 
 			if (FJsonSerializer::Deserialize(Reader, ManifestJson) && ManifestJson.IsValid())
 			{
-				TArray<TSharedPtr<FJsonValue>> AssetsArray = ManifestJson->GetArrayField(TEXT("TrackedAssets"));
-				for (const TSharedPtr<FJsonValue>& AssetValue : AssetsArray)
+				const TSharedPtr<FJsonObject> TrackedAssetsJson = ManifestJson->GetObjectField(TEXT("TrackedAssets"));
+				for (const auto& Entry : TrackedAssetsJson->Values)
 				{
-					FAssetSaveData StoredAsset = FAssetSaveData::FromJson(AssetValue->AsObject());
-					StoredAssets.Add(StoredAsset.Id, StoredAsset);
+					const FString& AssetId = Entry.Key;
+					const TSharedPtr<FJsonObject> AssetData = Entry.Value->AsObject();
+					FAssetSaveData StoredAsset = FAssetSaveData::FromJson(AssetData);
+					StoredAssets.Add(AssetId, StoredAsset);
 				}
 
 				UE_LOG(LogReadyPlayerMe, Log, TEXT("Loaded manifest with %d assets"), StoredAssets.Num());
@@ -76,15 +100,15 @@ public:
 		const FString ManifestFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache/AssetManifest.json");
 
 		TSharedPtr<FJsonObject> ManifestJson = MakeShared<FJsonObject>();
-		TArray<TSharedPtr<FJsonValue>> AssetsArray;
+		TSharedPtr<FJsonObject> TrackedAssetsJson = MakeShared<FJsonObject>();
 
 		for (const auto& Entry : StoredAssets)
 		{
 			TSharedPtr<FJsonObject> AssetJson = Entry.Value.ToJson();
-			AssetsArray.Add(MakeShared<FJsonValueObject>(AssetJson));
+			TrackedAssetsJson->SetObjectField(Entry.Key, AssetJson);
 		}
 
-		ManifestJson->SetArrayField(TEXT("TrackedAssets"), AssetsArray);
+		ManifestJson->SetObjectField(TEXT("TrackedAssets"), TrackedAssetsJson);
 
 		FString OutputString;
 		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);

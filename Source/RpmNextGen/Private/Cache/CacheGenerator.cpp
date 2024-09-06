@@ -1,4 +1,4 @@
-﻿#include "Cache/CacheGenerator.h"
+#include "Cache/CacheGenerator.h"
 #include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
@@ -143,7 +143,8 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 
 void FCacheGenerator::FetchAssetsForEachBaseModel()
 {
-	RequiredRefittedAssetRequests = AssetTypes.Num() * BaseModelAssets.Num();
+	const int TypesExcludingBaseModel = AssetTypes.Num() - 1;
+	RequiredRefittedAssetRequests = TypesExcludingBaseModel * BaseModelAssets.Num();
 	for (FAsset& BaseModel : BaseModelAssets)
 	{
 		for(FString AssetType : AssetTypes)
@@ -159,6 +160,7 @@ void FCacheGenerator::OnListAssetTypesResponse(const FAssetTypeListResponse& Ass
 	{
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d asset types"), AssetListResponse.Data.Num());
 		AssetTypes.Append(AssetListResponse.Data);
+		FAssetStorageManager::Get().StoreAssetTypes(AssetTypes);
 		FetchAssetsForEachBaseModel();
 		return;
 	}
@@ -224,7 +226,6 @@ void FCacheGenerator::FetchAssetTypes() const
 	FAssetTypeListRequest AssetListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
-	QueryParams.ExcludeTypes = "baseModel";
 	AssetListRequest.Params = QueryParams;
 	AssetApi->ListAssetTypesAsync(AssetListRequest);
 }
