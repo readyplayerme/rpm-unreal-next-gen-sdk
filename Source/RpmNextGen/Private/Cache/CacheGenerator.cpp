@@ -23,12 +23,6 @@ FCacheGenerator::FCacheGenerator()
 {
 	Http = &FHttpModule::Get();
 	AssetApi = MakeUnique<FAssetApi>();
-	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
-	
-	if(!Settings->ApiKey.IsEmpty())
-	{
-		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-	}
 	AssetApi->OnListAssetsResponse.BindRaw(this, &FCacheGenerator::OnListAssetsResponse);
 	AssetApi->OnListAssetTypeResponse.BindRaw(this, &FCacheGenerator::OnListAssetTypesResponse);
 }
@@ -51,22 +45,19 @@ void FCacheGenerator::GenerateLocalCache(int InItemsPerCategory)
 void FCacheGenerator::LoadAndStoreAssets()
 {
 	int RefittedAssetCount = 0;
-	for (auto BaseModel : BaseModelAssets)
+	for (auto Pairs : RefittedAssetMapByBaseModelId)
 	{
-		for (auto Pairs : BaseModelAssetsMap)
-		{
-			RefittedAssetCount += Pairs.Value.Num();
-		}
+		RefittedAssetCount += Pairs.Value.Num();
 	}
-	const int AssetIconRequestCount = BaseModelAssetsMap[BaseModelAssets[0].Id].Num();
-	for (auto Asset : BaseModelAssetsMap[BaseModelAssets[0].Id])
+	const int AssetIconRequestCount = RefittedAssetMapByBaseModelId[BaseModelAssets[0].Id].Num();
+	for (auto Asset : RefittedAssetMapByBaseModelId[BaseModelAssets[0].Id])
 	{
 		LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
 	}
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("RefittedAssetCount: %d. AssetIconRequestCount: %d BaseModelAssetsCount %d"), RefittedAssetCount, AssetIconRequestCount, BaseModelAssets.Num());
 
 	RequiredAssetDownloadRequest = RefittedAssetCount +  BaseModelAssets.Num() + AssetIconRequestCount;
-	return;
+	
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets to fetch: %d"), RequiredAssetDownloadRequest, RequiredRefittedAssetRequests);
 	for (auto BaseModel : BaseModelAssets)
 	{
@@ -77,26 +68,29 @@ void FCacheGenerator::LoadAndStoreAssets()
 		{
 			PlatformFile.CreateDirectoryTree(*DirectoryPath);
 		}
-
-		LoadAndStoreAssetFromUrl(BaseModel.Id, &BaseModel);
-		for (auto Pairs : BaseModelAssetsMap)
+		LoadAndStoreAssetGlb(BaseModel.Id, &BaseModel);
+		for (auto RefittedAsset : RefittedAssetMapByBaseModelId[BaseModel.Id])
 		{
-			for (auto AssetForBaseModel : Pairs.Value)
-			{
-				LoadAndStoreAssetFromUrl(BaseModel.Id, &AssetForBaseModel);
-			}
+			LoadAndStoreAssetGlb(BaseModel.Id, &RefittedAsset);
 		}
-	}	
+	}
 }
 
-void FCacheGenerator::LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset)
+void FCacheGenerator::LoadAndStoreAssetGlb(const FString& BaseModelId, const FAsset* Asset)
 {
 	TSharedPtr<FAssetLoader> AssetLoader = MakeShared<FAssetLoader>();
-	AssetLoader->OnAssetSaved.BindRaw( this, &FCacheGenerator::OnAssetSaved);
-	AssetLoader->LoadAsset(*Asset, BaseModelId, true);
+	AssetLoader->OnAssetGlbLoaded.BindRaw( this, &FCacheGenerator::OnAssetSaved);
+	AssetLoader->LoadAssetGlb(*Asset, BaseModelId, true);
 }
 
-void FCacheGenerator::OnAssetSaved(const FAssetSaveData& AssetSaveData)
+void FCacheGenerator::LoadAndStoreAssetIcon(const FString& BaseModelId, const FAsset* Asset)
+{
+	TSharedPtr<FAssetLoader> AssetLoader = MakeShared<FAssetLoader>();
+	AssetLoader->OnAssetIconLoaded.BindRaw( this, &FCacheGenerator::OnAssetSaved);
+	AssetLoader->LoadAssetIcon(*Asset, BaseModelId, true);
+}
+
+void FCacheGenerator::OnAssetSaved(const FAsset& Asset, const TArray<uint8>& Data)
 {
 	AssetDownloadRequestsCompleted++;
 	if(AssetDownloadRequestsCompleted >= RequiredAssetDownloadRequest)
@@ -121,24 +115,34 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 			FetchAssetTypes();
 			return;
 		}
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d assets"), AssetListResponse.Data.Num());
-
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d assets of type %s"), AssetListResponse.Data.Num(), *AssetListResponse.Data[0].Type);
+		
 		if(AssetListResponse.Data.Num() > 0)
 		{
 			FAsset BaseModelID = BaseModelAssets[CurrentBaseModelIndex];
-			if (!BaseModelAssetsMap.Contains(BaseModelID.Id))
+			if (!RefittedAssetMapByBaseModelId.Contains(BaseModelID.Id))
 			{
-				BaseModelAssetsMap.Add(BaseModelID.Id, AssetListResponse.Data);
+				RefittedAssetMapByBaseModelId.Add(BaseModelID.Id, AssetListResponse.Data);
+				UE_LOG(LogReadyPlayerMe, Log, TEXT("Adding %d assets of type %s"), AssetListResponse.Data.Num(), *AssetListResponse.Data[0].Type);
+
 			}
 			else
 			{
-				BaseModelAssetsMap[BaseModelID.Id].Append(AssetListResponse.Data);
+				RefittedAssetMapByBaseModelId[BaseModelID.Id].Append(AssetListResponse.Data);
+				UE_LOG(LogReadyPlayerMe, Log, TEXT("Appending %d assets of type %s"), AssetListResponse.Data.Num(), *AssetListResponse.Data[0].Type);
 			}
+
 		}
 		RefittedAssetRequestsCompleted++;
 		if(RefittedAssetRequestsCompleted >= RequiredRefittedAssetRequests)
 		{
 			OnCacheDataLoaded.ExecuteIfBound(true);
+		}
+		AssetListResponseCounter++;
+		if(AssetListResponseCounter >= AssetTypes.Num()-1)
+		{
+			CurrentBaseModelIndex++;
+			AssetListResponseCounter = 0;
 		}
 		return;
 	}
@@ -154,6 +158,7 @@ void FCacheGenerator::FetchAssetsForEachBaseModel()
 {
 	const int TypesExcludingBaseModel = AssetTypes.Num() - 1;
 	RequiredRefittedAssetRequests = TypesExcludingBaseModel * BaseModelAssets.Num();
+	
 	for (FAsset& BaseModel : BaseModelAssets)
 	{
 		for(FString AssetType : AssetTypes)

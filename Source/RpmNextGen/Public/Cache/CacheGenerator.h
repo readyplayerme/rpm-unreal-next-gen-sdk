@@ -37,11 +37,11 @@ protected:
 	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType) const;
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
-	void OnAssetSaved(const FAssetSaveData& AssetSaveData);
+	void OnAssetSaved(const FAsset& Asset, const TArray<uint8>& Data);
 	TUniquePtr<FAssetApi> AssetApi;
 	TArray<FAsset> BaseModelAssets;
 	TArray<FString> AssetTypes;
-	TMap<FString, TArray<FAsset>> BaseModelAssetsMap; 
+	TMap<FString, TArray<FAsset>> RefittedAssetMapByBaseModelId; 
 	int32 CurrentBaseModelIndex;
 private:
 	void OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
@@ -54,5 +54,6 @@ private:
 	int RefittedAssetRequestsCompleted = 0;
 	int RequiredAssetDownloadRequest = 0;
 	int AssetDownloadRequestsCompleted = 0;
+	int AssetListResponseCounter = 0;
 	FHttpModule* Http;
 };

@@ -27,7 +27,6 @@ public:
 
 	DECLARE_DELEGATE_TwoParams(FOnAssetGlbLoaded, const FAsset&, const TArray<uint8>&);
 	DECLARE_DELEGATE_TwoParams(FOnAsseImageLoaded, const FAsset&, const TArray<uint8>&);
-	DECLARE_DELEGATE_OneParam(FOnAssetSaved, const FAssetSaveData&);
 	
 	FAssetLoader();
 	virtual ~FAssetLoader();
@@ -35,7 +34,6 @@ public:
 	void LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache);
 	FOnAssetGlbLoaded OnAssetGlbLoaded;
 	FOnAsseImageLoaded OnAssetIconLoaded;
-	FOnAssetSaved OnAssetSaved;
 private:
 	void LoadAssetGlb(TSharedRef<FAssetLoadingContext> Context);
 	void LoadAssetIcon(TSharedRef<FAssetLoadingContext> Context);
