@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Api/Assets/Models/Asset.h"
+#include "Api/Common/Models/ApiResponse.h"
 #include "AssetListResponse.generated.h"
 
 USTRUCT(BlueprintType)

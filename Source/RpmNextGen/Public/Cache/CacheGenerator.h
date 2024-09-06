@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
 
 struct FAssetSaveData;
@@ -28,7 +28,8 @@ public:
 	FOnLocalCacheGenerated OnLocalCacheGenerated;
 	
 	void LoadAndStoreAssets();
-	void LoadAndStoreAssetFromUrl(const FString& BaseModelId, const FAsset* Asset);
+	void LoadAndStoreAssetGlb(const FString& BaseModelId, const FAsset* Asset);
+	void LoadAndStoreAssetIcon(const FString& BaseModelId, const FAsset* Asset);
 
 protected:
 	void FetchBaseModels() const;

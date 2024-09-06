@@ -12,16 +12,14 @@ struct FAssetLoadingContext
 {
 	FAsset Asset;
 	FString BaseModelId;
-	TArray<uint8> ImageData;
-	TArray<uint8> GlbData;
+	TArray<uint8> Data;
 	bool bStoreInCache;
-	bool bLoadGlb;
-	bool bLoadImage;
+	bool bIsGLb;
 	FAssetLoadingContext(const FAsset& InAsset, const FString& InBaseModelId, bool bInStoreInCache)
-		: Asset(InAsset), BaseModelId(InBaseModelId), bStoreInCache(bInStoreInCache) {}
+		: Asset(InAsset), BaseModelId(InBaseModelId), bStoreInCache(bInStoreInCache), bIsGLb(false)
+	{
+	}
 };
-
-
 
 class RPMNEXTGEN_API FAssetLoader : public TSharedFromThis<FAssetLoader>
 {
@@ -33,17 +31,16 @@ public:
 	
 	FAssetLoader();
 	virtual ~FAssetLoader();
-	void LoadAsset(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache);
+	void LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache);
 	void LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache);
 	FOnAssetGlbLoaded OnAssetGlbLoaded;
-	FOnAsseImageLoaded OnAssetImageLoaded;
+	FOnAsseImageLoaded OnAssetIconLoaded;
 	FOnAssetSaved OnAssetSaved;
 private:
 	void LoadAssetGlb(TSharedRef<FAssetLoadingContext> Context);
-	void LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache);
-	void LoadAssetImage(TSharedRef<FAssetLoadingContext> Context);
-	void AssetModelLoaded(TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context);
-	void AssetImageLoaded(TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context);
+	void LoadAssetIcon(TSharedRef<FAssetLoadingContext> Context);
+	void AssetGlbLoaded(TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context);
+	void AssetIconLoaded(TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context);
 
 	FHttpModule* Http;
 };

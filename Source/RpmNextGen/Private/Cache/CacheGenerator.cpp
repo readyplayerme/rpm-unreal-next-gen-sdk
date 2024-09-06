@@ -57,8 +57,16 @@ void FCacheGenerator::LoadAndStoreAssets()
 		{
 			RefittedAssetCount += Pairs.Value.Num();
 		}
-	}	
-	RequiredAssetDownloadRequest = RefittedAssetCount +  BaseModelAssets.Num();
+	}
+	const int AssetIconRequestCount = BaseModelAssetsMap[BaseModelAssets[0].Id].Num();
+	for (auto Asset : BaseModelAssetsMap[BaseModelAssets[0].Id])
+	{
+		LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
+	}
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("RefittedAssetCount: %d. AssetIconRequestCount: %d BaseModelAssetsCount %d"), RefittedAssetCount, AssetIconRequestCount, BaseModelAssets.Num());
+
+	RequiredAssetDownloadRequest = RefittedAssetCount +  BaseModelAssets.Num() + AssetIconRequestCount;
+	return;
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets to fetch: %d"), RequiredAssetDownloadRequest, RequiredRefittedAssetRequests);
 	for (auto BaseModel : BaseModelAssets)
 	{

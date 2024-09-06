@@ -3,6 +3,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
+#include "Api/Auth/ApiKeyAuthStrategy.h"
 
 struct FAssetTypeListRequest;
 const FString FAssetApi::BaseModelType = TEXT("baseModel");
@@ -10,11 +11,17 @@ const FString FAssetApi::BaseModelType = TEXT("baseModel");
 FAssetApi::FAssetApi()
 {
 	OnApiResponse.BindRaw(this, &FAssetApi::HandleListAssetResponse);
-	const URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 
 	if(Settings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Application ID is empty. Please set the Application ID in the Ready Player Me Developer Settings"));
+	}
+	
+	if(!Settings->ApiKey.IsEmpty())
+	{
+		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 	}
 }
 
