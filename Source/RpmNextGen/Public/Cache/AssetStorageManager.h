@@ -39,8 +39,8 @@ public:
 		const FAssetSaveData& StoredAsset = FAssetSaveData(Context.Asset, Context.BaseModelId);
 
 		FAssetSaver AssetSaver = FAssetSaver();
-		AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.D);
-		AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.Data);
+		AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.ImageData);
+		AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.GlbData);
 		StoreAndTrackAsset(StoredAsset);
 	}
 

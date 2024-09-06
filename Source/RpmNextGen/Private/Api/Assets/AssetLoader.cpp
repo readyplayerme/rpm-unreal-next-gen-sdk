@@ -74,7 +74,7 @@ void FAssetLoader::AssetImageLoaded(TSharedPtr<IHttpResponse> Response, const bo
 		Context->ImageData = Response->GetContent();
 		if(!Context->bLoadGlb)
 		{
-			FAssetStorageManager::Get().SaveAssetAndTrack(*Context);
+			FAssetStorageManager::Get().StoreAndTrackAsset(*Context);
 			OnAssetImageLoaded.ExecuteIfBound(Context->Asset, Context->ImageData);
 			OnAssetSaved.ExecuteIfBound(FAssetSaveData(Context->Asset, Context->BaseModelId));
 			return;
@@ -110,7 +110,7 @@ void FAssetLoader::AssetModelLoaded(TSharedPtr<IHttpResponse> Response, const bo
 
 		if (Context->bStoreInCache)
 		{
-			FAssetStorageManager::Get().SaveAssetAndTrack(*Context);
+			FAssetStorageManager::Get().StoreAndTrackAsset(*Context);
 			OnAssetSaved.ExecuteIfBound(FAssetSaveData(Context->Asset, Context->BaseModelId));
 		}
 		OnAssetGlbLoaded.ExecuteIfBound(Context->Asset, Context->GlbData);

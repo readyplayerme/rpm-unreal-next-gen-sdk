@@ -6,6 +6,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
+#include "Cache/AssetStorageManager.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -149,6 +150,10 @@ void FCacheGenerator::FetchAssetsForEachBaseModel()
 	{
 		for(FString AssetType : AssetTypes)
 		{
+			if(AssetType == FAssetApi::BaseModelType)
+			{
+				continue;
+			}
 			FetchAssetsForBaseModel(BaseModel.Id, AssetType);
 		}
 	}

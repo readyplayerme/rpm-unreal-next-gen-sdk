@@ -36,7 +36,7 @@ struct RPMNEXTGEN_API FAssetSaveData : public FAsset
 		CreatedAt = InAsset.CreatedAt;
 		UpdatedAt = InAsset.UpdatedAt;
 		BaseModelId = InBaseModelId;
-		IconFilePath = FString::Printf(TEXT("%s/%s/%s.png"), *CacheFolderPath, *BaseModelId, *Id);
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *CacheFolderPath, *Id);
 		GlbFilePath = FString::Printf(TEXT("%s/%s/%s.glb"), *CacheFolderPath, *BaseModelId, *Id);
 	}
 
