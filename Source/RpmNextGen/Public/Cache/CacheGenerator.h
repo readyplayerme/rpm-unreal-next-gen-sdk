@@ -1,6 +1,7 @@
 #pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
 
+class FTaskManager;
 struct FAssetSaveData;
 class FAssetSaver;
 struct FAssetTypeListResponse;
@@ -47,7 +48,6 @@ private:
 	void OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
 	void FetchAssetsForEachBaseModel();
 	void OnListAssetTypesResponse(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
-	static const FString CacheFolderPath;
 	static const FString ZipFileName;
 	int MaxItemsPerCategory;
 	int RequiredRefittedAssetRequests = 0;

@@ -15,7 +15,8 @@ public:
 
 	static void StoreAssetTypes(const TArray<FString>& TypeList)
 	{
-		FString TypeListFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache/TypeList.json");
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString TypeListFilePath = GlobalCachePath / TEXT("TypeList.json");
 
 		// Convert the TArray<FString> to TArray<TSharedPtr<FJsonValue>>
 		TArray<TSharedPtr<FJsonValue>> JsonValues;
@@ -41,10 +42,11 @@ public:
 		FAssetSaver AssetSaver = FAssetSaver();
 		if(Context.bIsGLb)
 		{
-			AssetSaver.SaveToFile(StoredAsset.GlbFilePath, Context.Data);
+			AssetSaver.SaveToFile(StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId], Context.Data);
 		}
 		else
 		{
+			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Storing asset Icon in cache at path %s"), *StoredAsset.IconFilePath);
 			AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.Data);
 		}
 
@@ -53,32 +55,32 @@ public:
 
 	void StoreAndTrackAsset(const FAssetSaveData& StoredAsset, const bool bSaveManifest = true)
 	{
-		FString CombinedId = StoredAsset.Id + StoredAsset.BaseModelId;
-		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(CombinedId);
+		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
 		if(ExistingStoredAsset != nullptr)
 		{
 			// Update existing stored asset with new values if present
-			if(ExistingStoredAsset->GlbFilePath.IsEmpty() && !StoredAsset.GlbFilePath.IsEmpty())
+			if(!StoredAsset.GlbPathsByBaseModelId.IsEmpty())
 			{
-				ExistingStoredAsset->GlbFilePath = StoredAsset.GlbFilePath;
+				MergeTMaps(ExistingStoredAsset->GlbPathsByBaseModelId, StoredAsset.GlbPathsByBaseModelId);
 			}
 			if(ExistingStoredAsset->IconFilePath.IsEmpty() && !StoredAsset.IconFilePath.IsEmpty())
 			{
 				ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
 			}
 		}
-		StoredAssets.Add(CombinedId, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
+		StoredAssets.Add(StoredAsset.Id, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
 
 		if(bSaveManifest)
 		{
 			SaveManifest(); 
 		}
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *StoredAsset.Id, *StoredAsset.GlbFilePath, *StoredAsset.IconFilePath);
+		//UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *StoredAsset.Id, *StoredAsset.GlbFilePath, *StoredAsset.IconFilePath);
 	}
 
 	void LoadManifest()
 	{
-		const FString ManifestFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache/AssetManifest.json");
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString ManifestFilePath = GlobalCachePath / TEXT("AssetManifest.json");
 		FString ManifestContent;
 
 		if (FFileHelper::LoadFileToString(ManifestContent, *ManifestFilePath))
@@ -104,7 +106,8 @@ public:
 
 	void SaveManifest()
 	{
-		const FString ManifestFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache/AssetManifest.json");
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString ManifestFilePath = GlobalCachePath / TEXT("AssetManifest.json");
 
 		TSharedPtr<FJsonObject> ManifestJson = MakeShared<FJsonObject>();
 		TSharedPtr<FJsonObject> TrackedAssetsJson = MakeShared<FJsonObject>();
@@ -150,5 +153,18 @@ private:
 	{
 		LoadManifest();
 	}
+
+	template <typename KeyType, typename ValueType>
+	void MergeTMaps(TMap<KeyType, ValueType>& DestinationMap, const TMap<KeyType, ValueType>& SourceMap)
+		{
+			for (const TPair<KeyType, ValueType>& Elem : SourceMap)
+			{
+				// Add only if the key doesn't already exist in the destination map
+				if (!DestinationMap.Contains(Elem.Key))
+				{
+					DestinationMap.Add(Elem.Key, Elem.Value);
+				}
+			}
+		}
 	TMap<FString, FAssetSaveData> StoredAssets; 
 };

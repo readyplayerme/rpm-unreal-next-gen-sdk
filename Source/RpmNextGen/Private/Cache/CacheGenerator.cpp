@@ -15,7 +15,6 @@
 #include "Misc/ScopeExit.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-const FString FCacheGenerator::CacheFolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
 const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.zip");
 
 FCacheGenerator::FCacheGenerator()
@@ -49,7 +48,11 @@ void FCacheGenerator::LoadAndStoreAssets()
 	{
 		RefittedAssetCount += Pairs.Value.Num();
 	}
-	const int AssetIconRequestCount = RefittedAssetMapByBaseModelId[BaseModelAssets[0].Id].Num();
+	const int AssetIconRequestCount = RefittedAssetMapByBaseModelId[BaseModelAssets[0].Id].Num() + BaseModelAssets.Num();
+	for ( auto Asset : BaseModelAssets)
+	{
+		LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
+	}
 	for (auto Asset : RefittedAssetMapByBaseModelId[BaseModelAssets[0].Id])
 	{
 		LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
@@ -57,11 +60,11 @@ void FCacheGenerator::LoadAndStoreAssets()
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("RefittedAssetCount: %d. AssetIconRequestCount: %d BaseModelAssetsCount %d"), RefittedAssetCount, AssetIconRequestCount, BaseModelAssets.Num());
 
 	RequiredAssetDownloadRequest = RefittedAssetCount +  BaseModelAssets.Num() + AssetIconRequestCount;
-	
+	const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets to fetch: %d"), RequiredAssetDownloadRequest, RequiredRefittedAssetRequests);
 	for (auto BaseModel : BaseModelAssets)
 	{
-		const FString BaseModeFolder = CacheFolderPath / BaseModel.Id;
+		const FString BaseModeFolder = GlobalCachePath / BaseModel.Id;
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		const FString DirectoryPath = FPaths::GetPath(BaseModeFolder);
 		if (!PlatformFile.DirectoryExists(*DirectoryPath))
@@ -192,9 +195,8 @@ void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Req
 	{
 		// Get the response data
 		const TArray<uint8>& Data = Response->GetContent();
-
 		// Define the path to save the ZIP file
-		const FString SavePath = CacheFolderPath / TEXT("/") / ZipFileName;
+		const FString SavePath = FRpmNextGenModule::GetGlobalAssetCachePath() / TEXT("/") / ZipFileName;
 
 		// Ensure the directory exists
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();

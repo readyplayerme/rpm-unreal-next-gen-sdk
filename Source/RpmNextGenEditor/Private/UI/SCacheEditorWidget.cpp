@@ -176,21 +176,17 @@ FReply SCacheEditorWidget::OnExtractCacheClicked()
 
 FReply SCacheEditorWidget::OnOpenLocalCacheFolderClicked()
 {
-    // Define the folder path you want to open (relative path)
-    FString FolderPath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
-
-    // Convert relative path to full absolute path
-    FString AbsoluteFolderPath = FPaths::ConvertRelativePathToFull(FolderPath);
-
+    const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+    
     // Check if the folder exists
-    if (FPaths::DirectoryExists(AbsoluteFolderPath))
+    if (FPaths::DirectoryExists(GlobalCachePath))
     {
         // Open the folder in the file explorer
-        FPlatformProcess::LaunchFileInDefaultExternalApplication(*AbsoluteFolderPath);
+        FPlatformProcess::LaunchFileInDefaultExternalApplication(*GlobalCachePath);
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Folder does not exist: %s"), *AbsoluteFolderPath);
+        UE_LOG(LogTemp, Warning, TEXT("Folder does not exist: %s"), *GlobalCachePath);
     }
 
     return FReply::Handled();

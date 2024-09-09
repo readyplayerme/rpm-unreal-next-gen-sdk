@@ -21,7 +21,7 @@ void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId,
 	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> GlbData;
-		FFileHelper::LoadFileToArray(GlbData, *StoredAsset.GlbFilePath);
+		FFileHelper::LoadFileToArray(GlbData, *StoredAsset.GlbPathsByBaseModelId[BaseModelId]);
 		OnAssetGlbLoaded.ExecuteIfBound(Asset, GlbData);
 		return;
 	}
