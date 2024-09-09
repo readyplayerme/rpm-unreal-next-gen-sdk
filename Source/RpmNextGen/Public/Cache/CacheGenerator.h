@@ -1,6 +1,7 @@
 #pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
 
+struct FAssetListRequest;
 class FTaskManager;
 struct FAssetSaveData;
 class FAssetSaver;
@@ -35,25 +36,24 @@ public:
 protected:
 	void FetchBaseModels() const;
 	void FetchAssetTypes() const;
-	void FetchAssetsForBaseModel(const FString& BaseModelID, const FString& AssetType) const;
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
 	void OnAssetSaved(const FAsset& Asset, const TArray<uint8>& Data);
+	void FetchNextRefittedAsset();
+	
 	TUniquePtr<FAssetApi> AssetApi;
-	TArray<FAsset> BaseModelAssets;
 	TArray<FString> AssetTypes;
-	TMap<FString, TArray<FAsset>> RefittedAssetMapByBaseModelId; 
+	TMap<FString, TArray<FAsset>> AssetMapByBaseModelId;
+	TArray<FAssetListRequest> AssetListRequests;
 	int32 CurrentBaseModelIndex;
 private:
 	void OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
-	void FetchAssetsForEachBaseModel();
+	void StartFetchingRefittedAssets();
 	void OnListAssetTypesResponse(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
 	static const FString ZipFileName;
 	int MaxItemsPerCategory;
-	int RequiredRefittedAssetRequests = 0;
 	int RefittedAssetRequestsCompleted = 0;
 	int RequiredAssetDownloadRequest = 0;
-	int AssetDownloadRequestsCompleted = 0;
-	int AssetListResponseCounter = 0;
+	int NumberOfAssetsSaved = 0;
 	FHttpModule* Http;
 };
