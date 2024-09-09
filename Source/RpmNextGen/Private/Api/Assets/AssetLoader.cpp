@@ -37,7 +37,7 @@ void FAssetLoader::LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId
 	{
 		TArray<uint8> IconData;
 		FFileHelper::LoadFileToArray(IconData, *StoredAsset.IconFilePath);
-		OnAssetGlbLoaded.ExecuteIfBound(Asset, IconData);
+		OnAssetIconLoaded.ExecuteIfBound(Asset, IconData);
 		return;
 	}
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
@@ -64,14 +64,14 @@ void FAssetLoader::AssetIconLoaded(TSharedPtr<IHttpResponse> Response, const boo
 	if (bWasSuccessful && Response.IsValid())
 	{
 		Context->Data = Response->GetContent();
-		if(!Context->bStoreInCache)
+		if(Context->bStoreInCache)
 		{
 			FAssetStorageManager::Get().StoreAndTrackAsset(*Context);
 		}
 		OnAssetIconLoaded.ExecuteIfBound(Context->Asset, Context->Data);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to load image from URL: %s"), *Context->Asset.IconUrl);
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load image from URL: %s"), *Context->Asset.IconUrl);
 	OnAssetIconLoaded.ExecuteIfBound(Context->Asset, TArray<uint8>());
 }
 
