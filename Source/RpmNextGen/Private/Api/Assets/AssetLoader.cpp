@@ -23,6 +23,7 @@ void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId,
 		TArray<uint8> GlbData;
 		FFileHelper::LoadFileToArray(GlbData, *StoredAsset.GlbPathsByBaseModelId[BaseModelId]);
 		OnAssetGlbLoaded.ExecuteIfBound(Asset, GlbData);
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading Glb From cache"));
 		return;
 	}
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
@@ -38,6 +39,7 @@ void FAssetLoader::LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId
 		TArray<uint8> IconData;
 		FFileHelper::LoadFileToArray(IconData, *StoredAsset.IconFilePath);
 		OnAssetIconLoaded.ExecuteIfBound(Asset, IconData);
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading Icon From cache"));
 		return;
 	}
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
