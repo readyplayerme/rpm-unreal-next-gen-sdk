@@ -8,6 +8,7 @@
 
 class UglTFRuntimeAsset;
 class FGlbLoader;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGltfAssetLoaded, UglTFRuntimeAsset*, Asset);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

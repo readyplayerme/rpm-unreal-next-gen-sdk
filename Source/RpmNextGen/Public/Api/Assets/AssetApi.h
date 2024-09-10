@@ -19,8 +19,6 @@ public:
 	FOnListAssetTypeResponse OnListAssetTypeResponse;
 	static const FString BaseModelType;
 private:
-	void HandleListAssetResponse(FString Response, bool bWasSuccessful);
-	void HandleListAssetTypeResponse(FString Response, bool bWasSuccessful);
+	void HandleResponse(FString Response, bool bWasSuccessful);
 	FString ApiBaseUrl;
-	
 };

@@ -10,7 +10,7 @@ const FString FAssetApi::BaseModelType = TEXT("baseModel");
 
 FAssetApi::FAssetApi()
 {
-	OnApiResponse.BindRaw(this, &FAssetApi::HandleListAssetResponse);
+	OnApiResponse.BindRaw(this, &FAssetApi::HandleResponse);
 
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 
@@ -63,7 +63,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	DispatchRawWithAuth(ApiRequest);
 }
 
-void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
+void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
 {
     if (bWasSuccessful)
     {
@@ -113,12 +113,12 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
 
         // Use EStructJsonFlags::SkipMissingProperties for Unreal Engine 5.1 and later
         FAssetListResponse AssetListResponse = FAssetListResponse();
-        FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
         if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, EStructJsonFlags::SkipMissingProperties))
         {
             OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
             return;
         }
+    	FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
         if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, EStructJsonFlags::SkipMissingProperties))
         {
             OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
@@ -137,10 +137,5 @@ void FAssetApi::HandleListAssetResponse(FString Response, bool bWasSuccessful)
     // If all parsing attempts fail, execute with default/empty responses
     OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
     OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
-}
-
-void FAssetApi::HandleListAssetTypeResponse(FString Response, bool bWasSuccessful)
-{
-	
 }
 

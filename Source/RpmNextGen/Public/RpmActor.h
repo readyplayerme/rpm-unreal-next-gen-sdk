@@ -68,16 +68,23 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset);
+	
 	void ClearLoadedComponents();
 
 	virtual void SetupAsset();
+	
+	void LoadClothingAsset(UglTFRuntimeAsset* GltfAsset, const FString& ClothingType);
+	void RemoveClothingComponents(const FString& ClothingType);
 
 private:
+	TArray<USceneComponent*> CreateClothingMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& ClothingType);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me|glTFRuntime")
 	USceneComponent* AssetRoot;
-
+	TMap<FString, TArray<USceneComponent*>> LoadedClothingComponents;
 	void ProcessBoneNode(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
 	USceneComponent* CreateNewComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
+	USkeletalMeshComponent* CreateSkeletalMeshComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
+	UStaticMeshComponent* CreateStaticMeshComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
 	void SetupComponentTags(USceneComponent* Component, FglTFRuntimeNode& Node, const FName SocketName);
 	void ProcessChildNodes(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
 };

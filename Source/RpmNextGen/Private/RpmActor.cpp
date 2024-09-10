@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimSequence.h"
 #include "glTFRuntimeSkeletalMeshComponent.h"
+#include "RpmNextGen.h"
 
 // Sets default values
 ARpmActor::ARpmActor()
@@ -14,7 +15,6 @@ ARpmActor::ARpmActor()
 	PrimaryActorTick.bCanEverTick = true;
 	AssetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AssetRoot"));
 	RootComponent = AssetRoot;
-	RootNodeIndex = INDEX_NONE;
 	bStaticMeshesAsSkeletalOnMorphTargets = true;
 }
 
@@ -35,7 +35,6 @@ void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset)
 {
 	// Before loading a new asset, clear existing components
 	ClearLoadedComponents();
-	
 	Asset = GltfAsset;
 	SetupAsset();
 }
@@ -67,34 +66,18 @@ void ARpmActor::SetupAsset()
 
 	double LoadingStartTime = FPlatformTime::Seconds();
 
-	if (RootNodeIndex > INDEX_NONE)
+
+	TArray<FglTFRuntimeScene> Scenes = Asset->GetScenes();
+	for (FglTFRuntimeScene& Scene : Scenes)
 	{
-		FglTFRuntimeNode Node;
-		if (!Asset->GetNode(RootNodeIndex, Node))
+		for (int32 NodeIndex : Scene.RootNodesIndices)
 		{
-			return;
-		}
-		AssetRoot = nullptr;
-		ProcessNode(nullptr, NAME_None, Node);
-	}
-	else
-	{
-		TArray<FglTFRuntimeScene> Scenes = Asset->GetScenes();
-		for (FglTFRuntimeScene& Scene : Scenes)
-		{
-			USceneComponent* SceneComponent = NewObject<USceneComponent>(this, *FString::Printf(TEXT("Scene %d"), Scene.Index));
-			SceneComponent->SetupAttachment(RootComponent);
-			SceneComponent->RegisterComponent();
-			AddInstanceComponent(SceneComponent);
-			for (int32 NodeIndex : Scene.RootNodesIndices)
+			FglTFRuntimeNode Node;
+			if (!Asset->GetNode(NodeIndex, Node))
 			{
-				FglTFRuntimeNode Node;
-				if (!Asset->GetNode(NodeIndex, Node))
-				{
-					return;
-				}
-				ProcessNode(SceneComponent, NAME_None, Node);
+				return;
 			}
+			ProcessNode(AssetRoot, NAME_None, Node);
 		}
 	}
 
@@ -114,9 +97,77 @@ void ARpmActor::SetupAsset()
 	UE_LOG(LogGLTFRuntime, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
 }
 
+void ARpmActor::LoadClothingAsset(UglTFRuntimeAsset* GltfAsset, const FString& ClothingType)
+{
+	// Remove existing components of this clothing type, if any
+	RemoveClothingComponents(ClothingType);
+
+	// Create and add the new components for the clothing type (multiple meshes)
+	TArray<USceneComponent*> NewClothingComponents = CreateClothingMeshComponents(GltfAsset, ClothingType);
+	if (NewClothingComponents.Num() > 0)
+	{
+		LoadedClothingComponents.Add(ClothingType, NewClothingComponents);
+	}
+}
+
+void ARpmActor::RemoveClothingComponents(const FString& ClothingType)
+{
+	if (LoadedClothingComponents.Contains(ClothingType))
+	{
+		TArray<USceneComponent*>& OldComponents = LoadedClothingComponents[ClothingType];
+		for (USceneComponent* OldComponent : OldComponents)
+		{
+			if (OldComponent)
+			{
+				OldComponent->DestroyComponent();
+			}
+		}
+		LoadedClothingComponents.Remove(ClothingType);
+	}
+}
+
+TArray<USceneComponent*> ARpmActor::CreateClothingMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& ClothingType)
+{
+	TArray<USceneComponent*> NewComponents;
+
+	// Assuming the asset contains multiple meshes, loop through and load them
+	// TArray<int32> MeshIndices = GltfAsset->GetMeshIndices();  // Or some other method to get mesh indices
+	//
+	// for (int32 MeshIndex : MeshIndices)
+	// {
+	// 	USkeletalMeshComponent* SkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, *FString::Printf(TEXT("%s_Mesh_%d"), *ClothingType, MeshIndex));
+	// 	USkeletalMesh* SkeletalMesh = GltfAsset->LoadSkeletalMesh(MeshIndex);
+	//
+	// 	if (SkeletalMesh)
+	// 	{
+	// 		SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
+	// 		SkeletalMeshComponent->SetupAttachment(RootComponent);
+	// 		SkeletalMeshComponent->RegisterComponent();
+	// 		SkeletalMeshComponent->SetRelativeTransform(FTransform::Identity);
+	//
+	// 		NewComponents.Add(SkeletalMeshComponent);
+	//
+	// 		// Custom event handling for when a skeletal mesh component is created
+	// 		ReceiveOnSkeletalMeshComponentCreated(SkeletalMeshComponent, MeshIndex);
+	// 	}
+	// }
+
+	return NewComponents;
+}
+
 
 void ARpmActor::ProcessNode(USceneComponent* NodeParentComponent, const FName SocketName, FglTFRuntimeNode& Node)
 {
+	// Skip the "Armature" node but still process its children
+	if (Node.Name.Contains("Armature"))
+	{
+		UE_LOG(LogGLTFRuntime, Log, TEXT("Skipping Armature node but processing its children"));
+
+		// Process children of the "Armature" node
+		ProcessChildNodes(NodeParentComponent, Node);
+		return;
+	}
+	
 	if (Asset->NodeIsBone(Node.Index))
 	{
 		ProcessBoneNode(NodeParentComponent, Node);
@@ -149,81 +200,93 @@ void ARpmActor::ProcessBoneNode(USceneComponent* NodeParentComponent, FglTFRunti
 
 USceneComponent* ARpmActor::CreateNewComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
 {
-    USceneComponent* NewComponent = nullptr;
+	USceneComponent* NewComponent = nullptr;
 
-    // Check if the node should be a skeletal mesh component
-    if (Node.SkinIndex >= 0 || (bStaticMeshesAsSkeletalOnMorphTargets && Asset->MeshHasMorphTargets(Node.MeshIndex)))
-    {
-        // Create a skeletal mesh component
-        USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
+	if (Node.SkinIndex >= 0 || (bStaticMeshesAsSkeletalOnMorphTargets && Asset->MeshHasMorphTargets(Node.MeshIndex)))
+	{
+		NewComponent = CreateSkeletalMeshComponent(NodeParentComponent, Node);
+		if(Node.Name.Contains("Armature"))
+		{
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Armature found when creating Skeletal mesh"));
+		}
+	}
+	else
+	{
+		NewComponent = CreateStaticMeshComponent(NodeParentComponent, Node);
+		
+	}
+	
+	AddInstanceComponent(NewComponent);
 
-        if (SkeletalMeshConfig.bPerPolyCollision)
-        {
-            SkeletalMeshComponent = NewObject<UglTFRuntimeSkeletalMeshComponent>(this, GetSafeNodeName<UglTFRuntimeSkeletalMeshComponent>(Node));
-            SkeletalMeshComponent->bEnablePerPolyCollision = true;
-            SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-        else
-        {
-            SkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, GetSafeNodeName<USkeletalMeshComponent>(Node));
-        }
+	return NewComponent;
+}
 
-        // Load and set the skeletal mesh
-        USkeletalMesh* SkeletalMesh = Asset->LoadSkeletalMesh(Node.MeshIndex, Node.SkinIndex, SkeletalMeshConfig);
-        SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
 
-        // Attach and register the component
-        SkeletalMeshComponent->SetupAttachment(NodeParentComponent ? NodeParentComponent : RootComponent.Get());
-        SkeletalMeshComponent->RegisterComponent();
-        SkeletalMeshComponent->SetRelativeTransform(Node.Transform);
+USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
+{
+	USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
 
-        // Add the component to the list of discovered skeletal mesh components
-        DiscoveredSkeletalMeshComponents.Add(SkeletalMeshComponent);
+	if (SkeletalMeshConfig.bPerPolyCollision)
+	{
+		SkeletalMeshComponent = NewObject<UglTFRuntimeSkeletalMeshComponent>(this, GetSafeNodeName<UglTFRuntimeSkeletalMeshComponent>(Node));
+		SkeletalMeshComponent->bEnablePerPolyCollision = true;
+		SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{
+		SkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, GetSafeNodeName<USkeletalMeshComponent>(Node));
+	}
 
-        NewComponent = SkeletalMeshComponent;
+	// Load and set the skeletal mesh
+	USkeletalMesh* SkeletalMesh = Asset->LoadSkeletalMesh(Node.MeshIndex, Node.SkinIndex, SkeletalMeshConfig);
+	SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
 
-        // Custom event handling for when a skeletal mesh component is created
-        ReceiveOnSkeletalMeshComponentCreated(SkeletalMeshComponent, Node);
-    }
-    else
-    {
-        // Create a static mesh component
-        UStaticMeshComponent* StaticMeshComponent = nullptr;
-        TArray<FTransform> GPUInstancingTransforms;
+	// Attach to AssetRoot and register the component
+	SkeletalMeshComponent->SetupAttachment(AssetRoot);
+	SkeletalMeshComponent->RegisterComponent();
+	SkeletalMeshComponent->SetRelativeTransform(Node.Transform);
 
-        if (Asset->GetNodeGPUInstancingTransforms(Node.Index, GPUInstancingTransforms))
-        {
-            UInstancedStaticMeshComponent* InstancedStaticMeshComponent = NewObject<UInstancedStaticMeshComponent>(this, GetSafeNodeName<UInstancedStaticMeshComponent>(Node));
-            for (const FTransform& GPUInstanceTransform : GPUInstancingTransforms)
-            {
-                InstancedStaticMeshComponent->AddInstance(GPUInstanceTransform);
-            }
-            StaticMeshComponent = InstancedStaticMeshComponent;
-        }
-        else
-        {
-            StaticMeshComponent = NewObject<UStaticMeshComponent>(this, GetSafeNodeName<UStaticMeshComponent>(Node));
-        }
+	// Add the component to the list of discovered skeletal mesh components
+	DiscoveredSkeletalMeshComponents.Add(SkeletalMeshComponent);
 
-        // Load and set the static mesh
-        UStaticMesh* StaticMesh = Asset->LoadStaticMeshLODs({Node.MeshIndex}, StaticMeshConfig);
-        StaticMeshComponent->SetStaticMesh(StaticMesh);
+	// Custom event handling for when a skeletal mesh component is created
+	ReceiveOnSkeletalMeshComponentCreated(SkeletalMeshComponent, Node);
 
-        // Attach and register the component
-        StaticMeshComponent->SetupAttachment(NodeParentComponent ? NodeParentComponent : RootComponent.Get());
-        StaticMeshComponent->RegisterComponent();
-        StaticMeshComponent->SetRelativeTransform(Node.Transform);
+	return SkeletalMeshComponent;
+}
 
-        NewComponent = StaticMeshComponent;
+UStaticMeshComponent* ARpmActor::CreateStaticMeshComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
+{
+	UStaticMeshComponent* StaticMeshComponent = nullptr;
+	TArray<FTransform> GPUInstancingTransforms;
 
-        // Custom event handling for when a static mesh component is created
-        ReceiveOnStaticMeshComponentCreated(StaticMeshComponent, Node);
-    }
+	if (Asset->GetNodeGPUInstancingTransforms(Node.Index, GPUInstancingTransforms))
+	{
+		UInstancedStaticMeshComponent* InstancedStaticMeshComponent = NewObject<UInstancedStaticMeshComponent>(this, GetSafeNodeName<UInstancedStaticMeshComponent>(Node));
+		for (const FTransform& GPUInstanceTransform : GPUInstancingTransforms)
+		{
+			InstancedStaticMeshComponent->AddInstance(GPUInstanceTransform);
+		}
+		StaticMeshComponent = InstancedStaticMeshComponent;
+	}
+	else
+	{
+		StaticMeshComponent = NewObject<UStaticMeshComponent>(this, GetSafeNodeName<UStaticMeshComponent>(Node));
+	}
 
-    // Add the component to the actor's list of instance components
-    AddInstanceComponent(NewComponent);
+	// Load and set the static mesh
+	UStaticMesh* StaticMesh = Asset->LoadStaticMeshLODs({Node.MeshIndex}, StaticMeshConfig);
+	StaticMeshComponent->SetStaticMesh(StaticMesh);
 
-    return NewComponent;
+	// Attach to AssetRoot and register the component
+	StaticMeshComponent->SetupAttachment(AssetRoot);
+	StaticMeshComponent->RegisterComponent();
+	StaticMeshComponent->SetRelativeTransform(Node.Transform);
+
+	// Custom event handling for when a static mesh component is created
+	ReceiveOnStaticMeshComponentCreated(StaticMeshComponent, Node);
+
+	return StaticMeshComponent;
 }
 
 
