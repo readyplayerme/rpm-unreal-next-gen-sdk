@@ -28,19 +28,13 @@ struct RPMNEXTGEN_API FRpmCharacterData
 	FString BaseModelId;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "assets"))
-	TMap<FString, FString> Assets;
+	TMap<FString, FAsset> Assets;
 
 	FRpmCharacterData()
 	{
 		Id = "";
 		BaseModelId = "";
-		Assets = TMap<FString, FString>();
-	}
-
-	FRpmCharacterData(FRpmCharacter Character)
-	{
-		Id = Character.Id;
-		Assets = Character.Assets;
+		Assets = TMap<FString, FAsset>();
 	}
 };
 
@@ -95,7 +89,6 @@ public:
 protected:
 	FString AppId;
 	FRpmCharacter Character;
-	TMap<FString, FAsset> PreviewAssetMap;
 	FRpmCharacterData CharacterData;
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;

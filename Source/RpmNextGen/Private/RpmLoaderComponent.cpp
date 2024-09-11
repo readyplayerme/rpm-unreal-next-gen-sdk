@@ -22,7 +22,6 @@ URpmLoaderComponent::URpmLoaderComponent()
 	{
 		GltfConfig = new FglTFRuntimeConfig();
 	}
-	PreviewAssetMap = TMap<FString, FAsset>();
 	GlbLoader = MakeShared<FGlbLoader>(GltfConfig);
 	GlbLoader->OnGLtfAssetLoaded.BindUObject(this, &URpmLoaderComponent::HandleGltfAssetLoaded);
 	CharacterApi = MakeShared<FCharacterApi>();
@@ -53,7 +52,7 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 		if(FAssetStorageManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
 		{
 			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Loading from cached asset"), *CachedAssetData.Id);
-			CharacterData.Assets.Add(FAssetApi::BaseModelType, CachedAssetData.Id);
+			CharacterData.Assets.Add(FAssetApi::BaseModelType, CachedAssetData.ToAsset());
 			OnCharacterCreated.Broadcast(CharacterData);
 			GlbLoader->LoadFileFromPath(CachedAssetData.GlbPathsByBaseModelId[BaseModelId], FAssetApi::BaseModelType);
 			return;
@@ -90,26 +89,39 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("BaseModelId is empty"));
 		return;
 	}
-	
-	if(AssetData.Type == FAssetApi::BaseModelType)
+	const bool bIsBaseModel = AssetData.Type == FAssetApi::BaseModelType;
+	if(bIsBaseModel)
 	{
 		CharacterData.BaseModelId = AssetData.Id;
 	}
-	PreviewAssetMap.Add(AssetData.Type, AssetData);
-	CharacterData.Assets.Add(AssetData.Id);
+	CharacterData.Assets.Add(AssetData.Type, AssetData);
+	
 	if(bUseCache)
 	{
+		if(bIsBaseModel)
+		{
+			CharacterData.Assets.Remove(AssetData.Type);
+			for (auto PreviewAssets : CharacterData.Assets)
+			{
+				FCachedAssetData CachedAsset;
+				if(FAssetStorageManager::Get().GetCachedAsset(PreviewAssets.Value.Id, CachedAsset))
+				{			
+					CharacterData.Assets.Add(CachedAsset.Type, PreviewAssets.Value);
+					GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], CachedAsset.Type);
+				}
+			}
+		}
 		FCachedAssetData CachedAsset;
 		if(FAssetStorageManager::Get().GetCachedAsset(AssetData.Id, CachedAsset))
 		{			
-			CharacterData.Assets.Add(CachedAsset.Type, AssetData.Id);
+			CharacterData.Assets.Add(CachedAsset.Type, AssetData);
 			GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], AssetData.Type);
 			return;
 		}
 		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Asset %s not found in cache. Will try to fetch from Url."), *AssetData.Id);
 	}
 	TMap<FString, FString> ParamAssets;
-	for (auto Asset : PreviewAssetMap)
+	for (auto Asset : CharacterData.Assets)
 	{
 		ParamAssets.Add(Asset.Key, Asset.Value.Id);
 	}
@@ -133,7 +145,6 @@ void URpmLoaderComponent::HandleGltfAssetLoaded(UglTFRuntimeAsset* UglTFRuntimeA
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse,
 	bool bWasSuccessful)
 {
-	CharacterData.Assets.Append(CharacterCreateResponse.Data.Assets);
 	CharacterData.Id = CharacterCreateResponse.Data.Id;
 	OnCharacterCreated.Broadcast(CharacterData);
 	LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
@@ -142,14 +153,16 @@ void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse
 void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse,
 	bool bWasSuccessful)
 {
-	CharacterData.Assets.Append(CharacterUpdateResponse.Data.Assets);
+	for (auto Element : CharacterUpdateResponse.Data.Assets)
+	{
+		
+	}
 	OnCharacterUpdated.Broadcast(CharacterData);
 }
 
 void URpmLoaderComponent::HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse,
 	bool bWasSuccessful)
 {
-	CharacterData.Assets.Append(CharacterFindByIdResponse.Data.Assets);
 	OnCharacterFound.Broadcast(CharacterData);
 }
 

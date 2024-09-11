@@ -65,6 +65,19 @@ struct RPMNEXTGEN_API FCachedAssetData
 		UpdatedAt = InAsset.UpdatedAt;
 	}
 
+	FAsset ToAsset() const
+	{
+		FAsset Asset;
+		Asset.Id = Id;
+		Asset.Name = Name;
+		Asset.GlbUrl = GlbUrl;
+		Asset.IconUrl = IconUrl;
+		Asset.Type = Type;
+		Asset.CreatedAt = CreatedAt;
+		Asset.UpdatedAt = UpdatedAt;
+		return Asset;
+	}
+
 	TSharedPtr<FJsonObject> ToJson() const
 	{
 		TSharedPtr<FJsonObject> JsonObject = MakeShared<FJsonObject>();
