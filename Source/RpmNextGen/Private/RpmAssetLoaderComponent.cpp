@@ -14,10 +14,7 @@ URpmAssetLoaderComponent::URpmAssetLoaderComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 	AssetLoader = MakeShared<FGlbLoader>();
-	AssetLoader->OnGLtfAssetLoaded.BindUObject(
-		this,
-		&URpmAssetLoaderComponent::HandleGLtfAssetLoaded
-	);
+	AssetLoader->OnGLtfAssetLoaded.BindUObject(this,&URpmAssetLoaderComponent::HandleGLtfAssetLoaded);
 }
 
 // Called when the game starts
@@ -28,18 +25,16 @@ void URpmAssetLoaderComponent::BeginPlay()
 
 void URpmAssetLoaderComponent::LoadCharacterFromUrl(const FString Url)
 {	
-	AssetLoader->RequestFromUrl(Url);
+	AssetLoader->LoadFileFromUrl(Url);
 }
 
-void URpmAssetLoaderComponent::HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful)
+void URpmAssetLoaderComponent::HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, const FString& AssetType)
 {
-	if (!gltfAsset || !bWasSuccessful)
+	if (!gltfAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Failed to load gltf asset"));
-		OnGltfAssetLoaded.Broadcast(nullptr);
-		return;
 	}
-	OnGltfAssetLoaded.Broadcast(gltfAsset);
+	OnAssetLoaded.Broadcast(gltfAsset, AssetType);
 }
 
 // Called every frame

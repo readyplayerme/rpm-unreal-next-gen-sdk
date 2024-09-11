@@ -9,6 +9,7 @@
 #include "Api/Characters/Models/CharacterCreateResponse.h"
 #include "Api/Characters/Models/CharacterFindByIdResponse.h"
 #include "Api/Characters/Models/CharacterUpdateResponse.h"
+#include "Api/Files/GlbLoader.h"
 #include "Cache/AssetStorageManager.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -17,11 +18,25 @@ URpmLoaderComponent::URpmLoaderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AppId = RpmSettings->ApplicationId;
+	if(GltfConfig == nullptr)
+	{
+		GltfConfig = new FglTFRuntimeConfig();
+	}
+	PreviewAssetMap = TMap<FString, FAsset>();
+	GlbLoader = MakeShared<FGlbLoader>(GltfConfig);
+	GlbLoader->OnGLtfAssetLoaded.BindUObject(this, &URpmLoaderComponent::HandleGltfAssetLoaded);
 	CharacterApi = MakeShared<FCharacterApi>();
-	PreviewAssetMap = TMap<FString, FString>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);	
+}
+
+void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config) const
+{
+	if(GlbLoader)
+	{
+		GlbLoader->SetConfig(Config);
+	}
 }
 
 void URpmLoaderComponent::BeginPlay()
@@ -34,39 +49,85 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 	CharacterData.BaseModelId = BaseModelId;
 	if(bUseCache)
 	{
-		FAssetSaveData AssetData;
-		if(FAssetStorageManager::Get().GetCachedAsset(BaseModelId, AssetData))
+		FCachedAssetData CachedAssetData;
+		if(FAssetStorageManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
 		{
-			
-			CharacterData.Assets.Add(FAssetApi::BaseModelType, AssetData.Id);
+			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Loading from cached asset"), *CachedAssetData.Id);
+			CharacterData.Assets.Add(FAssetApi::BaseModelType, CachedAssetData.Id);
 			OnCharacterCreated.Broadcast(CharacterData);
+			GlbLoader->LoadFileFromPath(CachedAssetData.GlbPathsByBaseModelId[BaseModelId], FAssetApi::BaseModelType);
+			return;
 		}
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to create character from cache. Will try to create from Url."), *CachedAssetData.Id);
 	}
-	else
+
+	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
+	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
+	CharacterCreateRequest.Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
+	CharacterCreateRequest.Data.ApplicationId = AppId;
+	CharacterApi->CreateAsync(CharacterCreateRequest);
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Creating character requrest for basemodel %s"), *BaseModelId);
+}
+
+void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
+{
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Load asset from url in loader"));
+	GlbLoader->LoadFileFromUrl(Url);
+}
+
+void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap)
+{
+	for (auto Pairs : AssetMap)
 	{
-		FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
-		CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
-		CharacterCreateRequest.Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
-		CharacterCreateRequest.Data.ApplicationId = AppId;
-		CharacterApi->CreateAsync(CharacterCreateRequest);
+		
 	}
 }
 
-void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData)
+void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 {
-
-	if (Character.Id.IsEmpty())
+	if (CharacterData.BaseModelId.IsEmpty())
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character Id is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("BaseModelId is empty"));
 		return;
 	}
-
-	PreviewAssetMap.Add(AssetData.Type, AssetData.Id);
+	
+	if(AssetData.Type == FAssetApi::BaseModelType)
+	{
+		CharacterData.BaseModelId = AssetData.Id;
+	}
+	PreviewAssetMap.Add(AssetData.Type, AssetData);
+	CharacterData.Assets.Add(AssetData.Id);
+	if(bUseCache)
+	{
+		FCachedAssetData CachedAsset;
+		if(FAssetStorageManager::Get().GetCachedAsset(AssetData.Id, CachedAsset))
+		{			
+			CharacterData.Assets.Add(CachedAsset.Type, AssetData.Id);
+			GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], AssetData.Type);
+			return;
+		}
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Asset %s not found in cache. Will try to fetch from Url."), *AssetData.Id);
+	}
+	TMap<FString, FString> ParamAssets;
+	for (auto Asset : PreviewAssetMap)
+	{
+		ParamAssets.Add(Asset.Key, Asset.Value.Id);
+	}
 	FCharacterPreviewRequest PreviewRequest;
-	PreviewRequest.Id = Character.Id;
-	PreviewRequest.Params.Assets = PreviewAssetMap;
+	PreviewRequest.Id = CharacterData.Id;
+	PreviewRequest.Params.Assets = ParamAssets;
 	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
-	//LoadCharacterFromUrl(Url);
+
+	LoadCharacterFromUrl(Url);
+}
+
+void URpmLoaderComponent::HandleGltfAssetLoaded(UglTFRuntimeAsset* UglTFRuntimeAsset, const FString& AssetType)
+{
+	if(!UglTFRuntimeAsset)
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+	}
+	OnGltfAssetLoaded.Broadcast(UglTFRuntimeAsset, AssetType);
 }
 
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse,
@@ -75,6 +136,7 @@ void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse
 	CharacterData.Assets.Append(CharacterCreateResponse.Data.Assets);
 	CharacterData.Id = CharacterCreateResponse.Data.Id;
 	OnCharacterCreated.Broadcast(CharacterData);
+	LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
 }
 
 void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse,
@@ -91,12 +153,8 @@ void URpmLoaderComponent::HandleCharacterFindResponse(FCharacterFindByIdResponse
 	OnCharacterFound.Broadcast(CharacterData);
 }
 
-
-// Called every frame
 void URpmLoaderComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 

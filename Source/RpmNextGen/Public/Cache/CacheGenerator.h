@@ -3,7 +3,7 @@
 
 struct FAssetListRequest;
 class FTaskManager;
-struct FAssetSaveData;
+struct FCachedAssetData;
 class FAssetSaver;
 struct FAssetTypeListResponse;
 class FAssetApi;

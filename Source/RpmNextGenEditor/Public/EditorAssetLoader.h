@@ -12,7 +12,7 @@ public:
 
 	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId = "");
 	void LoadGlbFromURLWithId(const FString& URL, const FString AssetId);
-	void OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, bool bWasSuccessful, FString LoadedAssetId);
+	void OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, FString LoadedAssetId);
 	
 	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
 	USkeleton* SkeletonToCopy;

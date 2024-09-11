@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "glTFRuntimeAsset.h"
+#include "RpmAssetLoaderComponent.h"
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "Components/ActorComponent.h"
 #include "RpmLoaderComponent.generated.h"
 
+class FGlbLoader;
 struct FCharacterCreateResponse;
 struct FCharacterUpdateResponse;
 struct FCharacterFindByIdResponse;
@@ -50,8 +53,14 @@ class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	URpmLoaderComponent();
+
+	void SetGltfConfig(FglTFRuntimeConfig* Config) const;
+	FglTFRuntimeConfig* GltfConfig;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
+	FOnAssetLoaded OnGltfAssetLoaded;
 	FOnCharacterCreated OnCharacterCreated;
 	FOnCharacterUpdated OnCharacterUpdated;
 	FOnCharacterFound OnCharacterFound;
@@ -60,11 +69,18 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void CreateCharacter(const FString& BaseModelId, bool bUseCache);
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadCharacterFromUrl(FString Url);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadAssetPreview(FAsset AssetData);
+	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
 
+	UFUNCTION()
+	virtual void HandleGltfAssetLoaded(UglTFRuntimeAsset* UglTFRuntimeAsset, const FString& AssetType);
 
 	UFUNCTION()
 	virtual void HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful);
@@ -79,9 +95,10 @@ public:
 protected:
 	FString AppId;
 	FRpmCharacter Character;
-	TMap<FString, FString> PreviewAssetMap;
+	TMap<FString, FAsset> PreviewAssetMap;
 	FRpmCharacterData CharacterData;
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;
+	TSharedPtr<FGlbLoader> GlbLoader;
 		
 };

@@ -9,7 +9,7 @@
 class UglTFRuntimeAsset;
 class FGlbLoader;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGltfAssetLoaded, UglTFRuntimeAsset*, Asset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, UglTFRuntimeAsset*, Asset, const FString& , AssetType);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmAssetLoaderComponent : public UActorComponent
@@ -23,13 +23,13 @@ public:
 	virtual void LoadCharacterFromUrl(FString Url);
 	
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
-	FOnGltfAssetLoaded OnGltfAssetLoaded;
+	FOnAssetLoaded OnAssetLoaded;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
-	virtual void HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful);
+	virtual void HandleGLtfAssetLoaded(UglTFRuntimeAsset* gltfAsset, const FString& AssetType);
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

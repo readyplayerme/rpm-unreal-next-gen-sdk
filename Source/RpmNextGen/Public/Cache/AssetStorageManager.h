@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "RpmNextGen.h"
-#include "AssetSaveData.h"
-#include "AssetSaver.h"
+#include "CachedAssetData.h"
+#include "FileWriter.h"
 #include "Api/Assets/AssetLoader.h"
 
 class FAssetStorageManager
@@ -37,25 +37,25 @@ public:
 
 	void StoreAndTrackAsset(const FAssetLoadingContext& Context)
 	{
-		const FAssetSaveData& StoredAsset = FAssetSaveData(Context.Asset, Context.BaseModelId);
+		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
 
-		FAssetSaver AssetSaver = FAssetSaver();
+		FFileWriter FileWriter = FFileWriter();
 		if(Context.bIsGLb)
 		{
-			AssetSaver.SaveToFile(StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId], Context.Data);
+			FileWriter.SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
 		}
 		else
 		{
 			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Storing asset Icon in cache at path %s"), *StoredAsset.IconFilePath);
-			AssetSaver.SaveToFile(StoredAsset.IconFilePath, Context.Data);
+			FileWriter.SaveToFile(Context.Data, StoredAsset.IconFilePath);
 		}
 
 		StoreAndTrackAsset(StoredAsset);
 	}
 
-	void StoreAndTrackAsset(const FAssetSaveData& StoredAsset, const bool bSaveManifest = true)
+	void StoreAndTrackAsset(const FCachedAssetData& StoredAsset, const bool bSaveManifest = true)
 	{
-		FAssetSaveData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
+		FCachedAssetData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
 		if(ExistingStoredAsset != nullptr)
 		{
 			// Update existing stored asset with new values if present
@@ -95,7 +95,7 @@ public:
 				{
 					const FString& AssetId = Entry.Key;
 					const TSharedPtr<FJsonObject> AssetData = Entry.Value->AsObject();
-					FAssetSaveData StoredAsset = FAssetSaveData::FromJson(AssetData);
+					FCachedAssetData StoredAsset = FCachedAssetData::FromJson(AssetData);
 					StoredAssets.Add(AssetId, StoredAsset);
 				}
 
@@ -127,7 +127,7 @@ public:
 		FFileHelper::SaveStringToFile(OutputString, *ManifestFilePath);
 	}
 
-	const TMap<FString, FAssetSaveData>& GetStoredAssets() const
+	const TMap<FString, FCachedAssetData>& GetStoredAssets() const
 	{
 		return StoredAssets;
 	}
@@ -137,9 +137,9 @@ public:
 		return StoredAssets.Contains(AssetId);
 	}
 
-	bool GetCachedAsset(const FString& AssetId, FAssetSaveData& OutAsset) const
+	bool GetCachedAsset(const FString& AssetId, FCachedAssetData& OutAsset) const
 	{
-		const FAssetSaveData* StoredAsset = StoredAssets.Find(AssetId);
+		const FCachedAssetData* StoredAsset = StoredAssets.Find(AssetId);
 		if(StoredAsset != nullptr)
 		{
 			OutAsset = *StoredAsset;
@@ -166,5 +166,5 @@ private:
 				}
 			}
 		}
-	TMap<FString, FAssetSaveData> StoredAssets; 
+	TMap<FString, FCachedAssetData> StoredAssets; 
 };

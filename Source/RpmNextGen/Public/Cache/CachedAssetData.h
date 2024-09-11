@@ -3,10 +3,10 @@
 #include "CoreMinimal.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
-#include "AssetSaveData.generated.h"
+#include "CachedAssetData.generated.h"
 
 USTRUCT(BlueprintType)
-struct RPMNEXTGEN_API FAssetSaveData 
+struct RPMNEXTGEN_API FCachedAssetData 
 {
 	GENERATED_BODY()
 
@@ -37,7 +37,7 @@ struct RPMNEXTGEN_API FAssetSaveData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "updatedAt"))
 	FDateTime UpdatedAt;
 
-	FAssetSaveData()
+	FCachedAssetData()
 	{
 		Id = FString();
 		Name = FString();
@@ -50,7 +50,7 @@ struct RPMNEXTGEN_API FAssetSaveData
 		UpdatedAt = FDateTime();
 	}
 
-	FAssetSaveData(const FAsset& InAsset, const FString& InBaseModelId)
+	FCachedAssetData(const FAsset& InAsset, const FString& InBaseModelId)
 	{
 		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
 		Id = InAsset.Id;
@@ -88,9 +88,9 @@ struct RPMNEXTGEN_API FAssetSaveData
 		return JsonObject;
 	}
 
-	static FAssetSaveData FromJson(const TSharedPtr<FJsonObject>& JsonObject)
+	static FCachedAssetData FromJson(const TSharedPtr<FJsonObject>& JsonObject)
 	{
-		FAssetSaveData StoredAsset;
+		FCachedAssetData StoredAsset;
 
 		StoredAsset.Id = JsonObject->GetStringField(TEXT("Id"));
 		StoredAsset.Name = JsonObject->GetStringField(TEXT("Name"));

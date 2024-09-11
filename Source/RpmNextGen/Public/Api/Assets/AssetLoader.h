@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Models/Asset.h"
 
-struct FAssetSaveData;
+struct FCachedAssetData;
 class IHttpResponse;
 class FHttpModule;
 struct FAsset;

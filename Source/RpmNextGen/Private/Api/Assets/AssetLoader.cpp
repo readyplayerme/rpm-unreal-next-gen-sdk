@@ -17,7 +17,7 @@ FAssetLoader::~FAssetLoader()
 
 void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
-	FAssetSaveData StoredAsset;
+	FCachedAssetData StoredAsset;
 	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> GlbData;
@@ -33,7 +33,7 @@ void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId,
 
 void FAssetLoader::LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
-	FAssetSaveData StoredAsset;
+	FCachedAssetData StoredAsset;
 	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> IconData;

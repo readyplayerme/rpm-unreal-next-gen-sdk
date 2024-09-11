@@ -13,9 +13,9 @@ FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, bool bWasSuccessful, FString LoadedAssetId)
+void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, FString LoadedAssetId)
 {
-	if (bWasSuccessful)
+	if (GltfAsset)
 	{
 		GltfAsset->AddToRoot();
 		SaveAsUAsset(GltfAsset, LoadedAssetId);
@@ -53,16 +53,16 @@ void FEditorAssetLoader::LoadGlbFromURLWithId(const FString& URL, FString Loaded
 {
 	OnGLtfAssetLoaded.BindLambda(
 		[LoadedAssetId, this]( UglTFRuntimeAsset* gltfAsset,
-		                      bool bWasSuccessful)
+		                      const FString& AssetType)
 		{
 			if (!gltfAsset)
 			{
 				UE_LOG(LogReadyPlayerMe, Log, TEXT("No gltf asset"));
 				return;
 			}
-			OnAssetLoadComplete(gltfAsset, bWasSuccessful, LoadedAssetId);
+			OnAssetLoadComplete(gltfAsset, AssetType, LoadedAssetId);
 		});
-	RequestFromUrl(URL);
+	LoadFileFromUrl(URL);
 }
 
 void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId)
