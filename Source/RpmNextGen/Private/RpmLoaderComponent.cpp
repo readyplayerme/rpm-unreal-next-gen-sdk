@@ -51,7 +51,6 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 		FCachedAssetData CachedAssetData;
 		if(FAssetStorageManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
 		{
-			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Loading from cached asset"), *CachedAssetData.Id);
 			CharacterData.Assets.Add(FAssetApi::BaseModelType, CachedAssetData.ToAsset());
 			OnCharacterCreated.Broadcast(CharacterData);
 			GlbLoader->LoadFileFromPath(CachedAssetData.GlbPathsByBaseModelId[BaseModelId], FAssetApi::BaseModelType);
@@ -65,12 +64,10 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 	CharacterCreateRequest.Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
 	CharacterCreateRequest.Data.ApplicationId = AppId;
 	CharacterApi->CreateAsync(CharacterCreateRequest);
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Creating character requrest for basemodel %s"), *BaseModelId);
 }
 
 void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
 {
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Load asset from url in loader"));
 	GlbLoader->LoadFileFromUrl(Url);
 }
 

@@ -74,7 +74,6 @@ void URpmPreviewLoaderComponent::LoadAssetPreview(FAsset AssetData)
 	PreviewRequest.Id = Character.Id;
 	PreviewRequest.Params.Assets = PreviewAssetMap;
 	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Preview url = %s"), *Url);
 	LoadCharacterFromUrl(Url);
 }
 

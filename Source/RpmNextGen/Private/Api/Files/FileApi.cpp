@@ -32,8 +32,6 @@ void FFileApi::LoadFileFromPath(const FString& Path, const FString& AssetType)
 	}
 	TArray<uint8> Content;
 	FFileHelper::LoadFileToArray(Content, *Path);
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("loaded local asset of type %s"), *AssetType);
-
 	OnFileRequestComplete.ExecuteIfBound(&Content, FileName, AssetType);	
 }
 
@@ -46,14 +44,12 @@ void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Res
 		FileName = FPaths::GetCleanFilename(Request->GetURL());
 	}
 	
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("File request complete %s"), *FileName);
 	if (bWasSuccessful && Response.IsValid() && Response->GetContentLength() > 0)
 	{
 		TArray<uint8> Content = Response->GetContent();
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("File request success of type %s"), *AssetType);
 		OnFileRequestComplete.ExecuteIfBound(&Content, FileName, AssetType);
 		return;
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to load file from URL"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load file from URL"));
 	OnFileRequestComplete.ExecuteIfBound(nullptr, FileName, AssetType);
 }

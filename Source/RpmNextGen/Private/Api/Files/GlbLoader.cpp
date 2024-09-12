@@ -31,12 +31,10 @@ void FGlbLoader::HandleFileRequestComplete(TArray<uint8>* Data, const FString& F
     UglTFRuntimeAsset* GltfAsset = nullptr;
     if (Data)
     {
-        UE_LOG(LogReadyPlayerMe, Warning, TEXT("Glb url request complete"));
         if(OnGLtfAssetLoaded.IsBound())
         {
             GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
             OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, AssetType);
-            UE_LOG(LogReadyPlayerMe, Warning, TEXT("Glb Loaded of type %s"), *AssetType);
         }
         return;
     }
