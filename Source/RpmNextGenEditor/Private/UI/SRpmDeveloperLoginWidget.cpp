@@ -9,7 +9,7 @@
 #include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "Auth/DeveloperTokenAuthStrategy.h"
 #include "Widgets/Input/SEditableTextBox.h"
-#include "RpmImageLoader.h"
+#include "RpmTextureLoader.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/Models/DeveloperAuth.h"
 #include "Auth/Models/DeveloperLoginRequest.h"
@@ -18,6 +18,7 @@
 #include "DeveloperAccounts/Models/OrganizationListRequest.h"
 #include "DeveloperAccounts/Models/OrganizationListResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
+#include "Utilities/RpmImageHelper.h"
 #include "Widgets/Layout/SScrollBox.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -293,12 +294,19 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 		]
 	];
 
-	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl, [this](UTexture2D* texture)
+	TSharedPtr<FRpmTextureLoader> ImageLoader = MakeShared<FRpmTextureLoader>();
+	ImageLoader->OnTextureLoaded.BindRaw(this, &SRpmDeveloperLoginWidget::OnTextureLoaded, ImageWidget);
+	ImageLoader->LoadIconFromAsset(StyleAsset);
+}
+
+void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage)
+{
+	if (Texture2D)
 	{
-		texture->AddToRoot();
-		CharacterStyleTextures.Add(texture);
-	});
+		Texture2D->AddToRoot();
+		CharacterStyleTextures.Add(Texture2D);
+		FRpmImageHelper::LoadTextureToSImage(Texture2D, FVector2D(100.0f, 100.0f), SImage);
+	}
 }
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
@@ -444,6 +452,7 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 		RpmSettings->SaveConfig();
 	}
 }
+
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {

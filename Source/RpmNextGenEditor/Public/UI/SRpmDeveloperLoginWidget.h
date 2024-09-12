@@ -75,5 +75,6 @@ private:
 	void SetLoggedInState(const bool IsLoggedIn);
 	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
+	void OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage);
 	void AddCharacterStyle(const FAsset& StyleAsset);
 };

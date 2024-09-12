@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetButtonWidget.generated.h"
 
+class FRpmTextureLoader;
 class USizeBox;
 class UBorder;
 class UImage;
@@ -44,6 +45,7 @@ public:
 
 	FAsset GetAssetData() const { return AssetData; }
 protected:
+	void OnTextureLoaded(UTexture2D* Texture2D);
 	virtual void NativeConstruct() override;
 
 private:
@@ -52,6 +54,6 @@ private:
 	FAsset AssetData;
 	UFUNCTION()
 	virtual void HandleButtonClicked();
-
+	TSharedPtr<FRpmTextureLoader> TextureLoader;
 	bool bIsSelected;
 };
