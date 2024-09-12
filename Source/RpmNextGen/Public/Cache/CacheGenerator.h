@@ -38,7 +38,8 @@ protected:
 	void FetchAssetTypes() const;
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
-	void OnAssetSaved(const FAsset& Asset, const TArray<uint8>& Data);
+	void OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data);
+	void OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>& Data);
 	void FetchNextRefittedAsset();
 	
 	TUniquePtr<FAssetApi> AssetApi;

@@ -31,8 +31,7 @@ void FRpmImageLoader::LoadUImageFromURL(UImage* Image, const FString& URL)
 	});
 }
 
-void FRpmImageLoader::LoadSImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL,
-                                        TFunction<void(UTexture2D*)> OnImageUpdated)
+void FRpmImageLoader::LoadSImageFromURL(TSharedPtr<SImage> ImageWidget, const FString& URL, TFunction<void(UTexture2D*)> OnImageUpdated)
 {
 	if (!ImageWidget.IsValid())
 	{

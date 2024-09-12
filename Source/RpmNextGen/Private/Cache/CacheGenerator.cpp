@@ -2,10 +2,10 @@
 #include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
-#include "Api/Assets/AssetLoader.h"
+#include "Api/Assets/FAssetGlbLoader.h"
+#include "Api/Assets/FAssetIconLoader.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
@@ -96,19 +96,30 @@ void FCacheGenerator::LoadAndStoreAssets()
 
 void FCacheGenerator::LoadAndStoreAssetGlb(const FString& BaseModelId, const FAsset* Asset)
 {
-	TSharedPtr<FAssetLoader> AssetLoader = MakeShared<FAssetLoader>();
-	AssetLoader->OnAssetGlbLoaded.BindRaw( this, &FCacheGenerator::OnAssetSaved);
-	AssetLoader->LoadAssetGlb(*Asset, BaseModelId, true);
+	TSharedPtr<FAssetGlbLoader> AssetLoader = MakeShared<FAssetGlbLoader>();
+	AssetLoader->OnGlbLoaded.BindRaw( this, &FCacheGenerator::OnAssetGlbSaved);
+	AssetLoader->LoadGlb(*Asset, BaseModelId, true);
 }
 
 void FCacheGenerator::LoadAndStoreAssetIcon(const FString& BaseModelId, const FAsset* Asset)
 {
-	TSharedPtr<FAssetLoader> AssetLoader = MakeShared<FAssetLoader>();
-	AssetLoader->OnAssetIconLoaded.BindRaw( this, &FCacheGenerator::OnAssetSaved);
-	AssetLoader->LoadAssetIcon(*Asset, BaseModelId, true);
+	TSharedPtr<FAssetIconLoader> AssetLoader = MakeShared<FAssetIconLoader>();
+	AssetLoader->OnIconLoaded.BindRaw( this, &FCacheGenerator::OnAssetIconSaved);
+	AssetLoader->LoadIcon(*Asset, true);
 }
 
-void FCacheGenerator::OnAssetSaved(const FAsset& Asset, const TArray<uint8>& Data)
+void FCacheGenerator::OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data)
+{
+	NumberOfAssetsSaved++;
+	if(NumberOfAssetsSaved >= RequiredAssetDownloadRequest)
+	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, NumberOfAssetsSaved);
+
+		OnLocalCacheGenerated.ExecuteIfBound(true);
+	}
+}
+
+void FCacheGenerator::OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>& Data)
 {
 	NumberOfAssetsSaved++;
 	if(NumberOfAssetsSaved >= RequiredAssetDownloadRequest)

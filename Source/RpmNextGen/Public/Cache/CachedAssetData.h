@@ -49,6 +49,19 @@ struct RPMNEXTGEN_API FCachedAssetData
 		CreatedAt = FDateTime();
 		UpdatedAt = FDateTime();
 	}
+	FCachedAssetData(const FAsset& InAsset)
+	{
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		Id = InAsset.Id;
+		Name = InAsset.Name;
+		GlbUrl = InAsset.GlbUrl;
+		IconUrl = InAsset.IconUrl;
+		GlbPathsByBaseModelId = TMap<FString, FString>();
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *GlobalCachePath, *Id);
+		Type = InAsset.Type;
+		CreatedAt = InAsset.CreatedAt;
+		UpdatedAt = InAsset.UpdatedAt;
+	}
 
 	FCachedAssetData(const FAsset& InAsset, const FString& InBaseModelId)
 	{
@@ -58,7 +71,10 @@ struct RPMNEXTGEN_API FCachedAssetData
 		GlbUrl = InAsset.GlbUrl;
 		IconUrl = InAsset.IconUrl;
 		GlbPathsByBaseModelId = TMap<FString, FString>();
-		GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *GlobalCachePath, *InBaseModelId, *Id));
+		if(InBaseModelId != FString())
+		{
+			GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *GlobalCachePath, *InBaseModelId, *Id));
+		}
 		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *GlobalCachePath, *Id);
 		Type = InAsset.Type;
 		CreatedAt = InAsset.CreatedAt;

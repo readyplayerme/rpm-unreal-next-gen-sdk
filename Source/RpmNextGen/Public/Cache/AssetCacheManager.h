@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "RpmNextGen.h"
 #include "CachedAssetData.h"
+#include "Api/Assets/AssetLoaderContext.h"
 #include "Api/Files/FileWriter.h"
-#include "Api/Assets/AssetLoader.h"
 
 class FAssetCacheManager
 {
@@ -32,21 +32,25 @@ public:
 		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath);
 	}
 
-	void StoreAndTrackAsset(const FAssetLoadingContext& Context)
+	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
+	{
+		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);
+
+		FFileWriter FileWriter = FFileWriter();
+		FileWriter.SaveToFile(Context.Data, StoredAsset.IconFilePath);
+
+		StoreAndTrackAsset(StoredAsset, bSaveManifest);
+	}
+	
+	void StoreAndTrackGlb(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
 
 		FFileWriter FileWriter = FFileWriter();
-		if(Context.bIsGLb)
-		{
-			FileWriter.SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
-		}
-		else
-		{
-			FileWriter.SaveToFile(Context.Data, StoredAsset.IconFilePath);
-		}
 
-		StoreAndTrackAsset(StoredAsset);
+		FileWriter.SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
+		
+		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
 
 	void StoreAndTrackAsset(const FCachedAssetData& StoredAsset, const bool bSaveManifest = true)

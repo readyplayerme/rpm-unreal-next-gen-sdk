@@ -50,7 +50,6 @@ private:
 	FLinearColor DefaultColor;
 
 	FAsset AssetData;
-
 	UFUNCTION()
 	virtual void HandleButtonClicked();
 
