@@ -10,7 +10,7 @@
 #include "Api/Characters/Models/CharacterFindByIdResponse.h"
 #include "Api/Characters/Models/CharacterUpdateResponse.h"
 #include "Api/Files/GlbLoader.h"
-#include "Cache/AssetStorageManager.h"
+#include "Cache/AssetCacheManager.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 URpmLoaderComponent::URpmLoaderComponent()
@@ -49,7 +49,7 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 	if(bUseCache)
 	{
 		FCachedAssetData CachedAssetData;
-		if(FAssetStorageManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
+		if(FAssetCacheManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
 		{
 			CharacterData.Assets.Add(FAssetApi::BaseModelType, CachedAssetData.ToAsset());
 			OnCharacterCreated.Broadcast(CharacterData);
@@ -101,7 +101,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 			for (auto PreviewAssets : CharacterData.Assets)
 			{
 				FCachedAssetData CachedAsset;
-				if(FAssetStorageManager::Get().GetCachedAsset(PreviewAssets.Value.Id, CachedAsset))
+				if(FAssetCacheManager::Get().GetCachedAsset(PreviewAssets.Value.Id, CachedAsset))
 				{			
 					CharacterData.Assets.Add(CachedAsset.Type, PreviewAssets.Value);
 					GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], CachedAsset.Type);
@@ -109,7 +109,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 			}
 		}
 		FCachedAssetData CachedAsset;
-		if(FAssetStorageManager::Get().GetCachedAsset(AssetData.Id, CachedAsset))
+		if(FAssetCacheManager::Get().GetCachedAsset(AssetData.Id, CachedAsset))
 		{			
 			CharacterData.Assets.Add(CachedAsset.Type, AssetData);
 			GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], AssetData.Type);

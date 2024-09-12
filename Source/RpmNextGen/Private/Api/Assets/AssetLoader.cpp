@@ -2,7 +2,7 @@
 
 #include "HttpModule.h"
 #include "Api/Assets/Models/Asset.h"
-#include "Cache/AssetStorageManager.h"
+#include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpResponse.h"
 #include "RpmNextGenEditor/Public/EditorAssetLoader.h"
 
@@ -18,7 +18,7 @@ FAssetLoader::~FAssetLoader()
 void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
 	FCachedAssetData StoredAsset;
-	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
+	if(FAssetCacheManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> GlbData;
 		FFileHelper::LoadFileToArray(GlbData, *StoredAsset.GlbPathsByBaseModelId[BaseModelId]);
@@ -34,7 +34,7 @@ void FAssetLoader::LoadAssetGlb(const FAsset& Asset, const FString& BaseModelId,
 void FAssetLoader::LoadAssetIcon(const FAsset& Asset, const FString& BaseModelId, bool bStoreInCache)
 {
 	FCachedAssetData StoredAsset;
-	if(FAssetStorageManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
+	if(FAssetCacheManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> IconData;
 		FFileHelper::LoadFileToArray(IconData, *StoredAsset.IconFilePath);
@@ -68,7 +68,7 @@ void FAssetLoader::AssetIconLoaded(TSharedPtr<IHttpResponse> Response, const boo
 		Context->Data = Response->GetContent();
 		if(Context->bStoreInCache)
 		{
-			FAssetStorageManager::Get().StoreAndTrackAsset(*Context);
+			FAssetCacheManager::Get().StoreAndTrackAsset(*Context);
 		}
 		OnAssetIconLoaded.ExecuteIfBound(Context->Asset, Context->Data);
 		return;
@@ -99,7 +99,7 @@ void FAssetLoader::AssetGlbLoaded(TSharedPtr<IHttpResponse> Response, const bool
 
 		if (Context->bStoreInCache)
 		{
-			FAssetStorageManager::Get().StoreAndTrackAsset(*Context);
+			FAssetCacheManager::Get().StoreAndTrackAsset(*Context);
 		}
 		OnAssetGlbLoaded.ExecuteIfBound(Context->Asset, Context->Data);
 

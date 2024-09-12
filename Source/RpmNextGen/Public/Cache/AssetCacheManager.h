@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "RpmNextGen.h"
 #include "CachedAssetData.h"
-#include "FileWriter.h"
+#include "Api/Files/FileWriter.h"
 #include "Api/Assets/AssetLoader.h"
 
-class FAssetStorageManager
+class FAssetCacheManager
 {
 public:
-	static FAssetStorageManager& Get()
+	static FAssetCacheManager& Get()
 	{
-		static FAssetStorageManager Instance;
+		static FAssetCacheManager Instance;
 		return Instance;
 	}
 
@@ -17,8 +17,7 @@ public:
 	{
 		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
 		const FString TypeListFilePath = GlobalCachePath / TEXT("TypeList.json");
-
-		// Convert the TArray<FString> to TArray<TSharedPtr<FJsonValue>>
+		
 		TArray<TSharedPtr<FJsonValue>> JsonValues;
 		for (const FString& Type : TypeList)
 		{
@@ -27,11 +26,9 @@ public:
 
 		FString OutputString;
 		const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-
-		// Serialize the array of TSharedPtr<FJsonValue>
+		
 		FJsonSerializer::Serialize(JsonValues, Writer);
-
-		// Save the resulting JSON string to file
+		
 		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath);
 	}
 
@@ -46,7 +43,6 @@ public:
 		}
 		else
 		{
-			UE_LOG(LogReadyPlayerMe, Warning, TEXT("Storing asset Icon in cache at path %s"), *StoredAsset.IconFilePath);
 			FileWriter.SaveToFile(Context.Data, StoredAsset.IconFilePath);
 		}
 
@@ -74,7 +70,6 @@ public:
 		{
 			SaveManifest(); 
 		}
-		//UE_LOG(LogReadyPlayerMe, Log, TEXT("Tracked asset: AssetId=%s, GlbFilePath=%s, IconFilePath=%s"), *StoredAsset.Id, *StoredAsset.GlbFilePath, *StoredAsset.IconFilePath);
 	}
 
 	void LoadManifest()
@@ -98,8 +93,6 @@ public:
 					FCachedAssetData StoredAsset = FCachedAssetData::FromJson(AssetData);
 					StoredAssets.Add(AssetId, StoredAsset);
 				}
-
-				UE_LOG(LogReadyPlayerMe, Log, TEXT("Loaded manifest with %d assets"), StoredAssets.Num());
 			}
 		}
 	}
@@ -127,6 +120,46 @@ public:
 		FFileHelper::SaveStringToFile(OutputString, *ManifestFilePath);
 	}
 
+	void ClearAllCache()
+	{
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (PlatformFile.DirectoryExists(*GlobalCachePath))
+		{
+			PlatformFile.DeleteDirectoryRecursively(*GlobalCachePath);
+			PlatformFile.CreateDirectory(*GlobalCachePath);
+		}
+
+		StoredAssets.Empty();
+		SaveManifest();
+	}
+
+	void RemoveAssetFromCache(const FString& AssetId)
+	{
+		if (StoredAssets.Contains(AssetId))
+		{
+			FCachedAssetData CachedAsset = StoredAssets[AssetId];
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+			for (const auto& GlbPath : CachedAsset.GlbPathsByBaseModelId)
+			{
+				if (PlatformFile.FileExists(*GlbPath.Value))
+				{
+					PlatformFile.DeleteFile(*GlbPath.Value);
+				}
+			}
+
+			if (PlatformFile.FileExists(*CachedAsset.IconFilePath))
+			{
+				PlatformFile.DeleteFile(*CachedAsset.IconFilePath);
+			}
+
+			StoredAssets.Remove(AssetId);
+			SaveManifest();
+		}
+	}
+
 	const TMap<FString, FCachedAssetData>& GetStoredAssets() const
 	{
 		return StoredAssets;
@@ -149,7 +182,7 @@ public:
 	}
 
 private:
-	FAssetStorageManager()
+	FAssetCacheManager()
 	{
 		LoadManifest();
 	}

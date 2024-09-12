@@ -1,9 +1,7 @@
 ﻿#include "Api/Files/GlbLoader.h"
 #include "RpmNextGen.h"
 #include "glTFRuntime/Public/glTFRuntimeFunctionLibrary.h"
-#include "Misc/FileHelper.h"
-#include "HAL/PlatformFilemanager.h"
-#include "Cache/FileWriter.h"
+#include "Api/Files//FileWriter.h"
 
 FGlbLoader::FGlbLoader() : GltfConfig(new FglTFRuntimeConfig()), FileWriter(new FFileWriter()) 
 {

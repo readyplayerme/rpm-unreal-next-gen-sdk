@@ -6,7 +6,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
-#include "Cache/AssetStorageManager.h"
+#include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/Paths.h"
@@ -201,7 +201,7 @@ void FCacheGenerator::OnListAssetTypesResponse(const FAssetTypeListResponse& Ass
 	{
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Fetched %d asset types"), AssetListResponse.Data.Num());
 		AssetTypes.Append(AssetListResponse.Data);
-		FAssetStorageManager::Get().StoreAssetTypes(AssetTypes);
+		FAssetCacheManager::Get().StoreAssetTypes(AssetTypes);
 		StartFetchingRefittedAssets();
 		return;
 	}

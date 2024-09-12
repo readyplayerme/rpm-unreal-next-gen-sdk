@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "glTFRuntimeAsset.h"
-#include "RpmAssetLoaderComponent.h"
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "Components/ActorComponent.h"
 #include "RpmLoaderComponent.generated.h"
@@ -41,6 +40,7 @@ struct RPMNEXTGEN_API FRpmCharacterData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCreated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, UglTFRuntimeAsset*, Asset, const FString&, AssetType);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
