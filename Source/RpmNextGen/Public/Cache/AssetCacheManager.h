@@ -32,6 +32,30 @@ public:
 		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath);
 	}
 
+	static TArray<FString> LoadAssetTypes()
+	{
+		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString TypeListFilePath = GlobalCachePath / TEXT("TypeList.json");
+		FString TypeListContent;
+
+		if (FFileHelper::LoadFileToString(TypeListContent, *TypeListFilePath))
+		{
+			TArray<TSharedPtr<FJsonValue>> JsonValues;
+			TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(TypeListContent);
+
+			if (FJsonSerializer::Deserialize(Reader, JsonValues) && JsonValues.Num() > 0)
+			{
+				TArray<FString> TypeList;
+				for (const TSharedPtr<FJsonValue>& JsonValue : JsonValues)
+				{
+					TypeList.Add(JsonValue->AsString());
+				}
+				return TypeList;
+			}
+		}
+		return TArray<FString>();
+	}
+
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);
@@ -90,7 +114,10 @@ public:
 					const FString& AssetId = Entry.Key;
 					const TSharedPtr<FJsonObject> AssetData = Entry.Value->AsObject();
 					FCachedAssetData StoredAsset = FCachedAssetData::FromJson(AssetData);
-					StoredAssets.Add(AssetId, StoredAsset);
+					if(StoredAsset.IsValid())
+					{
+						StoredAssets.Add(AssetId, StoredAsset);
+					}
 				}
 			}
 		}
@@ -172,7 +199,7 @@ public:
 	bool GetCachedAsset(const FString& AssetId, FCachedAssetData& OutAsset) const
 	{
 		const FCachedAssetData* StoredAsset = StoredAssets.Find(AssetId);
-		if(StoredAsset != nullptr)
+		if(StoredAsset != nullptr && StoredAsset->IsValid())
 		{
 			OutAsset = *StoredAsset;
 			return true;

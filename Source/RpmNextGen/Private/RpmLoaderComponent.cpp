@@ -24,10 +24,12 @@ URpmLoaderComponent::URpmLoaderComponent()
 	}
 	GlbLoader = MakeShared<FGlbLoader>(GltfConfig);
 	GlbLoader->OnGLtfAssetLoaded.BindUObject(this, &URpmLoaderComponent::HandleGltfAssetLoaded);
+	
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
-	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);	
+	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);
+	CharacterData = FRpmCharacterData();
 }
 
 void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config) const
@@ -73,10 +75,18 @@ void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
 
 void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap)
 {
+	TMap<FString, FString> ParamAssets;
 	for (auto Pairs : AssetMap)
 	{
-		
+		ParamAssets.Add(Pairs.Key, Pairs.Value.Id);
 	}
+
+	CharacterData.Assets = AssetMap;
+	FCharacterPreviewRequest PreviewRequest;
+	PreviewRequest.Id = CharacterData.Id;
+	PreviewRequest.Params.Assets = ParamAssets;
+	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
+	LoadCharacterFromUrl(Url);
 }
 
 void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)

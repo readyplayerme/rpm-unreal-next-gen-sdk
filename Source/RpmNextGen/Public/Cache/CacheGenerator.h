@@ -38,7 +38,9 @@ protected:
 	void FetchAssetTypes() const;
 
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
+	UFUNCTION()
 	void OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data);
+	UFUNCTION()
 	void OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>& Data);
 	void FetchNextRefittedAsset();
 	

@@ -45,6 +45,7 @@ public:
 
 	FAsset GetAssetData() const { return AssetData; }
 protected:
+	UFUNCTION()
 	void OnTextureLoaded(UTexture2D* Texture2D);
 	virtual void NativeConstruct() override;
 

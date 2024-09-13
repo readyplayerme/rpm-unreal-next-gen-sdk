@@ -54,4 +54,5 @@ void FConnectionManager::UpdateConnectionStatus(bool bNewStatus)
         bIsConnected = bNewStatus;
         OnConnectionStatusChanged.ExecuteIfBound(bIsConnected);
     }
+    OnConnectionStatusRefreshed.ExecuteIfBound(bIsConnected);
 }

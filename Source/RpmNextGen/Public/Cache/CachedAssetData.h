@@ -81,6 +81,20 @@ struct RPMNEXTGEN_API FCachedAssetData
 		UpdatedAt = InAsset.UpdatedAt;
 	}
 
+	bool IsValid () const
+	{
+		bool Valid = true;
+		if(GlbPathsByBaseModelId.Num() == 0)
+		{
+			Valid = false;
+		}
+		if (IconFilePath.IsEmpty())
+		{
+			Valid = false;
+		}
+		return Valid;
+	}
+
 	FAsset ToAsset() const
 	{
 		FAsset Asset;

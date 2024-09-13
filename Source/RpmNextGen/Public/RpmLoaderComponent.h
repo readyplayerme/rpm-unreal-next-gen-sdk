@@ -58,6 +58,7 @@ public:
 	FOnCharacterCreated OnCharacterCreated;
 	FOnCharacterUpdated OnCharacterUpdated;
 	FOnCharacterFound OnCharacterFound;
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -75,7 +76,6 @@ protected:
 
 	UFUNCTION()
 	virtual void HandleGltfAssetLoaded(UglTFRuntimeAsset* UglTFRuntimeAsset, const FString& AssetType);
-
 	UFUNCTION()
 	virtual void HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful);
 	UFUNCTION()
@@ -93,5 +93,4 @@ protected:
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;
 	TSharedPtr<FGlbLoader> GlbLoader;
-		
 };

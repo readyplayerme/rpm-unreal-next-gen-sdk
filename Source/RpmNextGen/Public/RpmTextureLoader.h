@@ -6,7 +6,7 @@
 
 class FAssetIconLoader;
 
-class RPMNEXTGEN_API FRpmTextureLoader
+class RPMNEXTGEN_API FRpmTextureLoader : public TSharedFromThis<FRpmTextureLoader>
 {
 public:
 
@@ -14,6 +14,7 @@ public:
 	
 	DECLARE_DELEGATE_OneParam(FOnTextureLoaded, UTexture2D*);
 	void LoadIconFromAsset(const FAsset& Asset);
+	UFUNCTION()
 	void OnIconLoaded(const FAsset& Asset, const TArray<unsigned char>& Array);
 
 	FOnTextureLoaded OnTextureLoaded;

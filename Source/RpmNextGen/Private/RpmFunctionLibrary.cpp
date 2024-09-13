@@ -9,6 +9,7 @@
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Settings/RpmDeveloperSettings.h"
+#include "Utilities/ConnectionManager.h"
 
 void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const FString& AssetType, FOnAssetIdFetched OnAssetIdFetched)
 {
@@ -41,4 +42,20 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
 	});
 
 	AssetApi->ListAssetsAsync(AssetListRequest);
+}
+
+bool URpmFunctionLibrary::IsInternetConnected()
+{
+	// Use FConnectionManager to get the current internet connection status
+	return FConnectionManager::Get().IsConnected();
+}
+
+void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefreshedDelegate& OnConnectionStatusRefreshed)
+{
+	FConnectionManager::Get().OnConnectionStatusRefreshed.BindLambda([OnConnectionStatusRefreshed](bool bIsConnected)
+	{
+		OnConnectionStatusRefreshed.ExecuteIfBound(bIsConnected);
+	});
+
+	FConnectionManager::Get().CheckInternetConnection();
 }

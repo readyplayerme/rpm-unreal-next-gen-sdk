@@ -17,7 +17,9 @@ class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UFUNCTION()
 	void OnTextureLoaded(UTexture2D* Texture2D);
+	
 	virtual void NativeConstruct() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Asset Card")
