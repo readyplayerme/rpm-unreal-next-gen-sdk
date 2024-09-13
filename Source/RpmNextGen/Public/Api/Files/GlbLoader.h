@@ -4,7 +4,7 @@
 #include "FileApi.h"
 #include "HAL/PlatformFilemanager.h"
 
-class FFileWriter;
+class FFileUtility;
 struct FglTFRuntimeConfig;
 class UglTFRuntimeAsset;
 
@@ -28,6 +28,6 @@ public:
 protected:
 	FglTFRuntimeConfig* GltfConfig;
 	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String, const FString& AssetType);
-	FFileWriter* FileWriter;
+	FFileUtility* FileWriter;
 	FString DownloadDirectory;
 };

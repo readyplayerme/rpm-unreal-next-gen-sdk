@@ -2,6 +2,8 @@
 
 
 #include "Samples/RpmAssetPanelWidget.h"
+
+#include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
@@ -34,7 +36,7 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 		CreateButtonsFromAssets(AssetListResponse.Data);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to fetch assets"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
 }
 
 void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
@@ -43,7 +45,7 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 	{
 		CreateButton(Asset);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("No assets found") );
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
 }
 
 void URpmAssetPanelWidget::ClearAllButtons()
@@ -91,7 +93,7 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("AssetButtonBlueprint is not set!"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetButtonBlueprint is not set!"));
 	}
 }
 
@@ -105,7 +107,7 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 {
 	if (!AssetApi.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("AssetApi is null or invalid"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi is null or invalid"));
 		return;
 	}
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();

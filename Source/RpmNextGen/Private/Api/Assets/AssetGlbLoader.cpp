@@ -1,6 +1,5 @@
-﻿#include "FAssetGlbLoader.h"
-
-#include "AssetLoaderContext.h"
+﻿#include "Api/Assets/AssetGlbLoader.h"
+#include "Api/Assets/AssetLoaderContext.h"
 #include "HttpModule.h"
 #include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpResponse.h"
@@ -53,9 +52,8 @@ void FAssetGlbLoader::GlbLoaded(TSharedPtr<IHttpResponse> Response, const bool b
             FAssetCacheManager::Get().StoreAndTrackGlb(*Context);
         }
         OnGlbLoaded.ExecuteIfBound(Context->Asset, Context->Data);
-        UE_LOG(LogTemp, Log, TEXT("GLB loaded successfully."));
         return;
     }
-    UE_LOG(LogTemp, Error, TEXT("Failed to load GLB from URL: %s"), *Context->Asset.GlbUrl);
+    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load GLB from URL: %s"), *Context->Asset.GlbUrl);
     OnGlbLoaded.ExecuteIfBound(Context->Asset, TArray<uint8>());
 }

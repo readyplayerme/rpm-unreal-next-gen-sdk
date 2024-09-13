@@ -1,5 +1,6 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
+#include "RpmNextGen.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
@@ -67,7 +68,7 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 	if (Response->GetResponseCode() == 401)
 	{
-		UE_LOG(LogTemp, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
+		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
 		return;
 	}
 	
@@ -95,7 +96,7 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Unhandled verb"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unhandled verb"));
 	}
 }
 

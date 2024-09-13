@@ -1,4 +1,6 @@
 ﻿#include "Auth/DeveloperTokenAuthStrategy.h"
+
+#include "RpmNextGen.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "Api/Auth/ApiRequest.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
@@ -17,7 +19,7 @@ void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Reques
 	const FString Token = FDevAuthTokenCache::GetAuthData().Token;
 	if(Token.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Token is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Token is empty"));
 		OnAuthComplete.ExecuteIfBound(false);
 		return;
 	}
@@ -50,7 +52,7 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to refresh token"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
 	OnTokenRefreshed.ExecuteIfBound(Response.Data, false);
 }
 

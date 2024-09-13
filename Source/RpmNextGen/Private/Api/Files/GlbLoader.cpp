@@ -1,9 +1,9 @@
 ﻿#include "Api/Files/GlbLoader.h"
 #include "RpmNextGen.h"
 #include "glTFRuntime/Public/glTFRuntimeFunctionLibrary.h"
-#include "Api/Files//FileWriter.h"
+#include "Api/Files//FileUtility.h"
 
-FGlbLoader::FGlbLoader() : GltfConfig(new FglTFRuntimeConfig()), FileWriter(new FFileWriter()) 
+FGlbLoader::FGlbLoader() : GltfConfig(new FglTFRuntimeConfig()), FileWriter(new FFileUtility()) 
 {
     GltfConfig->TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
     OnFileRequestComplete.BindRaw( this, &FGlbLoader::HandleFileRequestComplete);

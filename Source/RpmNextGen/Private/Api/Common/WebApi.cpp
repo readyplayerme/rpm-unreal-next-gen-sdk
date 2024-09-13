@@ -1,5 +1,6 @@
 ﻿#include "Api/Common/WebApi.h"
 #include "HttpModule.h"
+#include "RpmNextGen.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
 
@@ -38,7 +39,7 @@ void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Respon
         return;
     }
     FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
-    UE_LOG(LogTemp, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
+    UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
     OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), false);
 }
 

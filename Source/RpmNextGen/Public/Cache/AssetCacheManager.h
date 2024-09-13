@@ -2,7 +2,7 @@
 #include "RpmNextGen.h"
 #include "CachedAssetData.h"
 #include "Api/Assets/AssetLoaderContext.h"
-#include "Api/Files/FileWriter.h"
+#include "Api/Files/FileUtility.h"
 
 class FAssetCacheManager
 {
@@ -35,9 +35,7 @@ public:
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);
-
-		FFileWriter FileWriter = FFileWriter();
-		FileWriter.SaveToFile(Context.Data, StoredAsset.IconFilePath);
+		FFileUtility::SaveToFile(Context.Data, StoredAsset.IconFilePath);
 
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
@@ -45,10 +43,7 @@ public:
 	void StoreAndTrackGlb(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
-
-		FFileWriter FileWriter = FFileWriter();
-
-		FileWriter.SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
+		FFileUtility::SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
 		
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}

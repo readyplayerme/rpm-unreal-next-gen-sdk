@@ -7,6 +7,7 @@
 #include "glTFRuntimeFunctionLibrary.h"
 #include "Api/Files/GlbLoader.h"
 #include "PropertyCustomizationHelpers.h"
+#include "RpmNextGen.h"
 #include "AssetRegistry/AssetData.h"
 
 // Configuration section and key names
@@ -74,7 +75,7 @@ void SCharacterLoaderWidget::OnSkeletonSelected(const FAssetData& AssetData)
 	SelectedSkeleton = Cast<USkeleton>(AssetData.GetAsset());
 	if (SelectedSkeleton)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Selected Skeleton: %s"), *SelectedSkeleton->GetName());
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Selected Skeleton: %s"), *SelectedSkeleton->GetName());
 	}
 }
 
@@ -99,7 +100,7 @@ FReply SCharacterLoaderWidget::OnButtonClick()
 	FString Path = PathText.ToString();
 	if (Path.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Path is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Path is empty"));
 		return FReply::Handled();
 	}
 	LoadAsset(Path);

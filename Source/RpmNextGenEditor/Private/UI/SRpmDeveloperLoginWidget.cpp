@@ -3,6 +3,7 @@
 #include "UI/SRpmDeveloperLoginWidget.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
+#include "RpmNextGen.h"
 #include "SlateOptMacros.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
@@ -363,7 +364,7 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 		GetOrgList();
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Login request failed"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Login request failed"));
 	FDevAuthTokenCache::ClearAuthData();
 }
 
@@ -374,7 +375,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 	{
 		if (Response.Data.Num() == 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No organizations found"));
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("No organizations found"));
 			return;
 		}
 		FApplicationListRequest Request;
@@ -383,7 +384,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 		return;
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Failed to list organizations"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to list organizations"));
 }
 
 
@@ -413,7 +414,7 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to list applications"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to list applications"));
 	}
 	LoadBaseModelList();
 }
@@ -495,7 +496,7 @@ void SRpmDeveloperLoginWidget::LoadBaseModelList()
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	if (RpmSettings->ApplicationId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Application ID is empty, unable to load base models."));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty, unable to load base models."));
 		return;
 	}
 	FAssetListRequest Request = FAssetListRequest();

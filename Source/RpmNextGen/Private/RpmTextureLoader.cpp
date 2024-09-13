@@ -1,5 +1,7 @@
 ﻿#include "RpmTextureLoader.h"
-#include "Api/Assets/FAssetIconLoader.h"
+
+#include "RpmNextGen.h"
+#include "Api/Assets/AssetIconLoader.h"
 #include "Async/Async.h"
 #include "Modules/ModuleManager.h"
 #include "Engine/Texture2D.h"
@@ -23,6 +25,6 @@ void FRpmTextureLoader::OnIconLoaded(const FAsset& Asset, const TArray<unsigned 
 		OnTextureLoaded.ExecuteIfBound(Texture);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to load icon for asset: %s"), *Asset.Id);
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load icon for asset: %s"), *Asset.Id);
 	OnTextureLoaded.ExecuteIfBound(nullptr);
 }

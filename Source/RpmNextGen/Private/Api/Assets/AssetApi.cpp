@@ -1,4 +1,6 @@
 ﻿#include "Api/Assets/AssetApi.h"
+
+#include "RpmNextGen.h"
 #include "Settings/RpmDeveloperSettings.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
@@ -16,7 +18,7 @@ FAssetApi::FAssetApi()
 
 	if(Settings->ApplicationId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Application ID is empty. Please set the Application ID in the Ready Player Me Developer Settings"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty. Please set the Application ID in the Ready Player Me Developer Settings"));
 	}
 	
 	if(!Settings->ApiKey.IsEmpty())
@@ -31,7 +33,7 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 	ApiBaseUrl = RpmSettings->GetApiBaseUrl();
 	if(RpmSettings->ApplicationId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Application ID is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty"));
 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 		return;
 	}
@@ -50,7 +52,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	ApiBaseUrl = Settings->GetApiBaseUrl();
 	if(Settings->ApplicationId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Application ID is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty"));
 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 		return;
 	}
@@ -107,7 +109,7 @@ void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
             }
         }
 
-        UE_LOG(LogTemp, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
 
         #else
 
@@ -125,13 +127,13 @@ void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
             return;
         }
 
-        UE_LOG(LogTemp, Error, TEXT("Failed to parse API from response %s"), *Response);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse API from response %s"), *Response);
 
         #endif
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("API Response was unsuccessful"));
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("API Response was unsuccessful"));
     }
 
     // If all parsing attempts fail, execute with default/empty responses

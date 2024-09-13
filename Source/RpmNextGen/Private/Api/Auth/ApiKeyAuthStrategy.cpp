@@ -12,7 +12,7 @@ void FApiKeyAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> Request)
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	if(RpmSettings->ApiKey.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("API Key is empty"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("API Key is empty"));
 		OnAuthComplete.ExecuteIfBound(false);
 		return;
 	}

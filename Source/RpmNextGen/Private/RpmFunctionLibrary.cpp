@@ -2,6 +2,8 @@
 
 
 #include "RpmFunctionLibrary.h"
+
+#include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
@@ -24,7 +26,7 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
 
 	if (!WorldContextObject)
 	{
-		UE_LOG(LogTemp, Error, TEXT("WorldContextObject is null"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is null"));
 		return;
 	}
 

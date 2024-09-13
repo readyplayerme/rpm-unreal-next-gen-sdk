@@ -2,8 +2,8 @@
 #include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
-#include "Api/Assets/FAssetGlbLoader.h"
-#include "Api/Assets/FAssetIconLoader.h"
+#include "Api/Assets/AssetGlbLoader.h"
+#include "Api/Assets/AssetIconLoader.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Cache/AssetCacheManager.h"
@@ -17,8 +17,7 @@
 
 const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.zip");
 
-FCacheGenerator::FCacheGenerator()
-	: CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
+FCacheGenerator::FCacheGenerator() : CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
 {
 	Http = &FHttpModule::Get();
 	AssetApi = MakeUnique<FAssetApi>();
@@ -64,9 +63,8 @@ void FCacheGenerator::LoadAndStoreAssets()
 		LoadAndStoreAssetIcon(Asset.Id, &Asset);
 		AssetIconRequestCount++;
 	}
-
 	
-	// load and store asset icon (only 1 set is required
+	// load and store asset icon (only 1 set of icons is required)
 	for (auto Asset : AssetMapByBaseModelId[BaseModelAssets[0].Id])
 	{
 		if(Asset.Type == FAssetApi::BaseModelType) continue;			

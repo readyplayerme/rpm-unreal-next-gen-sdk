@@ -186,7 +186,7 @@ FReply SCacheEditorWidget::OnOpenLocalCacheFolderClicked()
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Folder does not exist: %s"), *GlobalCachePath);
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("Folder does not exist: %s"), *GlobalCachePath);
     }
 
     return FReply::Handled();
@@ -250,11 +250,11 @@ void SCacheEditorWidget::CreatePakFile(const FString& PakFilePath, const FString
         FPlatformProcess::WaitForProc(ProcHandle);
         FPlatformProcess::CloseProc(ProcHandle);
 
-        UE_LOG(LogTemp, Log, TEXT("Pak file created successfully: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Log, TEXT("Pak file created successfully: %s"), *PakFilePath);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create Pak file: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create Pak file: %s"), *PakFilePath);
     }
 }
 
@@ -275,5 +275,5 @@ void SCacheEditorWidget::GeneratePakResponseFile(const FString& ResponseFilePath
     }
     FFileHelper::SaveStringToFile(ResponseFileContent, *ResponseFilePath);
     // print number of files added to the response file
-    UE_LOG(LogTemp, Log, TEXT("Response file created with %d files"), FileCount);
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Response file created with %d files"), FileCount);
 }
