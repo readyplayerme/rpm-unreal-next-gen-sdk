@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
 #include "Api/Common/Models/ApiResponse.h"
+#include "RpmNextGen.h"
 #include "DeveloperLoginResponse.generated.h"
 
 USTRUCT(BlueprintType)

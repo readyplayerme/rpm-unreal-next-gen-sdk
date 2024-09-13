@@ -19,10 +19,13 @@ void FAssetIconLoader::LoadIcon(const FAsset& Asset, bool bStoreInCache)
 	if (FAssetCacheManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> IconData;
-		FFileHelper::LoadFileToArray(IconData, *StoredAsset.IconFilePath);
-		OnIconLoaded.ExecuteIfBound(Asset, IconData);
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading icon from cache"));
-		return;
+		if(FFileHelper::LoadFileToArray(IconData, *StoredAsset.IconFilePath))
+		{
+			OnIconLoaded.ExecuteIfBound(Asset, IconData);
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading icon from cache"));
+			return;
+		}
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Unable to load icon from cache"));
 	}
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, "", bStoreInCache);
 	LoadIcon(Context);
