@@ -275,7 +275,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 					   .Text(FText::FromString("Load Style"))
 					   .OnClicked_Lambda([this, StyleAsset]() -> FReply
 					             {
-						             OnLoadStyleClicked(StyleAsset.Id);
+						             OnLoadStyleClicked(StyleAsset);
 						             return FReply::Handled();
 					             })
 				]
@@ -310,10 +310,10 @@ void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr
 	}
 }
 
-void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
+void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FAsset& StyleAsset)
 {
 	AssetLoader = FEditorAssetLoader();
-	AssetLoader.LoadGlbFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
+	AssetLoader.LoadBaseModelAsset(StyleAsset);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const

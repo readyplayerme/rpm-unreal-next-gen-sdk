@@ -71,7 +71,7 @@ private:
 	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
 	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
 	void HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful);
-	void OnLoadStyleClicked(const FString& StyleId);
+	void OnLoadStyleClicked(const FAsset& Asset);
 	void SetLoggedInState(const bool IsLoggedIn);
 	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);

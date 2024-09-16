@@ -1,27 +1,38 @@
 #include "EditorAssetLoader.h"
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
+#include "glTFRuntimeFunctionLibrary.h"
 #include "RpmActor.h"
 #include "RpmNextGen.h"
+
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
 	SkeletonToCopy = nullptr;
+	OnGlbLoaded.BindRaw(this, &FEditorAssetLoader::HandleGlbLoaded);
+	GltfConfig = new FglTFRuntimeConfig();
+	GltfConfig->TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 }
 
 FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, FString LoadedAssetId)
+void FEditorAssetLoader::HandleGlbLoaded(const FAsset& Asset, const TArray<unsigned char>& Data)
 {
-	if (GltfAsset)
+	UglTFRuntimeAsset* GltfAsset = nullptr;
+	if (!Data.IsEmpty())
 	{
-		GltfAsset->AddToRoot();
-		SaveAsUAsset(GltfAsset, LoadedAssetId);
-		LoadAssetToWorldAsURpmActor(GltfAsset, LoadedAssetId);
-		GltfAsset->RemoveFromRoot();
+		GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+		if (GltfAsset)
+		{
+			GltfAsset->AddToRoot();
+			SaveAsUAsset(GltfAsset, Asset.Id);
+			LoadAssetToWorldAsURpmActor(GltfAsset, Asset.Id);
+			GltfAsset->RemoveFromRoot();
+		}
 	}
+	
 }
 
 USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const
@@ -49,20 +60,9 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	return skeletalMesh;
 }
 
-void FEditorAssetLoader::LoadGlbFromURLWithId(const FString& URL, FString LoadedAssetId)
+void FEditorAssetLoader::LoadBaseModelAsset(const FAsset& Asset)
 {
-	OnGLtfAssetLoaded.BindLambda(
-		[LoadedAssetId, this]( UglTFRuntimeAsset* gltfAsset,
-		                      const FString& AssetType)
-		{
-			if (!gltfAsset)
-			{
-				UE_LOG(LogReadyPlayerMe, Log, TEXT("No gltf asset"));
-				return;
-			}
-			OnAssetLoadComplete(gltfAsset, AssetType, LoadedAssetId);
-		});
-	LoadFileFromUrl(URL);
+	LoadGlb(Asset, Asset.Id, false);
 }
 
 void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId)
