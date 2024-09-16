@@ -21,20 +21,6 @@ void FFileApi::LoadFileFromUrl(const FString& URL, const FString& AssetType)
 	HttpRequest->ProcessRequest();
 }
 
-void FFileApi::LoadFileFromPath(const FString& Path, const FString& AssetType)
-{
-	const FString FileName = FPaths::GetCleanFilename(Path);
-	if(!FPaths::FileExists(Path))
-	{
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Path does not exist %s"), *Path);
-		OnFileRequestComplete.ExecuteIfBound(nullptr, FileName, AssetType);
-		return;
-	}
-	TArray<uint8> Content;
-	FFileHelper::LoadFileToArray(Content, *Path);
-	OnFileRequestComplete.ExecuteIfBound(&Content, FileName, AssetType);	
-}
-
 void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString AssetType)
 {
 	FString URL = Request->GetURL();
@@ -52,4 +38,18 @@ void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Res
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load file from URL"));
 	OnFileRequestComplete.ExecuteIfBound(nullptr, FileName, AssetType);
+}
+
+TArray<uint8>* FFileApi::LoadFileFromPath(const FString& Path)
+{
+	const FString FileName = FPaths::GetCleanFilename(Path);
+	if(!FPaths::FileExists(Path))
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Path does not exist %s"), *Path);
+		
+		return nullptr;
+	}
+	TArray<uint8> Content;
+	FFileHelper::LoadFileToArray(Content, *Path);
+	return &Content;
 }

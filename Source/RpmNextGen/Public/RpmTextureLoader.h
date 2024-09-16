@@ -11,9 +11,9 @@ class RPMNEXTGEN_API FRpmTextureLoader : public TSharedFromThis<FRpmTextureLoade
 public:
 
 	FRpmTextureLoader();
-	
 	DECLARE_DELEGATE_OneParam(FOnTextureLoaded, UTexture2D*);
-	void LoadIconFromAsset(const FAsset& Asset);
+	
+	void LoadIconFromAsset(const FAsset& Asset, bool bStoreInCache = false);
 	UFUNCTION()
 	void OnIconLoaded(const FAsset& Asset, const TArray<unsigned char>& Array);
 

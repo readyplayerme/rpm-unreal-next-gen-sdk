@@ -67,10 +67,14 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromUrl(FString Url);
+	
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	UglTFRuntimeAsset* LoadGltfRuntimeAssetFromCache(const FAsset& Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
-	void LoadUpdatedAssetStylesFromCache();
+	
+	void LoadAssetsWithNewStyle();
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);

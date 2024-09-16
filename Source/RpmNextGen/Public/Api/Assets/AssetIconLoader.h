@@ -16,12 +16,14 @@ public:
 
 	FAssetIconLoader();
 	virtual ~FAssetIconLoader();
+	
 	void LoadIcon(const FAsset& Asset, bool bStoreInCache);
 
 	FOnIconLoaded OnIconLoaded;
 
 private:
 	void LoadIcon(TSharedRef<FAssetLoadingContext> Context);
+	UFUNCTION()
 	void IconLoaded(TSharedPtr<IHttpResponse> Response, bool bWasSuccessful, const TSharedRef<FAssetLoadingContext>& Context);
 
 	FHttpModule* Http;

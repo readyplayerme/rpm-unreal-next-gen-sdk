@@ -11,8 +11,8 @@ public:
 	FFileApi();
 	virtual ~FFileApi();
 	virtual void LoadFileFromUrl(const FString& URL, const FString& AssetType = TEXT(""));
-	virtual void LoadFileFromPath(const FString& Path, const FString& AssetType = TEXT(""));
 	virtual void FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString AssetType);
-	
+	virtual TArray<uint8>* LoadFileFromPath(const FString& Path);
+
 	FOnFileRequestComplete OnFileRequestComplete;
 };
