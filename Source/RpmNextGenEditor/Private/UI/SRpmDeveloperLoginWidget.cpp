@@ -28,7 +28,6 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 {
 	FDeveloperAuth AuthData = FDevAuthTokenCache::GetAuthData();
 	FDevAuthTokenCache::SetAuthData(AuthData);
-
 	bIsLoggedIn = AuthData.IsValid();
 	UserName = AuthData.Name;
 
@@ -189,6 +188,8 @@ void SRpmDeveloperLoginWidget::Initialize()
 	{
 		return;
 	}
+
+	ActiveLoaders = TArray<TSharedPtr<FRpmTextureLoader>>();
 	const FDeveloperAuth DevAuthData = FDevAuthTokenCache::GetAuthData();
 	if (!DeveloperAuthApi.IsValid())
 	{
@@ -296,11 +297,12 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 	];
 
 	TSharedPtr<FRpmTextureLoader> ImageLoader = MakeShared<FRpmTextureLoader>();
-	ImageLoader->OnTextureLoaded.BindRaw(this, &SRpmDeveloperLoginWidget::OnTextureLoaded, ImageWidget);
+	ActiveLoaders.Add(ImageLoader);
+	ImageLoader->OnTextureLoaded.BindRaw(this, &SRpmDeveloperLoginWidget::OnTextureLoaded, ImageWidget, ImageLoader);
 	ImageLoader->LoadIconFromAsset(StyleAsset);
 }
 
-void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage)
+void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage, TSharedPtr<FRpmTextureLoader> LoaderToRemove)
 {
 	if (Texture2D)
 	{
@@ -308,6 +310,7 @@ void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr
 		CharacterStyleTextures.Add(Texture2D);
 		FRpmImageHelper::LoadTextureToSImage(Texture2D, FVector2D(100.0f, 100.0f), SImage);
 	}
+	ActiveLoaders.Remove(LoaderToRemove);
 }
 
 void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FAsset& StyleAsset)
