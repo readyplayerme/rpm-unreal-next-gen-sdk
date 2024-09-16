@@ -70,7 +70,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
-	
+	void LoadUpdatedAssetStylesFromCache();
+
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
 

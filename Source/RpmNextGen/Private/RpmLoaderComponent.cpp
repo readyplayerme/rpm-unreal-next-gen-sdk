@@ -89,6 +89,23 @@ void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> A
 	LoadCharacterFromUrl(Url);
 }
 
+void URpmLoaderComponent::LoadUpdatedAssetStylesFromCache()
+{
+	for (auto PreviewAssets : CharacterData.Assets)
+	{
+		FCachedAssetData ExistingAsset;
+		if(FAssetCacheManager::Get().GetCachedAsset(PreviewAssets.Value.Id, ExistingAsset))
+		{
+			if(ExistingAsset.Type == FAssetApi::BaseModelType)
+			{
+				continue;
+			}
+			CharacterData.Assets.Add(ExistingAsset.Type, PreviewAssets.Value);
+			GlbLoader->LoadFileFromPath(ExistingAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], ExistingAsset.Type);
+		}
+	}
+}
+
 void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 {
 	if (CharacterData.BaseModelId.IsEmpty())
@@ -100,6 +117,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	if(bIsBaseModel)
 	{
 		CharacterData.BaseModelId = AssetData.Id;
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Asset is %s setting BaseModelId to AssetId."), *AssetData.Type);
 	}
 	CharacterData.Assets.Add(AssetData.Type, AssetData);
 	
@@ -107,20 +125,12 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	{
 		if(bIsBaseModel)
 		{
-			CharacterData.Assets.Remove(AssetData.Type);
-			for (auto PreviewAssets : CharacterData.Assets)
-			{
-				FCachedAssetData CachedAsset;
-				if(FAssetCacheManager::Get().GetCachedAsset(PreviewAssets.Value.Id, CachedAsset))
-				{			
-					CharacterData.Assets.Add(CachedAsset.Type, PreviewAssets.Value);
-					GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], CachedAsset.Type);
-				}
-			}
+			LoadUpdatedAssetStylesFromCache();
 		}
+
 		FCachedAssetData CachedAsset;
 		if(FAssetCacheManager::Get().GetCachedAsset(AssetData.Id, CachedAsset))
-		{			
+		{
 			CharacterData.Assets.Add(CachedAsset.Type, AssetData);
 			GlbLoader->LoadFileFromPath(CachedAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], AssetData.Type);
 			return;
@@ -160,10 +170,6 @@ void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse
 void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse,
 	bool bWasSuccessful)
 {
-	for (auto Element : CharacterUpdateResponse.Data.Assets)
-	{
-		
-	}
 	OnCharacterUpdated.Broadcast(CharacterData);
 }
 
