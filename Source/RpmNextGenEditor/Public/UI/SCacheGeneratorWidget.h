@@ -5,10 +5,10 @@
 
 class FCacheGenerator;
 
-class SCacheEditorWidget : public SCompoundWidget
+class SCacheGeneratorWidget : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SCacheEditorWidget) {}
+	SLATE_BEGIN_ARGS(SCacheGeneratorWidget) {}
 	SLATE_END_ARGS()
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);

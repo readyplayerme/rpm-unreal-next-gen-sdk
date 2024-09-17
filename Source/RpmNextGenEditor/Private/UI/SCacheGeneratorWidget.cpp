@@ -1,4 +1,4 @@
-﻿#include "UI/SCacheEditorWidget.h"
+﻿#include "UI/SCacheGeneratorWidget.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "EditorStyleSet.h"
@@ -9,14 +9,14 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 
-void SCacheEditorWidget::Construct(const FArguments& InArgs)
+void SCacheGeneratorWidget::Construct(const FArguments& InArgs)
 {
     if(!CacheGenerator)
     {
         CacheGenerator = MakeUnique<FCacheGenerator>();
-        CacheGenerator->OnCacheDataLoaded.BindRaw(this, &SCacheEditorWidget::OnFetchCacheDataComplete);
-        CacheGenerator->OnDownloadRemoteCacheDelegate.BindRaw(this, &SCacheEditorWidget::OnDownloadRemoteCacheComplete);
-        CacheGenerator->OnLocalCacheGenerated.BindRaw(this, &SCacheEditorWidget::OnGenerateLocalCacheCompleted);
+        CacheGenerator->OnCacheDataLoaded.BindRaw(this, &SCacheGeneratorWidget::OnFetchCacheDataComplete);
+        CacheGenerator->OnDownloadRemoteCacheDelegate.BindRaw(this, &SCacheGeneratorWidget::OnDownloadRemoteCacheComplete);
+        CacheGenerator->OnLocalCacheGenerated.BindRaw(this, &SCacheGeneratorWidget::OnGenerateLocalCacheCompleted);
     }
     ChildSlot
     [
@@ -53,8 +53,8 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                 .FillWidth(1.0f)
                 [
                     SNew(SNumericEntryBox<int32>)
-                    .Value(this, &SCacheEditorWidget::GetItemsPerCategory)
-                    .OnValueChanged(this, &SCacheEditorWidget::OnItemsPerCategoryChanged)
+                    .Value(this, &SCacheGeneratorWidget::GetItemsPerCategory)
+                    .OnValueChanged(this, &SCacheGeneratorWidget::OnItemsPerCategoryChanged)
                     .AllowSpin(true) // Slider-like behavior
                     .MinValue(1)
                     .MaxValue(30)
@@ -70,7 +70,7 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                 [
                     SNew(SButton)
                     .Text(FText::FromString("Generate offline cache"))
-                    .OnClicked(this, &SCacheEditorWidget::OnGenerateOfflineCacheClicked)
+                    .OnClicked(this, &SCacheGeneratorWidget::OnGenerateOfflineCacheClicked)
                     .HAlign(HAlign_Center)
                     .VAlign(VAlign_Center)
                 ]
@@ -99,7 +99,7 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
                 [
                     SNew(SButton)
                     .Text(FText::FromString("Open Local Cache Folder"))
-                    .OnClicked(this, &SCacheEditorWidget::OnOpenLocalCacheFolderClicked)
+                    .OnClicked(this, &SCacheGeneratorWidget::OnOpenLocalCacheFolderClicked)
                     .HAlign(HAlign_Center)
                     .VAlign(VAlign_Center)
                 ]
@@ -162,19 +162,19 @@ void SCacheEditorWidget::Construct(const FArguments& InArgs)
 }
 
 
-FReply SCacheEditorWidget::OnGenerateOfflineCacheClicked()
+FReply SCacheGeneratorWidget::OnGenerateOfflineCacheClicked()
 {
     CacheGenerator->GenerateLocalCache(ItemsPerCategory);
     return FReply::Handled();
 }
 
-FReply SCacheEditorWidget::OnExtractCacheClicked()
+FReply SCacheGeneratorWidget::OnExtractCacheClicked()
 {
     // Handle extracting the cache
     return FReply::Handled();
 }
 
-FReply SCacheEditorWidget::OnOpenLocalCacheFolderClicked()
+FReply SCacheGeneratorWidget::OnOpenLocalCacheFolderClicked()
 {
     const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
     
@@ -192,23 +192,23 @@ FReply SCacheEditorWidget::OnOpenLocalCacheFolderClicked()
     return FReply::Handled();
 }
 
-FReply SCacheEditorWidget::OnDownloadRemoteCacheClicked()
+FReply SCacheGeneratorWidget::OnDownloadRemoteCacheClicked()
 {
     // Handle downloading the remote cache
     return FReply::Handled();
 }
 
-void SCacheEditorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
+void SCacheGeneratorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed fetching assets"));
     CacheGenerator->LoadAndStoreAssets();
 }
 
-void SCacheEditorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
+void SCacheGeneratorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
 {
 }
 
-void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
+void SCacheGeneratorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed generating cache"));
 
@@ -222,17 +222,17 @@ void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
     // CreatePakFile(PakFilePath, ResponseFilePath);
 }
 
-void SCacheEditorWidget::OnItemsPerCategoryChanged(float NewValue)
+void SCacheGeneratorWidget::OnItemsPerCategoryChanged(float NewValue)
 {
     ItemsPerCategory = NewValue;
 }
 
-void SCacheEditorWidget::OnCacheUrlChanged(const FText& NewText)
+void SCacheGeneratorWidget::OnCacheUrlChanged(const FText& NewText)
 {
     CacheUrl = NewText.ToString();
 }
 
-void SCacheEditorWidget::CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath)
+void SCacheGeneratorWidget::CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath)
 {
     // Path to the UnrealPak executable
     FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
@@ -257,7 +257,7 @@ void SCacheEditorWidget::CreatePakFile(const FString& PakFilePath, const FString
 }
 
 
-void SCacheEditorWidget::GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak)
+void SCacheGeneratorWidget::GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak)
 {
     TArray<FString> Files;
     IFileManager::Get().FindFilesRecursive(Files, *FolderToPak, TEXT("*.*"), true, false);

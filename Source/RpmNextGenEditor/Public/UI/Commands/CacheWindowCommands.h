@@ -7,7 +7,7 @@ class RPMNEXTGENEDITOR_API FCacheWindowCommands : public TCommands<FCacheWindowC
 {
 public:
 	FCacheWindowCommands()
-		: TCommands<FCacheWindowCommands>(TEXT("CacheWindow"), NSLOCTEXT("Contexts", "CacheWindow", "Cache Window Plugin"), NAME_None, FEditorStyle::GetStyleSetName())
+		: TCommands<FCacheWindowCommands>(TEXT("CacheGeneratorWindow"), NSLOCTEXT("Contexts", "CacheGeneratorWindow", "Cache Generator Window"), NAME_None, FEditorStyle::GetStyleSetName())
 	{
 	}
 

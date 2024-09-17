@@ -33,6 +33,8 @@ public:
 	void LoadAndStoreAssetGlb(const FString& BaseModelId, const FAsset* Asset);
 	void LoadAndStoreAssetIcon(const FString& BaseModelId, const FAsset* Asset);
 
+	void Reset();
+
 protected:
 	void FetchBaseModels() const;
 	void FetchAssetTypes() const;

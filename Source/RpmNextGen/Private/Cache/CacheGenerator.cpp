@@ -36,6 +36,7 @@ void FCacheGenerator::DownloadRemoteCacheFromUrl(const FString& Url)
 
 void FCacheGenerator::GenerateLocalCache(int InItemsPerCategory)
 {
+	Reset();
 	MaxItemsPerCategory = InItemsPerCategory;
 	FetchBaseModels();
 }
@@ -104,6 +105,18 @@ void FCacheGenerator::LoadAndStoreAssetIcon(const FString& BaseModelId, const FA
 	TSharedPtr<FAssetIconLoader> AssetLoader = MakeShared<FAssetIconLoader>();
 	AssetLoader->OnIconLoaded.BindRaw( this, &FCacheGenerator::OnAssetIconSaved);
 	AssetLoader->LoadIcon(*Asset, true);
+}
+
+void FCacheGenerator::Reset()
+{
+	AssetMapByBaseModelId.Empty();
+	AssetListRequests.Empty();
+	AssetTypes.Empty();
+	CurrentBaseModelIndex = 0;
+	RefittedAssetRequestsCompleted = 0;
+	RequiredAssetDownloadRequest = 0;
+	NumberOfAssetsSaved = 0;
+	FAssetCacheManager::Get().ClearAllCache();
 }
 
 void FCacheGenerator::OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data)

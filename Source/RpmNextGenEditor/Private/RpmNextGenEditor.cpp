@@ -10,12 +10,12 @@
 #include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
 #include "UI/LoginWindowStyle.h"
-#include "UI/SCacheEditorWidget.h"
+#include "UI/SCacheGeneratorWidget.h"
 #include "UI/Commands/CacheWindowCommands.h"
 
 static const FName DeveloperWindowName("LoginWindow");
 static const FName LoaderWindowName("LoaderWindow");
-static const FName CacheWindowName("CacheWindow");
+static const FName CacheWindowName("CacheGeneratorWindow");
 #define LOCTEXT_NAMESPACE "RpmNextGenEditorModule"
 
 
@@ -54,7 +54,7 @@ void FRpmNextGenEditorModule::StartupModule()
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 	
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(CacheWindowName, FOnSpawnTab::CreateRaw(this, &FRpmNextGenEditorModule::OnSpawnCacheWindow))
-		.SetDisplayName(LOCTEXT("CacheEditorWidget", "Cache Editor"))
+		.SetDisplayName(LOCTEXT("CacheGeneratorrWidget", "Cache Generator"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
 	
 	// Don't show Loader window in the menu
@@ -98,9 +98,9 @@ void FRpmNextGenEditorModule::FillReadyPlayerMeMenu(UToolMenu* Menu)
 
 
 	Section.AddMenuEntry(
-		"OpenCacheEditorWindow",
-		LOCTEXT("OpenCacheEditorWindow", "Cache Editor"),
-		LOCTEXT("OpenLoaderWindowToolTip", "Cache Editor Window."),
+		"OpenCacheGeneratorWindow",
+		LOCTEXT("OpenCacheGeneratorWindow", "Cache Generator"),
+		LOCTEXT("OpenGeneratorWindowToolTip", "Cache Generator Window."),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FRpmNextGenEditorModule::OpenCacheEditorWindow))
 	);
@@ -162,7 +162,7 @@ TSharedRef<SDockTab> FRpmNextGenEditorModule::OnSpawnCacheWindow(const FSpawnTab
 	return SNew(SDockTab)
 		.TabRole(NomadTab)
 		[
-			SNew(SCacheEditorWidget)
+			SNew(SCacheGeneratorWidget)
 		];
 }
 
