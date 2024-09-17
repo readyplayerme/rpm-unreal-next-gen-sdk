@@ -11,7 +11,7 @@ void URpmAssetCardWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	this->SetVisibility(ESlateVisibility::Hidden);
-	if(TextureLoader.IsValid())
+	if(!TextureLoader.IsValid())
 	{
 		TextureLoader = MakeShared<FRpmTextureLoader>();
 		TextureLoader->OnTextureLoaded.BindUObject(this, &URpmAssetCardWidget::OnTextureLoaded);
@@ -34,7 +34,7 @@ void URpmAssetCardWidget::InitializeCard(const FAsset& Asset)
 void URpmAssetCardWidget::LoadImage(const FAsset& Asset)
 {
 	AssetData = Asset;
-	TextureLoader->LoadIconFromAsset(Asset);
+	TextureLoader->LoadIconFromAsset(AssetData);
 }
 
 void URpmAssetCardWidget::OnTextureLoaded(UTexture2D* Texture2D)

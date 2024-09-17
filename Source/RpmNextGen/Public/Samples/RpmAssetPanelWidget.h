@@ -57,6 +57,9 @@ public:
 	void OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
+	void LoadAssetsFromCache(const FString& AssetType);
+	
+	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void LoadAssetsOfType(const FString& AssetType);
 	
 	void CreateButton(const FAsset& AssetData);

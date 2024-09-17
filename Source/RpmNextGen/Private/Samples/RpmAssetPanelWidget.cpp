@@ -7,10 +7,13 @@
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
+#include "Cache/AssetCacheManager.h"
+#include "Cache/CachedAssetData.h"
 #include "Components/PanelWidget.h"
 #include "Components/SizeBox.h"
 #include "Samples/RpmAssetButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
+#include "Utilities/ConnectionManager.h"
 
 void URpmAssetPanelWidget::NativeConstruct()
 {
@@ -24,7 +27,6 @@ void URpmAssetPanelWidget::NativeConstruct()
 	}
 	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
-
 	ButtonSize = FVector2D(200, 200);
 	ImageSize = FVector2D(200, 200);
 }
@@ -37,6 +39,15 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
+}
+
+void URpmAssetPanelWidget::LoadAssetsFromCache(const FString& AssetType)
+{
+	TArray<FCachedAssetData> CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
+	for (auto CachedAsset : CachedAssets)
+	{
+		CreateButton(CachedAsset.ToAsset());
+	}
 }
 
 void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
@@ -108,6 +119,12 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 	if (!AssetApi.IsValid())
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi is null or invalid"));
+		return;
+	}
+	if(!FConnectionManager::Get().IsConnected())
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No internet connection, loading assets from cache"));
+		LoadAssetsFromCache(AssetType);
 		return;
 	}
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();

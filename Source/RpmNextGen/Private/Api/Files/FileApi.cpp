@@ -40,16 +40,14 @@ void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Res
 	OnFileRequestComplete.ExecuteIfBound(nullptr, FileName, AssetType);
 }
 
-TArray<uint8>* FFileApi::LoadFileFromPath(const FString& Path)
+bool FFileApi::LoadFileFromPath(const FString& Path, TArray<uint8>& OutContent)
 {
 	const FString FileName = FPaths::GetCleanFilename(Path);
-	if(!FPaths::FileExists(Path))
+	if (!FPaths::FileExists(Path))
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Path does not exist %s"), *Path);
-		
-		return nullptr;
+		return false;
 	}
-	TArray<uint8> Content;
-	FFileHelper::LoadFileToArray(Content, *Path);
-	return &Content;
+
+	return FFileHelper::LoadFileToArray(OutContent, *Path);
 }

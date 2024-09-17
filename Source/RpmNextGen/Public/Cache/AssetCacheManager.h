@@ -56,6 +56,20 @@ public:
 		return TArray<FString>();
 	}
 
+	TArray<FCachedAssetData> GetAssetsOfType(const FString& AssetType) const
+	{
+		TArray<FCachedAssetData> Assets;
+		for (const auto& Entry : StoredAssets)
+		{
+			const FCachedAssetData& CachedAsset = Entry.Value;
+			if (CachedAsset.Type == AssetType)
+			{
+				Assets.Add(CachedAsset);
+			}
+		}
+		return Assets;
+	}
+
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);

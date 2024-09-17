@@ -4,8 +4,8 @@
 #include "RpmLoaderComponent.h"
 
 #include "glTFRuntimeFunctionLibrary.h"
+#include "RpmFunctionLibrary.h"
 #include "Api/Assets/AssetApi.h"
-#include "Api/Assets/AssetGlbLoader.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Api/Characters/CharacterApi.h"
 #include "Api/Characters/Models/CharacterCreateResponse.h"
@@ -50,7 +50,7 @@ void URpmLoaderComponent::BeginPlay()
 void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseCache)
 {
 	CharacterData.BaseModelId = BaseModelId;
-	if(bUseCache)
+	if(!FConnectionManager::Get().IsConnected() || bUseCache)
 	{
 		FCachedAssetData CachedAssetData;
 		if(FAssetCacheManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
@@ -58,8 +58,12 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 			const FAsset AssetFromCache = CachedAssetData.ToAsset();
 			CharacterData.Assets.Add(FAssetApi::BaseModelType, AssetFromCache);
 			OnCharacterCreated.Broadcast(CharacterData);
-			UglTFRuntimeAsset* GltfAsset = LoadGltfRuntimeAssetFromCache(AssetFromCache);
-			HandleGltfAssetLoaded(GltfAsset, FAssetApi::BaseModelType);
+			TArray<uint8> Data;
+			if(FFileApi::LoadFileFromPath(CachedAssetData.GlbPathsByBaseModelId[CharacterData.BaseModelId], Data))
+			{
+				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+				HandleGltfAssetLoaded(GltfRuntimeAsset, FAssetApi::BaseModelType);
+			}
 			return;
 		}
 		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to create character from cache. Will try to create from Url."), *CachedAssetData.Id);
@@ -83,9 +87,12 @@ UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAss
 	if(FAssetCacheManager::Get().GetCachedAsset(Asset.Id, ExistingAsset))
 	{
 		CharacterData.Assets.Add(ExistingAsset.Type, Asset);
-		const TArray<uint8>* Data = GlbLoader->LoadFileFromPath(ExistingAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId]);
-		UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
-		return GltfRuntimeAsset;
+		TArray<uint8> Data;
+		if(FFileApi::LoadFileFromPath(ExistingAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], Data))
+		{
+			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+			return GltfRuntimeAsset;
+		}
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset from cache"));
 	return nullptr;
@@ -135,7 +142,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	}
 	CharacterData.Assets.Add(AssetData.Type, AssetData);
 	
-	if(bUseCache)
+	if(!FConnectionManager::Get().IsConnected() || bUseCache)
 	{
 		if(bIsBaseModel && CharacterData.Assets.Num() > 1)
 		{

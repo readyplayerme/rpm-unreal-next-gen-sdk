@@ -51,7 +51,7 @@ public:
 	URpmLoaderComponent();
 
 	void SetGltfConfig(FglTFRuntimeConfig* Config) const;
-	FglTFRuntimeConfig* GltfConfig;
+	FglTFRuntimeConfig* GltfConfig = nullptr;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnAssetLoaded OnGltfAssetLoaded;
