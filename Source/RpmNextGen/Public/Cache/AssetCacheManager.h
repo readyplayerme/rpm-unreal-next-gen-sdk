@@ -72,20 +72,30 @@ public:
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
 
+	void UpdateExistingCachedAsset(const FCachedAssetData& StoredAsset, FCachedAssetData* ExistingStoredAsset)
+	{
+		if(!StoredAsset.GlbPathsByBaseModelId.IsEmpty())
+		{
+			MergeTMaps(ExistingStoredAsset->GlbPathsByBaseModelId, StoredAsset.GlbPathsByBaseModelId);
+		}
+		if(ExistingStoredAsset->IconFilePath.IsEmpty() && !StoredAsset.IconFilePath.IsEmpty())
+		{
+			ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
+		}
+	}
+
+	void StoreAndTrackAsset(const FAsset& Asset, const FString& baseModelId = TEXT(""), const bool bSaveManifest = true)
+	{
+		FCachedAssetData NewCachedAsset = FCachedAssetData(Asset, baseModelId);
+		StoreAndTrackAsset(NewCachedAsset, bSaveManifest);
+	}
+
 	void StoreAndTrackAsset(const FCachedAssetData& StoredAsset, const bool bSaveManifest = true)
 	{
 		FCachedAssetData* ExistingStoredAsset = StoredAssets.Find(StoredAsset.Id);
 		if(ExistingStoredAsset != nullptr)
 		{
-			// Update existing stored asset with new values if present
-			if(!StoredAsset.GlbPathsByBaseModelId.IsEmpty())
-			{
-				MergeTMaps(ExistingStoredAsset->GlbPathsByBaseModelId, StoredAsset.GlbPathsByBaseModelId);
-			}
-			if(ExistingStoredAsset->IconFilePath.IsEmpty() && !StoredAsset.IconFilePath.IsEmpty())
-			{
-				ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
-			}
+			UpdateExistingCachedAsset(StoredAsset, ExistingStoredAsset);
 		}
 		StoredAssets.Add(StoredAsset.Id, ExistingStoredAsset ? *ExistingStoredAsset :  StoredAsset);
 
@@ -163,27 +173,31 @@ public:
 
 	void RemoveAssetFromCache(const FString& AssetId)
 	{
-		if (StoredAssets.Contains(AssetId))
+		if (!StoredAssets.Contains(AssetId))
 		{
-			FCachedAssetData CachedAsset = StoredAssets[AssetId];
-			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-			for (const auto& GlbPath : CachedAsset.GlbPathsByBaseModelId)
-			{
-				if (PlatformFile.FileExists(*GlbPath.Value))
-				{
-					PlatformFile.DeleteFile(*GlbPath.Value);
-				}
-			}
-
-			if (PlatformFile.FileExists(*CachedAsset.IconFilePath))
-			{
-				PlatformFile.DeleteFile(*CachedAsset.IconFilePath);
-			}
-
-			StoredAssets.Remove(AssetId);
-			SaveManifest();
+			UE_LOG(LogReadyPlayerMe, Warning, TEXT("No Asset with ID %s found in the cache."), *AssetId);
+			return;
 		}
+
+		FCachedAssetData CachedAsset = StoredAssets[AssetId];
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+		for (const auto& GlbPath : CachedAsset.GlbPathsByBaseModelId)
+		{
+			if (PlatformFile.FileExists(*GlbPath.Value))
+			{
+				PlatformFile.DeleteFile(*GlbPath.Value);
+			}
+		}
+
+		if (PlatformFile.FileExists(*CachedAsset.IconFilePath))
+		{
+			PlatformFile.DeleteFile(*CachedAsset.IconFilePath);
+		}
+
+		StoredAssets.Remove(AssetId);
+		SaveManifest();
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Asset %s of type %s removed from cache"), *AssetId, *CachedAsset.Type);
 	}
 
 	const TMap<FString, FCachedAssetData>& GetStoredAssets() const

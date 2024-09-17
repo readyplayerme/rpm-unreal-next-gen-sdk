@@ -225,13 +225,11 @@ void SCacheEditorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
 void SCacheEditorWidget::OnItemsPerCategoryChanged(float NewValue)
 {
     ItemsPerCategory = NewValue;
-    // Handle slider value change
 }
 
 void SCacheEditorWidget::OnCacheUrlChanged(const FText& NewText)
 {
     CacheUrl = NewText.ToString();
-    // Handle cache URL text change
 }
 
 void SCacheEditorWidget::CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath)

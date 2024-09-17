@@ -64,6 +64,18 @@ inline FString FAssetListRequest::BuildQueryString() const
 	{
 		QueryString += TEXT("characterModelAssetId=") + Params.CharacterModelAssetId + TEXT("&");
 	}
+	if( Params.Limit > 0 )
+	{
+		QueryString += TEXT("limit=") + FString::FromInt(Params.Limit) + TEXT("&");
+	}
+	if( Params.Page > 0 )
+	{
+		QueryString += TEXT("page=") + FString::FromInt(Params.Page) + TEXT("&");
+	}
+	if( !Params.Order.IsEmpty() )
+	{
+		QueryString += TEXT("order=") + Params.Order + TEXT("&");
+	}
 	QueryString.RemoveFromEnd(TEXT("&"));
 	return QueryString;
 }
