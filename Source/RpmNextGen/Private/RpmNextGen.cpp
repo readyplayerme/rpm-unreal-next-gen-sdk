@@ -24,6 +24,7 @@ void FRpmNextGenModule::ShutdownModule()
 void FRpmNextGenModule::InitializeGlobalPaths()
 {
 	const FString RelativePath = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
+	
 	AssetCachePath = FPaths::ConvertRelativePathToFull(RelativePath);
 
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Initialized Asset Cache Path: %s"), *AssetCachePath);

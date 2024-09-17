@@ -4,6 +4,7 @@
 #include "EditorStyleSet.h"
 #include "IPlatformFilePak.h"
 #include "RpmNextGen.h"
+#include "Api/Files/PakFileUtility.h"
 #include "Cache/CacheGenerator.h"
 #include "Misc/FileHelper.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -75,21 +76,20 @@ void SCacheGeneratorWidget::Construct(const FArguments& InArgs)
                     .VAlign(VAlign_Center)
                 ]
             ]
-            // TODO re-enable once we have added unzip logic
-            // + SVerticalBox::Slot()
-            // .Padding(5)
-            // .AutoHeight()
-            // [
-            //     SNew(SBox)
-            //     .HeightOverride(40) // Set button height
-            //     [
-            //         SNew(SButton)
-            //         .Text(FText::FromString("Extract Cache to local folder"))
-            //         .OnClicked(this, &SCacheEditorWidget::OnExtractCacheClicked)
-            //         .HAlign(HAlign_Center)
-            //         .VAlign(VAlign_Center)
-            //     ]
-            // ]
+            + SVerticalBox::Slot()
+            .Padding(5)
+            .AutoHeight()
+            [
+                SNew(SBox)
+                .HeightOverride(40) // Set button height
+                [
+                    SNew(SButton)
+                    .Text(FText::FromString("Extract Cache to local folder"))
+                    .OnClicked(this, &SCacheGeneratorWidget::OnExtractCacheClicked)
+                    .HAlign(HAlign_Center)
+                    .VAlign(VAlign_Center)
+                ]
+            ]
             + SVerticalBox::Slot()
             .Padding(5)
             .AutoHeight()
@@ -170,7 +170,9 @@ FReply SCacheGeneratorWidget::OnGenerateOfflineCacheClicked()
 
 FReply SCacheGeneratorWidget::OnExtractCacheClicked()
 {
-    // Handle extracting the cache
+    FString PakFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/RpmAssetCache.pak");
+    FPakFileUtility::ExtractPakFile(PakFilePath);
+    
     return FReply::Handled();
 }
 
@@ -206,20 +208,18 @@ void SCacheGeneratorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 
 void SCacheGeneratorWidget::OnDownloadRemoteCacheComplete(bool bWasSuccessful)
 {
+    
 }
 
 void SCacheGeneratorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed generating cache"));
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
+    FString FolderToPak = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
+    FString PakFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/RpmAssetCache.pak");
 
-    //TODO re-nable once zip extraction is implemented
-    // UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
-    // FString FolderToPak = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/LocalCache");
-    // FString PakFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("LocalCacheAssets.pak");
-    // FString ResponseFilePath = FPaths::ProjectPersistentDownloadDir() / TEXT("RpmCache_ResponseFile.txt");
-    //
-    // GeneratePakResponseFile(ResponseFilePath, FolderToPak);
-    // CreatePakFile(PakFilePath, ResponseFilePath);
+    FPakFileUtility::GeneratePakResponseFile(FolderToPak);
+    FPakFileUtility::CreatePakFile(PakFilePath);
 }
 
 void SCacheGeneratorWidget::OnItemsPerCategoryChanged(float NewValue)
@@ -230,48 +230,4 @@ void SCacheGeneratorWidget::OnItemsPerCategoryChanged(float NewValue)
 void SCacheGeneratorWidget::OnCacheUrlChanged(const FText& NewText)
 {
     CacheUrl = NewText.ToString();
-}
-
-void SCacheGeneratorWidget::CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath)
-{
-    // Path to the UnrealPak executable
-    FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
-
-    // Arguments for the UnrealPak tool
-    FString CommandLineArgs = FString::Printf(TEXT("%s -Create=%s"), *PakFilePath, *ResponseFilePath);
-
-    // Launch the UnrealPak process
-    FProcHandle ProcHandle = FPlatformProcess::CreateProc(*UnrealPakPath, *CommandLineArgs, true, false, false, nullptr, 0, nullptr, nullptr);
-
-    if (ProcHandle.IsValid())
-    {
-        FPlatformProcess::WaitForProc(ProcHandle);
-        FPlatformProcess::CloseProc(ProcHandle);
-
-        UE_LOG(LogReadyPlayerMe, Log, TEXT("Pak file created successfully: %s"), *PakFilePath);
-    }
-    else
-    {
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create Pak file: %s"), *PakFilePath);
-    }
-}
-
-
-void SCacheGeneratorWidget::GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak)
-{
-    TArray<FString> Files;
-    IFileManager::Get().FindFilesRecursive(Files, *FolderToPak, TEXT("*.*"), true, false);
-
-    FString ResponseFileContent;
-    int FileCount = 0;
-    for (const FString& File : Files)
-    {
-        FString RelativePath = File;
-        FPaths::MakePathRelativeTo(RelativePath, *FolderToPak);
-        ResponseFileContent += FString::Printf(TEXT("\"%s\" \"%s\"\n"), *File, *RelativePath);
-        FileCount++;
-    }
-    FFileHelper::SaveStringToFile(ResponseFileContent, *ResponseFilePath);
-    // print number of files added to the response file
-    UE_LOG(LogReadyPlayerMe, Log, TEXT("Response file created with %d files"), FileCount);
 }

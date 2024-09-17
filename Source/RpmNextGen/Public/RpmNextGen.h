@@ -15,16 +15,12 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-	// Get the global asset cache path
 	static const FString& GetGlobalAssetCachePath()
 	{
 		return AssetCachePath;
 	}
 
 private:
-	// Initialize the asset cache path
 	void InitializeGlobalPaths();
-
-	// Store the global asset cache path
 	static FString AssetCachePath;
 };

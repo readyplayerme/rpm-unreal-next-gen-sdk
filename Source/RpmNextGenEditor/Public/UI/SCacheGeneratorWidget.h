@@ -41,13 +41,9 @@ private:
 		CacheUrl = NewText.ToString();
 	}
 
-	// Slider value handling
 	float ItemsPerCategory = 10.0f;
 	void OnItemsPerCategoryChanged(float NewValue);
 
-	// Cache URL handling
 	FString CacheUrl;
 	void OnCacheUrlChanged(const FText& NewText);
-	void CreatePakFile(const FString& PakFilePath, const FString& ResponseFilePath);
-	void GeneratePakResponseFile(const FString& ResponseFilePath, const FString& FolderToPak);
 };
