@@ -14,13 +14,4 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-
-	static const FString& GetGlobalAssetCachePath()
-	{
-		return AssetCachePath;
-	}
-
-private:
-	void InitializeGlobalPaths();
-	static FString AssetCachePath;
 };

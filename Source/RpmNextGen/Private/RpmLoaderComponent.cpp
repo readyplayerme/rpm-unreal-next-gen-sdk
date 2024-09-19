@@ -88,7 +88,7 @@ UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAss
 	{
 		CharacterData.Assets.Add(ExistingAsset.Type, Asset);
 		TArray<uint8> Data;
-		if(FFileApi::LoadFileFromPath(ExistingAsset.GlbPathsByBaseModelId[CharacterData.BaseModelId], Data))
+		if(FFileApi::LoadFileFromPath(ExistingAsset.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 		{
 			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
 			return GltfRuntimeAsset;

@@ -15,8 +15,7 @@ public:
 
 	static void StoreAssetTypes(const TArray<FString>& TypeList)
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
-		const FString TypeListFilePath = GlobalCachePath / TEXT("TypeList.json");
+		const FString TypeListFilePath = FFileUtility::GetCachePath() / TEXT("TypeList.json");
 		
 		TArray<TSharedPtr<FJsonValue>> JsonValues;
 		for (const FString& Type : TypeList)
@@ -29,12 +28,12 @@ public:
 		
 		FJsonSerializer::Serialize(JsonValues, Writer);
 		
-		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath);
+		FFileHelper::SaveStringToFile(OutputString, *TypeListFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
 
 	static TArray<FString> LoadAssetTypes()
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString GlobalCachePath = FFileUtility::GetCachePath();
 		const FString TypeListFilePath = GlobalCachePath / TEXT("TypeList.json");
 		FString TypeListContent;
 
@@ -73,7 +72,7 @@ public:
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);
-		FFileUtility::SaveToFile(Context.Data, StoredAsset.IconFilePath);
+		FFileUtility::SaveToFile(Context.Data, FFileUtility::GetFullPersistentPath(StoredAsset.IconFilePath));
 
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
@@ -81,7 +80,8 @@ public:
 	void StoreAndTrackGlb(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
-		FFileUtility::SaveToFile(Context.Data, StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
+		const FString& GlbPath = FFileUtility::GetFullPersistentPath(StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
+		FFileUtility::SaveToFile(Context.Data, GlbPath);
 		
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
@@ -121,7 +121,7 @@ public:
 
 	void LoadManifest()
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString GlobalCachePath = FFileUtility::GetCachePath();
 		const FString ManifestFilePath = GlobalCachePath / TEXT("AssetManifest.json");
 		FString ManifestContent;
 
@@ -149,7 +149,7 @@ public:
 
 	void SaveManifest()
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString GlobalCachePath = FFileUtility::GetCachePath();
 		const FString ManifestFilePath = GlobalCachePath / TEXT("AssetManifest.json");
 
 		TSharedPtr<FJsonObject> ManifestJson = MakeShared<FJsonObject>();
@@ -167,12 +167,12 @@ public:
 		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 		FJsonSerializer::Serialize(ManifestJson.ToSharedRef(), Writer);
 
-		FFileHelper::SaveStringToFile(OutputString, *ManifestFilePath);
+		FFileHelper::SaveStringToFile(OutputString, *ManifestFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
 
 	void ClearAllCache()
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+		const FString GlobalCachePath = FFileUtility::GetCachePath();
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		if (PlatformFile.DirectoryExists(*GlobalCachePath))

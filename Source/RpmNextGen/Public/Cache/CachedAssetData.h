@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
+#include "Api/Files/FileUtility.h"
 #include "CachedAssetData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -51,13 +52,12 @@ struct RPMNEXTGEN_API FCachedAssetData
 	}
 	FCachedAssetData(const FAsset& InAsset)
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
 		Id = InAsset.Id;
 		Name = InAsset.Name;
 		GlbUrl = InAsset.GlbUrl;
 		IconUrl = InAsset.IconUrl;
 		GlbPathsByBaseModelId = TMap<FString, FString>();
-		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *GlobalCachePath, *Id);
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FFileUtility::RelativeCachePath, *Id);
 		Type = InAsset.Type;
 		CreatedAt = InAsset.CreatedAt;
 		UpdatedAt = InAsset.UpdatedAt;
@@ -65,7 +65,6 @@ struct RPMNEXTGEN_API FCachedAssetData
 
 	FCachedAssetData(const FAsset& InAsset, const FString& InBaseModelId)
 	{
-		const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
 		Id = InAsset.Id;
 		Name = InAsset.Name;
 		GlbUrl = InAsset.GlbUrl;
@@ -73,9 +72,9 @@ struct RPMNEXTGEN_API FCachedAssetData
 		GlbPathsByBaseModelId = TMap<FString, FString>();
 		if(InBaseModelId != FString())
 		{
-			GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *GlobalCachePath, *InBaseModelId, *Id));
+			GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *FFileUtility::RelativeCachePath, *InBaseModelId, *Id));
 		}
-		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *GlobalCachePath, *Id);
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FFileUtility::RelativeCachePath, *Id);
 		Type = InAsset.Type;
 		CreatedAt = InAsset.CreatedAt;
 		UpdatedAt = InAsset.UpdatedAt;
@@ -151,5 +150,15 @@ struct RPMNEXTGEN_API FCachedAssetData
 		}
 
 		return StoredAsset;
+	}
+
+	FString GetGlbPathForBaseModelId(FString BaseModelId)
+	{
+		if(GlbPathsByBaseModelId.Num() > 0 && !BaseModelId.IsEmpty())
+		{
+			return GlbPathsByBaseModelId[BaseModelId];
+		}
+		
+		return "";
 	}
 };

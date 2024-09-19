@@ -4,6 +4,7 @@
 #include "EditorStyleSet.h"
 #include "IPlatformFilePak.h"
 #include "RpmNextGen.h"
+#include "Api/Files/FileUtility.h"
 #include "Api/Files/PakFileUtility.h"
 #include "Cache/CacheGenerator.h"
 #include "Misc/FileHelper.h"
@@ -170,25 +171,23 @@ FReply SCacheGeneratorWidget::OnGenerateOfflineCacheClicked()
 
 FReply SCacheGeneratorWidget::OnExtractCacheClicked()
 {
-    FString PakFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/RpmAssetCache.pak");
-    FPakFileUtility::ExtractPakFile(PakFilePath);
-    
+    FString PakFilePath = FPaths::ConvertRelativePathToFull(FPakFileUtility::CachePakFilePath);
+    FPakFileUtility::ExtractFilesFromPak(PakFilePath);
     return FReply::Handled();
 }
 
 FReply SCacheGeneratorWidget::OnOpenLocalCacheFolderClicked()
 {
-    const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
-    
+    const FString CacheRoot = FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath);
     // Check if the folder exists
-    if (FPaths::DirectoryExists(GlobalCachePath))
+    if (FPaths::DirectoryExists(CacheRoot))
     {
         // Open the folder in the file explorer
-        FPlatformProcess::LaunchFileInDefaultExternalApplication(*GlobalCachePath);
+        FPlatformProcess::LaunchFileInDefaultExternalApplication(*CacheRoot);
     }
     else
     {
-        UE_LOG(LogReadyPlayerMe, Warning, TEXT("Folder does not exist: %s"), *GlobalCachePath);
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("Folder does not exist: %s"), *CacheRoot);
     }
 
     return FReply::Handled();
@@ -215,12 +214,9 @@ void SCacheGeneratorWidget::OnGenerateLocalCacheCompleted(bool bWasSuccessful)
 {
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed generating cache"));
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Local cache generated successfully"));
-    FString FolderToPak = FPaths::ProjectPersistentDownloadDir() / TEXT("ReadyPlayerMe/AssetCache");
-    FString PakFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/RpmAssetCache.pak");
-
-    FPakFileUtility::GeneratePakResponseFile(FolderToPak);
-    FPakFileUtility::CreatePakFile(PakFilePath);
+    FPakFileUtility::CreatePakFile();
 }
+
 
 void SCacheGeneratorWidget::OnItemsPerCategoryChanged(float NewValue)
 {

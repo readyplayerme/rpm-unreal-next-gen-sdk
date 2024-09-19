@@ -7,6 +7,7 @@
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
+#include "Api/Files/PakFileUtility.h"
 #include "Cache/AssetCacheManager.h"
 #include "Cache/CachedAssetData.h"
 #include "Settings/RpmDeveloperSettings.h"
@@ -70,4 +71,9 @@ void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefre
 	});
 
 	FConnectionManager::Get().CheckInternetConnection();
+}
+
+void URpmFunctionLibrary::ExtractCachePakFile()
+{
+	FPakFileUtility::ExtractFilesFromPak(FPakFileUtility::CachePakFilePath);
 }

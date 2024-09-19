@@ -30,7 +30,8 @@ public class RpmNextGen : ModuleRules
 				"DeveloperSettings",
 				"Slate",
 				"SlateCore",
-				"PakFile"
+				"PakFile", 
+				"StreamingFile"
 			}
 			);
 			

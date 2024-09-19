@@ -27,4 +27,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ReadyPlayerMe/Network")
 	static void CheckInternetConnection(const FOnConnectionStatusRefreshedDelegate& OnConnectionStatusRefreshed);
+
+	UFUNCTION(BlueprintCallable, Category = "ReadyPlayerMe/Cache")
+	static void ExtractCachePakFile();
 };

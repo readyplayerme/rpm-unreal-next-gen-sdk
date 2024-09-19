@@ -6,6 +6,7 @@
 #include "Api/Assets/AssetIconLoader.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
+#include "Api/Files/PakFileUtility.h"
 #include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
@@ -15,7 +16,7 @@
 #include "Misc/ScopeExit.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.zip");
+const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.pak");
 
 FCacheGenerator::FCacheGenerator() : CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
 {
@@ -74,7 +75,7 @@ void FCacheGenerator::LoadAndStoreAssets()
 	}
 	
 	 RequiredAssetDownloadRequest = TotalRefittedAssets + AssetIconRequestCount;
-	 const FString GlobalCachePath = FRpmNextGenModule::GetGlobalAssetCachePath();
+	 const FString GlobalCachePath = FFileUtility::GetCachePath();
 	 UE_LOG(LogReadyPlayerMe, Log, TEXT("Total assets to download: %d. Total refitted assets glbs to fetch: %d"), RequiredAssetDownloadRequest, TotalRefittedAssets - BaseModelAssets.Num());
 
 	for (auto Pair : AssetMapByBaseModelId)
@@ -238,7 +239,7 @@ void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Req
 		// Get the response data
 		const TArray<uint8>& Data = Response->GetContent();
 		// Define the path to save the ZIP file
-		const FString SavePath = FRpmNextGenModule::GetGlobalAssetCachePath() / TEXT("/") / ZipFileName;
+		const FString SavePath = FFileUtility::GetCachePath()/ TEXT("/") / ZipFileName;
 
 		// Ensure the directory exists
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -267,7 +268,7 @@ void FCacheGenerator::OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Req
 
 void FCacheGenerator::ExtractCache()
 {
-	// TODO add implementation
+	//FPakFileUtility::ExtractFilesFromPak( FRpmNextGenModule::GetGlobalAssetCachePath() / TEXT("/") / ZipFileName);
 }
 
 void FCacheGenerator::FetchBaseModels() const

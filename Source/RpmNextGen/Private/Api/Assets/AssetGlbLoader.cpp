@@ -19,7 +19,8 @@ void FAssetGlbLoader::LoadGlb(const FAsset& Asset, const FString& BaseModelId, b
     if (FAssetCacheManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
     {
         TArray<uint8> GlbData;
-        if(FFileHelper::LoadFileToArray(GlbData, *StoredAsset.GlbPathsByBaseModelId[BaseModelId]))
+        const FString StoredGlbPath = FFileUtility::GetFullPersistentPath(StoredAsset.GlbPathsByBaseModelId[BaseModelId]);
+        if(FFileHelper::LoadFileToArray(GlbData, *StoredGlbPath))
         {
             OnGlbLoaded.ExecuteIfBound(Asset, GlbData);
             UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading GLB from cache"));
