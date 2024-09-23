@@ -46,6 +46,13 @@ void FCacheGenerator::LoadAndStoreAssets()
 {
 	TArray<FAsset> BaseModelAssets = TArray<FAsset>();
 	int TotalRefittedAssets = 0;
+	
+	// Ensure AssetMapByBaseModelId contains valid data
+	if (AssetMapByBaseModelId.Num() == 0)
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No base models found in AssetMapByBaseModelId"));
+		return;
+	}
 	for ( auto BaseModel : AssetMapByBaseModelId)
 	{
 		for (auto Asset : BaseModel.Value)
@@ -57,6 +64,15 @@ void FCacheGenerator::LoadAndStoreAssets()
 			TotalRefittedAssets++;
 		}
 	}
+
+	// Ensure there's at least one BaseModel
+	if (BaseModelAssets.Num() == 0)
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No base model assets found"));
+		OnCacheDataLoaded.ExecuteIfBound(false);		
+		return;
+	}
+	
 	int AssetIconRequestCount = 0;
 	
 	// load and store base model assets
@@ -66,12 +82,20 @@ void FCacheGenerator::LoadAndStoreAssets()
 		AssetIconRequestCount++;
 	}
 	
-	// load and store asset icon (only 1 set of icons is required)
-	for (auto Asset : AssetMapByBaseModelId[BaseModelAssets[0].Id])
+	// Ensure AssetMap contains the BaseModelId
+	if (AssetMapByBaseModelId.Contains(BaseModelAssets[0].Id))
 	{
-		if(Asset.Type == FAssetApi::BaseModelType) continue;			
-		LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
-		AssetIconRequestCount++;
+		for (auto& Asset : AssetMapByBaseModelId[BaseModelAssets[0].Id])
+		{
+			if (Asset.Type == FAssetApi::BaseModelType) continue;
+			LoadAndStoreAssetIcon(BaseModelAssets[0].Id, &Asset);
+			AssetIconRequestCount++;
+		}
+	}
+	else
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("BaseModelId not found in AssetMapByBaseModelId"));
+		return;
 	}
 	
 	 RequiredAssetDownloadRequest = TotalRefittedAssets + AssetIconRequestCount;
@@ -96,13 +120,24 @@ void FCacheGenerator::LoadAndStoreAssets()
 
 void FCacheGenerator::LoadAndStoreAssetGlb(const FString& BaseModelId, const FAsset* Asset)
 {
+	if (!Asset) // Ensure asset is valid
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid asset when loading GLB for BaseModelId: %s"), *BaseModelId);
+		return;
+	}
+
 	TSharedPtr<FAssetGlbLoader> AssetLoader = MakeShared<FAssetGlbLoader>();
-	AssetLoader->OnGlbLoaded.BindRaw( this, &FCacheGenerator::OnAssetGlbSaved);
+	AssetLoader->OnGlbLoaded.BindRaw(this, &FCacheGenerator::OnAssetGlbSaved);
 	AssetLoader->LoadGlb(*Asset, BaseModelId, true);
 }
 
 void FCacheGenerator::LoadAndStoreAssetIcon(const FString& BaseModelId, const FAsset* Asset)
 {
+	if (!Asset) // Ensure asset is valid
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid asset when loading Icon for BaseModelId: %s"), *BaseModelId);
+		return;
+	}
 	TSharedPtr<FAssetIconLoader> AssetLoader = MakeShared<FAssetIconLoader>();
 	AssetLoader->OnIconLoaded.BindRaw( this, &FCacheGenerator::OnAssetIconSaved);
 	AssetLoader->LoadIcon(*Asset, true);
@@ -178,7 +213,7 @@ void FCacheGenerator::AddFolderToNonAssetDirectory() const
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
 {
-	if(bWasSuccessful && AssetListResponse.IsSuccess)
+	if(bWasSuccessful && AssetListResponse.IsSuccess && AssetListResponse.Data.Num() > 0)
 	{
 		if (AssetListResponse.Data[0].Type == FAssetApi::BaseModelType)
 		{
@@ -212,8 +247,7 @@ void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListRe
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
-	RefittedAssetRequestsCompleted++;
-	FetchNextRefittedAsset();
+	OnCacheDataLoaded.ExecuteIfBound(false);
 }
 
 void FCacheGenerator::StartFetchingRefittedAssets()

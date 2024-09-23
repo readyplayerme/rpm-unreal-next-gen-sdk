@@ -1,5 +1,6 @@
-﻿#include "PakFileUtility.h"
-#include "FileUtility.h"
+﻿#include "Api/Files/PakFileUtility.h"
+
+#include "Api/Files/FileUtility.h"
 #include "IPlatformFilePak.h"
 
 const FString ResponseFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/Cache/RpmCache_ResponseFile.txt");
@@ -80,6 +81,11 @@ void FPakFileUtility::CreatePakFile()
 
 void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
 {
+    if(!FPaths::FileExists(PakFilePath) )
+    {
+        UE_LOG(LogTemp, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
+        return;
+    }
     const FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
     const FString DestinationPath = FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath);
     const FString CommandLineArgs = FString::Printf(TEXT("%s -Extract %s"), *PakFilePath, *DestinationPath);
@@ -99,46 +105,14 @@ void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
     }
 }
 
-// void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
-// {
-//     bool bSuccessfulInitialization = false;
-//     IPlatformFile* LocalPlatformFile = &FPlatformFileManager::Get().GetPlatformFile();
-//     if (LocalPlatformFile != nullptr)
-//     {
-//         IPlatformFile* PakPlatformFile = FPlatformFileManager::Get().GetPlatformFile(TEXT("PakFile"));
-//         if (PakPlatformFile != nullptr)
-//         {
-//             UE_LOG(LogTemp, Error, TEXT("Successfully initialized PakPlatformFile"));
-//             bSuccessfulInitialization = true;
-//         }
-//
-//     }
-//     if(bSuccessfulInitialization)
-//     {
-//         const TCHAR* cmdLine = TEXT("");
-//         FPakPlatformFile* PakPlatform = new FPakPlatformFile();
-//         IPlatformFile* InnerPlatform = LocalPlatformFile;
-//         PakPlatform->Initialize(InnerPlatform, cmdLine);
-//         FPlatformFileManager::Get().SetPlatformFile(*PakPlatform);
-//
-//         FString FilePath = PakFilePath;
-//
-//         UE_LOG(LogTemp, Log, TEXT("Attempting to load pak: %s"), *FilePath);
-//
-//         FPakFile PakFile = FPakFile(InnerPlatform, *FilePath, false);
-//
-//         if (!PakFile.IsValid())
-//         {
-//             UE_LOG(LogTemp, Error, TEXT("Invalid pak file: %s"), *FilePath);
-//             return ;
-//         }
-//         UE_LOG(LogTemp, Log, TEXT("Pak file is VALID! %s"), *FilePath);
-//         //FCoreDelegates::MountPak.IsBound();
-//     }
-// }
-
 void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
 {
+    if(!FPaths::FileExists(PakFilePath) )
+    {
+        UE_LOG(LogTemp, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
+        return;
+    }
+    
     // Step 1: Get the current platform file and initialize the Pak platform
     IPlatformFile& InnerPlatformFile = FPlatformFileManager::Get().GetPlatformFile();
     FPakPlatformFile* PakPlatformFile = static_cast<FPakPlatformFile*>(FPlatformFileManager::Get().FindPlatformFile(TEXT("PakFile")));

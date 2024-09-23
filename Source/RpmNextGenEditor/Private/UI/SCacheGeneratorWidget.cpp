@@ -201,6 +201,11 @@ FReply SCacheGeneratorWidget::OnDownloadRemoteCacheClicked()
 
 void SCacheGeneratorWidget::OnFetchCacheDataComplete(bool bWasSuccessful)
 {
+    if(!bWasSuccessful)
+    {
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch cache data"));
+        return;
+    }
     UE_LOG(LogReadyPlayerMe, Log, TEXT("Completed fetching assets"));
     CacheGenerator->LoadAndStoreAssets();
 }
