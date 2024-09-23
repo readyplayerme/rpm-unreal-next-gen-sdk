@@ -72,15 +72,15 @@ public:
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);
-		FFileUtility::SaveToFile(Context.Data, FFileUtility::GetFullPersistentPath(StoredAsset.IconFilePath));
+		FFileUtility::SaveToFile(Context.Data, FFileUtility::GetFullPersistentPath(StoredAsset.RelativeIconFilePath));
 
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
 	}
 	
 	void StoreAndTrackGlb(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
-		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
-		const FString& GlbPath = FFileUtility::GetFullPersistentPath(StoredAsset.GlbPathsByBaseModelId[Context.BaseModelId]);
+		FCachedAssetData StoredAsset = FCachedAssetData(Context.Asset, Context.BaseModelId);
+		const FString& GlbPath = StoredAsset.GetGlbPathForBaseModelId(Context.BaseModelId);
 		FFileUtility::SaveToFile(Context.Data, GlbPath);
 		
 		StoreAndTrackAsset(StoredAsset, bSaveManifest);
@@ -88,13 +88,13 @@ public:
 
 	void UpdateExistingCachedAsset(const FCachedAssetData& StoredAsset, FCachedAssetData* ExistingStoredAsset)
 	{
-		if(!StoredAsset.GlbPathsByBaseModelId.IsEmpty())
+		if(!StoredAsset.RelativeGlbPathsByBaseModelId.IsEmpty())
 		{
-			MergeTMaps(ExistingStoredAsset->GlbPathsByBaseModelId, StoredAsset.GlbPathsByBaseModelId);
+			MergeTMaps(ExistingStoredAsset->RelativeGlbPathsByBaseModelId, StoredAsset.RelativeGlbPathsByBaseModelId);
 		}
-		if(ExistingStoredAsset->IconFilePath.IsEmpty() && !StoredAsset.IconFilePath.IsEmpty())
+		if(ExistingStoredAsset->RelativeIconFilePath.IsEmpty() && !StoredAsset.RelativeIconFilePath.IsEmpty())
 		{
-			ExistingStoredAsset->IconFilePath = StoredAsset.IconFilePath;
+			ExistingStoredAsset->RelativeIconFilePath = StoredAsset.RelativeIconFilePath;
 		}
 	}
 
@@ -196,17 +196,18 @@ public:
 		FCachedAssetData CachedAsset = StoredAssets[AssetId];
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
-		for (const auto& GlbPath : CachedAsset.GlbPathsByBaseModelId)
+		for (const auto& GlbPath : CachedAsset.RelativeGlbPathsByBaseModelId)
 		{
-			if (PlatformFile.FileExists(*GlbPath.Value))
+			const FString FullGlbPath = FFileUtility::GetFullPersistentPath(GlbPath.Value);
+			if (PlatformFile.FileExists(*FullGlbPath))
 			{
-				PlatformFile.DeleteFile(*GlbPath.Value);
+				PlatformFile.DeleteFile(*FullGlbPath);
 			}
 		}
-
-		if (PlatformFile.FileExists(*CachedAsset.IconFilePath))
+		const FString FullIconPath = FFileUtility::GetFullPersistentPath(CachedAsset.RelativeIconFilePath);
+		if (PlatformFile.FileExists(*FullIconPath))
 		{
-			PlatformFile.DeleteFile(*CachedAsset.IconFilePath);
+			PlatformFile.DeleteFile(*FullIconPath);
 		}
 
 		StoredAssets.Remove(AssetId);

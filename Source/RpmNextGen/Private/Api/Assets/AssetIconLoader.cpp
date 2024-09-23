@@ -19,7 +19,7 @@ void FAssetIconLoader::LoadIcon(const FAsset& Asset, bool bStoreInCache)
 	if (FAssetCacheManager::Get().GetCachedAsset(Asset.Id, StoredAsset))
 	{
 		TArray<uint8> IconData;
-		if(FFileHelper::LoadFileToArray(IconData, * FFileUtility::GetFullPersistentPath(StoredAsset.IconFilePath)))
+		if(FFileHelper::LoadFileToArray(IconData, * FFileUtility::GetFullPersistentPath(StoredAsset.RelativeIconFilePath)))
 		{
 			OnIconLoaded.ExecuteIfBound(Asset, IconData);
 			UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading icon from cache"));

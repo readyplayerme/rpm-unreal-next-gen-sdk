@@ -4,6 +4,8 @@
 #include "RpmNextGen.h"
 #include "Components/Image.h"
 #include "Widgets/Images/SImage.h"
+#include "Engine/Texture.h"
+#include "Engine/Texture2D.h"
 
 UTexture2D* FRpmImageHelper::CreateTextureFromData(const TArray<uint8>& ImageData)
 {
@@ -36,8 +38,12 @@ UTexture2D* FRpmImageHelper::CreateTextureFromData(const TArray<uint8>& ImageDat
 	}
 
 	// Disable mipmaps and streaming for icons
-	Texture->NeverStream = true; 
-	Texture->MipGenSettings = TMGS_NoMipmaps; 
+	Texture->CompressionSettings = TC_EditorIcon; // Optional: Prevent unnecessary compression for icons.
+	//Texture->MipGenSettings = TMGS_NoMipmaps;
+	Texture->LODGroup = TEXTUREGROUP_UI;  // UI textures typically don’t use mipmaps.
+	Texture->NeverStream = true;
+	Texture->SRGB = true; // If you're working with UI icons, they are usually in sRGB space.
+	Texture->UpdateResource();
 
 	// Lock the texture and copy data
 	void* TextureData = Texture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);

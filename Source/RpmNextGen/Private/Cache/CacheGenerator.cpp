@@ -128,6 +128,7 @@ void FCacheGenerator::OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& 
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, NumberOfAssetsSaved);
 
 		OnLocalCacheGenerated.ExecuteIfBound(true);
+		AddFolderToNonAssetDirectory();
 	}
 }
 
@@ -139,7 +140,40 @@ void FCacheGenerator::OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>&
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("OnLocalCacheGenerated Total assets to download: %d. Asset download requests completed: %d"), RequiredAssetDownloadRequest, NumberOfAssetsSaved);
 
 		OnLocalCacheGenerated.ExecuteIfBound(true);
+		AddFolderToNonAssetDirectory();
 	}
+}
+
+void FCacheGenerator::AddFolderToNonAssetDirectory() const
+{
+	FString ConfigFilePath = FPaths::ProjectConfigDir() / TEXT("DefaultGame.ini");
+
+	// Section and key for "Additional Non-Asset Directories to Copy"
+	const FString SectionName = TEXT("/Script/UnrealEd.ProjectPackagingSettings");
+	const FString KeyName = TEXT("+DirectoriesToAlwaysStageAsNonUFS");
+
+	// Folder to add to the non-asset directories
+	const FString FolderToAdd = FString::Printf(TEXT("(Path=\"%s\")"), *FFileUtility::RelativeCachePath);
+
+	// Check if the folder is already added
+	FString CurrentValue;
+	if (GConfig->GetString(*SectionName, *KeyName, CurrentValue, ConfigFilePath))
+	{
+		if (CurrentValue.Contains(FolderToAdd))
+		{
+			// Folder already exists, no need to add it
+			UE_LOG(LogTemp, Log, TEXT("Folder already added to Additional Non-Asset Directories: %s"), *FolderToAdd);
+			return;
+		}
+	}
+
+	// Add the folder to the config
+	GConfig->SetString(*SectionName, *KeyName, *FolderToAdd, ConfigFilePath);
+
+	// Force update the config file
+	GConfig->Flush(false, ConfigFilePath);
+
+	UE_LOG(LogTemp, Log, TEXT("Added folder to Additional Non-Asset Directories: %s"), *FolderToAdd);
 }
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)

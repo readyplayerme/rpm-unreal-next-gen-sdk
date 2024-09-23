@@ -59,7 +59,7 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 			CharacterData.Assets.Add(FAssetApi::BaseModelType, AssetFromCache);
 			OnCharacterCreated.Broadcast(CharacterData);
 			TArray<uint8> Data;
-			if(FFileApi::LoadFileFromPath(CachedAssetData.GlbPathsByBaseModelId[CharacterData.BaseModelId], Data))
+			if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 			{
 				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
 				HandleGltfAssetLoaded(GltfRuntimeAsset, FAssetApi::BaseModelType);

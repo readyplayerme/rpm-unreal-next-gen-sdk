@@ -44,6 +44,7 @@ protected:
 	void OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data);
 	UFUNCTION()
 	void OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>& Data);
+	void AddFolderToNonAssetDirectory() const;
 	void FetchNextRefittedAsset();
 	
 	TUniquePtr<FAssetApi> AssetApi;

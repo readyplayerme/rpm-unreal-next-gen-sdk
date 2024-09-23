@@ -42,7 +42,6 @@ void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Res
 
 bool FFileApi::LoadFileFromPath(const FString& Path, TArray<uint8>& OutContent)
 {
-	const FString FileName = FPaths::GetCleanFilename(Path);
 	if (!FPaths::FileExists(Path))
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Path does not exist %s"), *Path);
