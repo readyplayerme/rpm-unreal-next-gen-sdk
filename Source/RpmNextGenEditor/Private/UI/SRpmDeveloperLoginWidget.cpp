@@ -153,7 +153,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 		  .AutoHeight()
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString("Character Styles"))
+			.Text(FText::FromString("Character Models"))
 			.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 16))
 			.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
 		]
@@ -162,7 +162,7 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 		  .AutoHeight()
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString("Here you can import your character styles from Studio"))
+			.Text(FText::FromString("Here you can import your character models from Studio"))
 			.Visibility(this, &SRpmDeveloperLoginWidget::GetLoggedInViewVisibility)
 		]
 		+ SVerticalBox::Slot()
@@ -273,13 +273,16 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 				.WidthOverride(100.0f)
 				[
 					SNew(SButton)
-					   .Text(FText::FromString("Load Style"))
-					   .OnClicked_Lambda([this, StyleAsset]() -> FReply
-					             {
-						             OnLoadStyleClicked(StyleAsset);
-						             return FReply::Handled();
-					             })
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					.Text(FText::FromString("Import"))
+					.OnClicked_Lambda([this, StyleAsset]() -> FReply
+					{
+						OnLoadBaseModelClicked(StyleAsset);
+						return FReply::Handled();
+					})
 				]
+
 			]
 		]
 		+ SHorizontalBox::Slot()
@@ -313,10 +316,10 @@ void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr
 	ActiveLoaders.Remove(LoaderToRemove);
 }
 
-void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FAsset& StyleAsset)
+void SRpmDeveloperLoginWidget::OnLoadBaseModelClicked(const FAsset& StyleAsset)
 {
-	AssetLoader = FEditorAssetLoader();
-	AssetLoader.LoadBaseModelAsset(StyleAsset);
+	AssetLoader = MakeShared<FEditorAssetLoader>();
+	AssetLoader->LoadBaseModelAsset(StyleAsset);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const

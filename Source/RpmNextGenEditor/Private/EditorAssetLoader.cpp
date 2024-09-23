@@ -46,8 +46,7 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	USkeletalMesh* skeletalMesh = GltfAsset->LoadSkeletalMeshRecursive(TEXT(""), {}, meshConfig);
 	skeletalMesh->SetSkeleton(Skeleton);
 	Skeleton->SetPreviewMesh(skeletalMesh);
-
-	const FString CoreAssetPath = FString::Printf(TEXT("/Game/ReadyPlayerMe/%s/"), *LoadedAssetId);
+	const FString CoreAssetPath = FString::Printf(TEXT("/Game/ReadyPlayerMe/CharacterModels/%s/"), *LoadedAssetId);
 	const FString SkeletonAssetPath = FString::Printf(TEXT("%s%s_Skeleton"), *CoreAssetPath, *LoadedAssetId);
 	const FString SkeletalMeshAssetPath = FString::Printf(TEXT("%s%s_SkeletalMesh"), *CoreAssetPath, *LoadedAssetId);
 
