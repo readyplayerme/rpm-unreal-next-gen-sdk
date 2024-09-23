@@ -75,5 +75,7 @@ void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefre
 
 void URpmFunctionLibrary::ExtractCachePakFile()
 {
-	FPakFileUtility::ExtractFilesFromPak(FPakFileUtility::CachePakFilePath);
+	FString PakFilePath = FFileUtility::GetFullPersistentPath(FPakFileUtility::CachePakFilePath);
+
+	FPakFileUtility::ExtractFilesFromPak(PakFilePath);
 }

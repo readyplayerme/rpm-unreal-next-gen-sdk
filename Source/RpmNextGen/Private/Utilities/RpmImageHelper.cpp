@@ -28,19 +28,28 @@ UTexture2D* FRpmImageHelper::CreateTextureFromData(const TArray<uint8>& ImageDat
 		return nullptr;
 	}
 
+	// Create the texture
 	UTexture2D* Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
 	if (!Texture)
 	{
 		return nullptr;
 	}
 
+	// Disable mipmaps and streaming for icons
+	Texture->NeverStream = true; 
+	Texture->MipGenSettings = TMGS_NoMipmaps; 
+
+	// Lock the texture and copy data
 	void* TextureData = Texture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
 	FMemory::Memcpy(TextureData, UncompressedBGRA.GetData(), UncompressedBGRA.Num());
 	Texture->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+	// Update texture resource
 	Texture->UpdateResource();
 
 	return Texture;
 }
+
 
 UImage* FRpmImageHelper::CreateUImageFromData(const TArray<uint8>& ImageData, const FVector2D& ImageSize)
 {

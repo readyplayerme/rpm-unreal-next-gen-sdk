@@ -2,12 +2,12 @@
 #include "FileUtility.h"
 #include "IPlatformFilePak.h"
 
-const FString ResponseFilePath = FPaths::ProjectContentDir() / TEXT("Paks/RpmCache_ResponseFile.txt");
+const FString ResponseFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/Cache/RpmCache_ResponseFile.txt");
 
 #if WITH_EDITOR
-const FString FPakFileUtility::CachePakFilePath = FPaths::ProjectContentDir() / TEXT("Paks/RpmAssetCache.pak");
+const FString FPakFileUtility::CachePakFilePath = FPaths::ProjectContentDir() / TEXT("ReadyPlayerMe/Cache/RpmAssetCache.pak");
 #else
-const FString FPakFileUtility::CachePakFilePath = FPaths::ProjectDir() / TEXT("Content/Paks/RpmAssetCache.pak");
+const FString FPakFileUtility::CachePakFilePath = FPaths::ProjectDir() / TEXT("Content/ReadyPlayerMe/Cache/RpmAssetCache.pak");
 #endif
 
 void FPakFileUtility::CreatePakFile(const FString& PakFilePath)
@@ -81,7 +81,7 @@ void FPakFileUtility::CreatePakFile()
 void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
 {
     const FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
-    const FString DestinationPath = FFileUtility::GetFullPersistentPath("");
+    const FString DestinationPath = FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath);
     const FString CommandLineArgs = FString::Printf(TEXT("%s -Extract %s"), *PakFilePath, *DestinationPath);
 
     FProcHandle ProcHandle = FPlatformProcess::CreateProc(*UnrealPakPath, *CommandLineArgs, true, false, false, nullptr, 0, nullptr, nullptr);
@@ -99,96 +99,157 @@ void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
     }
 }
 
+// void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
+// {
+//     bool bSuccessfulInitialization = false;
+//     IPlatformFile* LocalPlatformFile = &FPlatformFileManager::Get().GetPlatformFile();
+//     if (LocalPlatformFile != nullptr)
+//     {
+//         IPlatformFile* PakPlatformFile = FPlatformFileManager::Get().GetPlatformFile(TEXT("PakFile"));
+//         if (PakPlatformFile != nullptr)
+//         {
+//             UE_LOG(LogTemp, Error, TEXT("Successfully initialized PakPlatformFile"));
+//             bSuccessfulInitialization = true;
+//         }
+//
+//     }
+//     if(bSuccessfulInitialization)
+//     {
+//         const TCHAR* cmdLine = TEXT("");
+//         FPakPlatformFile* PakPlatform = new FPakPlatformFile();
+//         IPlatformFile* InnerPlatform = LocalPlatformFile;
+//         PakPlatform->Initialize(InnerPlatform, cmdLine);
+//         FPlatformFileManager::Get().SetPlatformFile(*PakPlatform);
+//
+//         FString FilePath = PakFilePath;
+//
+//         UE_LOG(LogTemp, Log, TEXT("Attempting to load pak: %s"), *FilePath);
+//
+//         FPakFile PakFile = FPakFile(InnerPlatform, *FilePath, false);
+//
+//         if (!PakFile.IsValid())
+//         {
+//             UE_LOG(LogTemp, Error, TEXT("Invalid pak file: %s"), *FilePath);
+//             return ;
+//         }
+//         UE_LOG(LogTemp, Log, TEXT("Pak file is VALID! %s"), *FilePath);
+//         //FCoreDelegates::MountPak.IsBound();
+//     }
+// }
+
 void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
 {
+    // Step 1: Get the current platform file and initialize the Pak platform
     IPlatformFile& InnerPlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-    FPakPlatformFile* PakPlatformFile = new FPakPlatformFile();
-    FPlatformFileManager::Get().SetPlatformFile(*PakPlatformFile);
-    PakPlatformFile->Initialize(&InnerPlatformFile, TEXT(""));
-    
-    const FString MountPoint = TEXT("/CachePak/");  // Mount in a virtual folder
+    FPakPlatformFile* PakPlatformFile = static_cast<FPakPlatformFile*>(FPlatformFileManager::Get().FindPlatformFile(TEXT("PakFile")));
+
+    // If the PakPlatformFile is null, initialize it
+    if (!PakPlatformFile)
+    {
+        PakPlatformFile = new FPakPlatformFile();
+        FPlatformFileManager::Get().SetPlatformFile(*PakPlatformFile);
+        if (!PakPlatformFile->Initialize(&InnerPlatformFile, TEXT("")))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to initialize Pak Platform File"));
+            delete PakPlatformFile;
+            return;
+        }
+        UE_LOG(LogTemp, Log, TEXT("Initializing new Pak Platform File"));
+    }
+
+    // Step 2: Define mount point and destination paths
+    const FString MountPoint = TEXT("/AssetCache/"); // Virtual mount point inside Unreal
     const FString DestinationPath = FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath);
 
-    if (PakPlatformFile->Mount(*PakFilePath, 0, *MountPoint))
+    // Step 3: Mount the Pak file
+    if (!PakPlatformFile->Mount(*PakFilePath, 0, *MountPoint))
     {
-        UE_LOG(LogTemp, Log, TEXT("Successfully mounted Pak file: %s"), *PakFilePath);
+        UE_LOG(LogTemp, Error, TEXT("Failed to mount Pak file: %s"), *PakFilePath);
+        //return;
+    }
 
-        // Find and extract files from the mounted pak file
-        TArray<FString> Files;
-        PakPlatformFile->FindFilesRecursively(Files, *MountPoint, TEXT(""));  // Using virtual mount point
+    UE_LOG(LogTemp, Log, TEXT("Successfully mounted Pak file: %s"), *PakFilePath);
+    
+    // Step 4: List files in the mounted Pak file
+    TArray<FString> Files;
+    PakPlatformFile->FindFilesRecursively(Files, *MountPoint, TEXT(""));
 
-        for (const FString& File : Files)
+    if (Files.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No files found in Pak file: %s"), *PakFilePath);
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Found %d files in Pak file: %s"), Files.Num(), *PakFilePath);
+
+    // Step 5: Extract each file from the Pak
+    for (const FString& File : Files)
+    {
+        // Ensure the file is relative to the mount point
+        FString RelativeFilePath = File;
+        FPaths::MakePathRelativeTo(RelativeFilePath, *MountPoint);
+        FString DestinationFilePath = DestinationPath / RelativeFilePath;
+
+        // Step 6: Handle JSON files separately
+        if (File.EndsWith(TEXT(".json")))
         {
-            // Use relative path within the mounted folder, preserving subdirectories
-            FString RelativeFilePath = File;
-            FPaths::MakePathRelativeTo(RelativeFilePath, *MountPoint);
-            FString DestinationFilePath = DestinationPath / RelativeFilePath;
-
-            if (File.EndsWith(TEXT(".json")))
+            UE_LOG(LogTemp, Log, TEXT("Processing JSON file: %s"), *File);
+            FString JsonContent;
+            if (FFileHelper::LoadFileToString(JsonContent, *File))
             {
-                UE_LOG(LogTemp, Log, TEXT("json File = %s"), *File);
-                // Handle JSON files
-                FString JsonContent;
-                if (FFileHelper::LoadFileToString(JsonContent, *File))
+                // Ensure destination directory exists
+                IFileManager::Get().MakeDirectory(*FPaths::GetPath(DestinationFilePath), true);
+
+                // Try to deserialize JSON
+                TSharedPtr<FJsonObject> JsonObject;
+                TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonContent);
+
+                if (FJsonSerializer::Deserialize(Reader, JsonObject))
                 {
-                    UE_LOG(LogTemp, Log, TEXT("Successfully read JSON file: %s"), *File);
-                    // Ensure destination folder exists
-                    IFileManager::Get().MakeDirectory(*FPaths::GetPath(DestinationFilePath), true);
-
-                    TSharedPtr<FJsonObject> JsonObject;
-                    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonContent);
-
-                    // Try to deserialize the JSON string into a JsonObject
-                    if (FJsonSerializer::Deserialize(Reader, JsonObject))
-                    {
-                        UE_LOG(LogTemp, Log, TEXT("Json content valid"));
-                    }
-                    else
-                    {
-                        UE_LOG(LogTemp, Log, TEXT("Json content invalid"));
-                    }
-
-                    // Attempt to save the JSON content
-                    if (FFileHelper::SaveStringToFile(JsonContent, *DestinationFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
-                    {
-                        UE_LOG(LogTemp, Log, TEXT("Successfully saved JSON file: %s"), *DestinationFilePath);
-                    }
-                    else
-                    {
-                        UE_LOG(LogTemp, Error, TEXT("Failed to save JSON file: %s"), *DestinationFilePath);
-                    }
+                    UE_LOG(LogTemp, Log, TEXT("Successfully parsed JSON content"));
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Error, TEXT("Failed to read JSON file from Pak: %s"), *File);
+                    UE_LOG(LogTemp, Warning, TEXT("Invalid JSON content in file: %s"), *File);
+                }
+
+                // Save JSON file to disk
+                if (FFileHelper::SaveStringToFile(JsonContent, *DestinationFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+                {
+                    UE_LOG(LogTemp, Log, TEXT("Successfully saved JSON file: %s"), *DestinationFilePath);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("Failed to save JSON file: %s"), *DestinationFilePath);
                 }
             }
             else
             {
-                // Handle other file types as binary
-                TArray<uint8> FileData;
-                if (FFileHelper::LoadFileToArray(FileData, *File))
+                UE_LOG(LogTemp, Error, TEXT("Failed to read JSON file from Pak: %s"), *File);
+            }
+        }
+        else
+        {
+            // Handle binary files
+            TArray<uint8> FileData;
+            if (FFileHelper::LoadFileToArray(FileData, *File))
+            {
+                if (FFileHelper::SaveArrayToFile(FileData, *DestinationFilePath))
                 {
-                    if (FFileHelper::SaveArrayToFile(FileData, *DestinationFilePath))
-                    {
-                        UE_LOG(LogTemp, Log, TEXT("Successfully extracted file: %s"), *DestinationFilePath);
-                    }
-                    else
-                    {
-                        UE_LOG(LogTemp, Error, TEXT("Failed to save file: %s"), *DestinationFilePath);
-                    }
+                    UE_LOG(LogTemp, Log, TEXT("Successfully extracted file: %s"), *DestinationFilePath);
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Error, TEXT("Failed to read file from Pak: %s"), *File);
+                    UE_LOG(LogTemp, Error, TEXT("Failed to save file: %s"), *DestinationFilePath);
                 }
             }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to read file from Pak: %s"), *File);
+            }
         }
+    }
 
-        UE_LOG(LogTemp, Warning, TEXT("Finished extracting files %d from Pak: %s"), Files.Num(), *PakFilePath);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to mount Pak file: %s"), *PakFilePath);
-    }
+    UE_LOG(LogTemp, Log, TEXT("Finished extracting files from Pak: %s"), *PakFilePath);
 }
+

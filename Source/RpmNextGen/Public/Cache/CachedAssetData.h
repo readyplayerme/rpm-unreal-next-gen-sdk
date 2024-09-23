@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "RpmNextGen.h"
 #include "Api/Assets/Models/Asset.h"
 #include "Api/Files/FileUtility.h"
 #include "CachedAssetData.generated.h"
@@ -57,7 +56,7 @@ struct RPMNEXTGEN_API FCachedAssetData
 		GlbUrl = InAsset.GlbUrl;
 		IconUrl = InAsset.IconUrl;
 		GlbPathsByBaseModelId = TMap<FString, FString>();
-		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FFileUtility::RelativeCachePath, *Id);
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath), *Id);
 		Type = InAsset.Type;
 		CreatedAt = InAsset.CreatedAt;
 		UpdatedAt = InAsset.UpdatedAt;
@@ -70,11 +69,12 @@ struct RPMNEXTGEN_API FCachedAssetData
 		GlbUrl = InAsset.GlbUrl;
 		IconUrl = InAsset.IconUrl;
 		GlbPathsByBaseModelId = TMap<FString, FString>();
+		const FString FullPath = FFileUtility::GetFullPersistentPath(FFileUtility::RelativeCachePath);
 		if(InBaseModelId != FString())
 		{
-			GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *FFileUtility::RelativeCachePath, *InBaseModelId, *Id));
+			GlbPathsByBaseModelId.Add(InBaseModelId, FString::Printf(TEXT("%s/%s/%s.glb"), *FullPath, *InBaseModelId, *Id));
 		}
-		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FFileUtility::RelativeCachePath, *Id);
+		IconFilePath = FString::Printf(TEXT("%s/Icons/%s.png"), *FullPath, *Id);
 		Type = InAsset.Type;
 		CreatedAt = InAsset.CreatedAt;
 		UpdatedAt = InAsset.UpdatedAt;
