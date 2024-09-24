@@ -16,6 +16,24 @@ class FCharacterApi;
 struct FAsset;
 
 USTRUCT(BlueprintType)
+struct RPMNEXTGEN_API FRpmAnimationCharacter
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me" )
+	USkeleton* Skeleton;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	TSubclassOf<UAnimInstance> AnimationBlueprint;
+
+	FRpmAnimationCharacter()
+	{
+		Skeleton = nullptr;
+		AnimationBlueprint = nullptr;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct RPMNEXTGEN_API FRpmCharacterData
 {
 	GENERATED_BODY()
@@ -58,6 +76,9 @@ public:
 	FOnCharacterCreated OnCharacterCreated;
 	FOnCharacterUpdated OnCharacterUpdated;
 	FOnCharacterFound OnCharacterFound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me" )
+	TMap<FString, FRpmAnimationCharacter> AnimationCharactersByBaseModelId;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -87,7 +108,7 @@ protected:
 	virtual void HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse, bool bWasSuccessful);
 	UFUNCTION()
 	virtual void HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse, bool bWasSuccessful);
-
+	
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -95,6 +116,8 @@ protected:
 	FString AppId;
 	FRpmCharacter Character;
 	FRpmCharacterData CharacterData;
+
+	
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;
 	TSharedPtr<FGlbLoader> GlbLoader;

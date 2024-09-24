@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "glTFRuntimeSkeletalMeshComponent.h"
 #include "RpmNextGen.h"
+#include "Api/Assets/AssetApi.h"
 
 // Sets default values
 ARpmActor::ARpmActor()
@@ -14,6 +15,7 @@ ARpmActor::ARpmActor()
 	PrimaryActorTick.bCanEverTick = true;
 	AssetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AssetRoot"));
 	RootComponent = AssetRoot;
+	MasterPoseComponent = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -46,9 +48,31 @@ void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& Asset
 	if (NewMeshComponents.Num() > 0)
 	{
 		LoadedMeshComponentsByAssetType.Add(AssetType, NewMeshComponents);
+		if(AssetType != FAssetApi::BaseModelType)
+		{
+			MasterPoseComponent = Cast<USkeletalMeshComponent>(LoadedMeshComponentsByAssetType[FAssetApi::BaseModelType][0]);
+			MasterPoseComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+			MasterPoseComponent->SetAnimInstanceClass(AnimationCharacter.AnimationBlueprint);
+		}
+		for (USceneComponent* NewMeshComponent : NewMeshComponents)
+		{
+			if (USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(NewMeshComponent))
+			{
+				SkeletalMeshComponent->SetMasterPoseComponent(MasterPoseComponent.Get());
+			}
+		}
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
+		return;
 	}
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load mesh components"));
+}
 
-	UE_LOG(LogReadyPlayerMe, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
+void ARpmActor::LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, const FRpmAnimationCharacter& InAnimationCharacter)
+{
+	AnimationCharacter = InAnimationCharacter;
+	SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
+	SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationCharacter.Skeleton;
+	LoadGltfAsset(GltfAsset, AssetType);
 }
 
 void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "glTFRuntimeAsset.h"
+#include "RpmLoaderComponent.h"
 #include "RpmActor.generated.h"
 
 UCLASS()
@@ -33,6 +34,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
 	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	FRpmAnimationCharacter AnimationCharacter;
+	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadGltfAssets(TMap<FString, UglTFRuntimeAsset*> GltfAssetsByType);
 	
@@ -40,11 +44,16 @@ public:
 	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& AssetType = TEXT(""));
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, const FRpmAnimationCharacter& InAnimationCharacter);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveAllMeshes();
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveMeshComponentsOfType(const FString& AssetType);
 
+protected:
+	TWeakObjectPtr<USkeletalMeshComponent> MasterPoseComponent;
 private:
 	TArray<USceneComponent*> LoadMeshComponents(UglTFRuntimeAsset* GltfAsset);
 	USkeletalMeshComponent* CreateSkeletalMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
