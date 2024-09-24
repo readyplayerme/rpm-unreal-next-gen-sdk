@@ -21,8 +21,10 @@ private:
 	void RegisterMenus();
 	void FillReadyPlayerMeMenu(UToolMenu* Menu);
 	void OpenLoaderWindow();
+	void OpenCacheEditorWindow();
 	TSharedRef<SDockTab> OnSpawnLoaderWindow(const FSpawnTabArgs& SpawnTabArgs);
-	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
-	TSharedPtr<class FUICommandList> PluginCommands;
+	TSharedRef<SDockTab> OnSpawnCacheWindow(const FSpawnTabArgs& SpawnTabArgs);
+	TSharedRef<SDockTab> OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs);
+	TSharedPtr<FUICommandList> PluginCommands;
 	
 };

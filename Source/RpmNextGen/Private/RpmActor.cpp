@@ -4,8 +4,8 @@
 #include "RpmActor.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Animation/AnimSequence.h"
 #include "glTFRuntimeSkeletalMeshComponent.h"
+#include "RpmNextGen.h"
 
 // Sets default values
 ARpmActor::ARpmActor()
@@ -14,52 +14,25 @@ ARpmActor::ARpmActor()
 	PrimaryActorTick.bCanEverTick = true;
 	AssetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AssetRoot"));
 	RootComponent = AssetRoot;
-	RootNodeIndex = INDEX_NONE;
-	bStaticMeshesAsSkeletalOnMorphTargets = true;
 }
 
 // Called when the game starts or when spawned
 void ARpmActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (!Asset)
-	{
-		return;
-	}
-	
-	SetupAsset();
 }
 
-void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset)
+void ARpmActor::LoadGltfAssets(TMap<FString, UglTFRuntimeAsset*> GltfAssetsByType)
 {
-	// Before loading a new asset, clear existing components
-	ClearLoadedComponents();
-	
-	Asset = GltfAsset;
-	SetupAsset();
-}
-
-void ARpmActor::ClearLoadedComponents()
-{
-	if (RootComponent)
+	for (const auto& Pairs : GltfAssetsByType)
 	{
-		TArray<USceneComponent*> ChildComponents;
-		RootComponent->GetChildrenComponents(true, ChildComponents);
-
-		for (USceneComponent* ChildComponent : ChildComponents)
-		{
-			if (ChildComponent && ChildComponent != RootComponent)
-			{
-				ChildComponent->DestroyComponent();
-			}
-		}
+		LoadGltfAsset(Pairs.Value, Pairs.Key);
 	}
 }
 
-void ARpmActor::SetupAsset()
+void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& AssetType)
 {
-	if (!Asset)
+	if (!GltfAsset)
 	{
 		UE_LOG(LogGLTFRuntime, Warning, TEXT("No asset to setup"));
 		return;
@@ -67,212 +40,132 @@ void ARpmActor::SetupAsset()
 
 	double LoadingStartTime = FPlatformTime::Seconds();
 
-	if (RootNodeIndex > INDEX_NONE)
+	RemoveMeshComponentsOfType(AssetType);
+	
+	const TArray<USceneComponent*> NewMeshComponents = LoadMeshComponents(GltfAsset);
+	if (NewMeshComponents.Num() > 0)
 	{
-		FglTFRuntimeNode Node;
-		if (!Asset->GetNode(RootNodeIndex, Node))
+		LoadedMeshComponentsByAssetType.Add(AssetType, NewMeshComponents);
+	}
+
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
+}
+
+void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
+{
+	if (LoadedMeshComponentsByAssetType.Contains(AssetType))
+	{
+		TArray<USceneComponent*>& ComponentsToRemove = LoadedMeshComponentsByAssetType[AssetType];
+		for (USceneComponent* ComponentToRemove : ComponentsToRemove)
 		{
-			return;
+			if (ComponentToRemove)
+			{
+				ComponentToRemove->DestroyComponent();
+			}
 		}
-		AssetRoot = nullptr;
-		ProcessNode(nullptr, NAME_None, Node);
+		LoadedMeshComponentsByAssetType.Remove(AssetType);
+	}
+}
+
+
+void ARpmActor::RemoveAllMeshes()
+{
+	for (const auto Pairs : LoadedMeshComponentsByAssetType){
+		
+		TArray<USceneComponent*> ComponentsToRemove = Pairs.Value;
+		for (USceneComponent* ComponentToRemove : ComponentsToRemove)
+		{
+			if (ComponentToRemove)
+			{
+				ComponentToRemove->DestroyComponent();
+			}
+		}
+	}
+	LoadedMeshComponentsByAssetType.Empty();
+}
+
+TArray<USceneComponent*> ARpmActor::LoadMeshComponents(UglTFRuntimeAsset* GltfAsset)
+{
+	TArray<FglTFRuntimeNode> AllNodes = GltfAsset->GetNodes();
+	TArray<USceneComponent*> NewMeshComponents;
+	
+	// Loop through all nodes to create mesh components
+	for (const FglTFRuntimeNode& Node : AllNodes)
+	{
+		// Skip bones and armature
+		if(GltfAsset->NodeIsBone(Node.Index) || Node.Name.Contains("Armature"))
+		{
+			continue;
+		}
+		
+		if (Node.SkinIndex >= 0)
+		{
+			NewMeshComponents.Add(CreateSkeletalMeshComponent(GltfAsset, Node));
+		}
+		else
+		{
+			NewMeshComponents.Add(CreateStaticMeshComponent(GltfAsset, Node));
+
+		}
+	}
+	return NewMeshComponents;
+}
+
+USkeletalMeshComponent* ARpmActor::CreateSkeletalMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node)
+{
+	USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
+
+	if (SkeletalMeshConfig.bPerPolyCollision)
+	{
+		SkeletalMeshComponent = NewObject<UglTFRuntimeSkeletalMeshComponent>(this, GetSafeNodeName<UglTFRuntimeSkeletalMeshComponent>(Node));
+		SkeletalMeshComponent->bEnablePerPolyCollision = true;
+		SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	}
 	else
 	{
-		TArray<FglTFRuntimeScene> Scenes = Asset->GetScenes();
-		for (FglTFRuntimeScene& Scene : Scenes)
+		SkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, GetSafeNodeName<USkeletalMeshComponent>(Node));
+	}
+
+	USkeletalMesh* SkeletalMesh = GltfAsset->LoadSkeletalMesh(Node.MeshIndex, Node.SkinIndex, SkeletalMeshConfig);
+	SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
+	SkeletalMeshComponent->SetupAttachment(AssetRoot);
+	SkeletalMeshComponent->SetRelativeTransform(Node.Transform);
+	SkeletalMeshComponent->RegisterComponent();
+	AddInstanceComponent(SkeletalMeshComponent);
+	
+	return SkeletalMeshComponent;
+}
+
+UStaticMeshComponent* ARpmActor::CreateStaticMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node)
+{
+	UStaticMeshComponent* StaticMeshComponent = nullptr;
+	TArray<FTransform> GPUInstancingTransforms;
+
+	if (GltfAsset->GetNodeGPUInstancingTransforms(Node.Index, GPUInstancingTransforms))
+	{
+		UInstancedStaticMeshComponent* InstancedStaticMeshComponent = NewObject<UInstancedStaticMeshComponent>(this, GetSafeNodeName<UInstancedStaticMeshComponent>(Node));
+		for (const FTransform& GPUInstanceTransform : GPUInstancingTransforms)
 		{
-			USceneComponent* SceneComponent = NewObject<USceneComponent>(this, *FString::Printf(TEXT("Scene %d"), Scene.Index));
-			SceneComponent->SetupAttachment(RootComponent);
-			SceneComponent->RegisterComponent();
-			AddInstanceComponent(SceneComponent);
-			for (int32 NodeIndex : Scene.RootNodesIndices)
-			{
-				FglTFRuntimeNode Node;
-				if (!Asset->GetNode(NodeIndex, Node))
-				{
-					return;
-				}
-				ProcessNode(SceneComponent, NAME_None, Node);
-			}
+			InstancedStaticMeshComponent->AddInstance(GPUInstanceTransform);
 		}
+		StaticMeshComponent = InstancedStaticMeshComponent;
 	}
-
-	for (TPair<USceneComponent*, FName>& Pair : SocketMapping)
+	else
 	{
-		for (USkeletalMeshComponent* SkeletalMeshComponent : DiscoveredSkeletalMeshComponents)
-		{
-			if (SkeletalMeshComponent->DoesSocketExist(Pair.Value))
-			{
-				Pair.Key->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepRelativeTransform, Pair.Value);
-				Pair.Key->SetRelativeTransform(FTransform::Identity);
-				break;
-			}
-		}
+		StaticMeshComponent = NewObject<UStaticMeshComponent>(this, GetSafeNodeName<UStaticMeshComponent>(Node));
 	}
-
-	UE_LOG(LogGLTFRuntime, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
+	
+	UStaticMesh* StaticMesh = GltfAsset->LoadStaticMeshLODs({Node.MeshIndex}, StaticMeshConfig);
+	StaticMeshComponent->SetStaticMesh(StaticMesh);
+	StaticMeshComponent->SetupAttachment(AssetRoot);
+	StaticMeshComponent->SetRelativeTransform(Node.Transform);
+	StaticMeshComponent->RegisterComponent();
+	AddInstanceComponent(StaticMeshComponent);
+	
+	return StaticMeshComponent;
 }
 
-
-void ARpmActor::ProcessNode(USceneComponent* NodeParentComponent, const FName SocketName, FglTFRuntimeNode& Node)
-{
-	if (Asset->NodeIsBone(Node.Index))
-	{
-		ProcessBoneNode(NodeParentComponent, Node);
-		return;
-	}
-
-	USceneComponent* NewComponent = CreateNewComponent(NodeParentComponent, Node);
-
-	if (!NewComponent)
-	{
-		return;
-	}
-
-	SetupComponentTags(NewComponent, Node, SocketName);
-	ProcessChildNodes(NewComponent, Node);
-}
-
-void ARpmActor::ProcessBoneNode(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
-{
-	for (int32 ChildIndex : Node.ChildrenIndices)
-	{
-		FglTFRuntimeNode Child;
-		if (!Asset->GetNode(ChildIndex, Child))
-		{
-			return;
-		}
-		ProcessNode(NodeParentComponent, *Child.Name, Child);
-	}
-}
-
-USceneComponent* ARpmActor::CreateNewComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
-{
-    USceneComponent* NewComponent = nullptr;
-
-    // Check if the node should be a skeletal mesh component
-    if (Node.SkinIndex >= 0 || (bStaticMeshesAsSkeletalOnMorphTargets && Asset->MeshHasMorphTargets(Node.MeshIndex)))
-    {
-        // Create a skeletal mesh component
-        USkeletalMeshComponent* SkeletalMeshComponent = nullptr;
-
-        if (SkeletalMeshConfig.bPerPolyCollision)
-        {
-            SkeletalMeshComponent = NewObject<UglTFRuntimeSkeletalMeshComponent>(this, GetSafeNodeName<UglTFRuntimeSkeletalMeshComponent>(Node));
-            SkeletalMeshComponent->bEnablePerPolyCollision = true;
-            SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-        else
-        {
-            SkeletalMeshComponent = NewObject<USkeletalMeshComponent>(this, GetSafeNodeName<USkeletalMeshComponent>(Node));
-        }
-
-        // Load and set the skeletal mesh
-        USkeletalMesh* SkeletalMesh = Asset->LoadSkeletalMesh(Node.MeshIndex, Node.SkinIndex, SkeletalMeshConfig);
-        SkeletalMeshComponent->SetSkeletalMesh(SkeletalMesh);
-
-        // Attach and register the component
-        SkeletalMeshComponent->SetupAttachment(NodeParentComponent ? NodeParentComponent : RootComponent.Get());
-        SkeletalMeshComponent->RegisterComponent();
-        SkeletalMeshComponent->SetRelativeTransform(Node.Transform);
-
-        // Add the component to the list of discovered skeletal mesh components
-        DiscoveredSkeletalMeshComponents.Add(SkeletalMeshComponent);
-
-        NewComponent = SkeletalMeshComponent;
-
-        // Custom event handling for when a skeletal mesh component is created
-        ReceiveOnSkeletalMeshComponentCreated(SkeletalMeshComponent, Node);
-    }
-    else
-    {
-        // Create a static mesh component
-        UStaticMeshComponent* StaticMeshComponent = nullptr;
-        TArray<FTransform> GPUInstancingTransforms;
-
-        if (Asset->GetNodeGPUInstancingTransforms(Node.Index, GPUInstancingTransforms))
-        {
-            UInstancedStaticMeshComponent* InstancedStaticMeshComponent = NewObject<UInstancedStaticMeshComponent>(this, GetSafeNodeName<UInstancedStaticMeshComponent>(Node));
-            for (const FTransform& GPUInstanceTransform : GPUInstancingTransforms)
-            {
-                InstancedStaticMeshComponent->AddInstance(GPUInstanceTransform);
-            }
-            StaticMeshComponent = InstancedStaticMeshComponent;
-        }
-        else
-        {
-            StaticMeshComponent = NewObject<UStaticMeshComponent>(this, GetSafeNodeName<UStaticMeshComponent>(Node));
-        }
-
-        // Load and set the static mesh
-        UStaticMesh* StaticMesh = Asset->LoadStaticMeshLODs({Node.MeshIndex}, StaticMeshConfig);
-        StaticMeshComponent->SetStaticMesh(StaticMesh);
-
-        // Attach and register the component
-        StaticMeshComponent->SetupAttachment(NodeParentComponent ? NodeParentComponent : RootComponent.Get());
-        StaticMeshComponent->RegisterComponent();
-        StaticMeshComponent->SetRelativeTransform(Node.Transform);
-
-        NewComponent = StaticMeshComponent;
-
-        // Custom event handling for when a static mesh component is created
-        ReceiveOnStaticMeshComponentCreated(StaticMeshComponent, Node);
-    }
-
-    // Add the component to the actor's list of instance components
-    AddInstanceComponent(NewComponent);
-
-    return NewComponent;
-}
-
-
-void ARpmActor::SetupComponentTags(USceneComponent* Component, FglTFRuntimeNode& Node, const FName SocketName)
-{
-	Component->ComponentTags.Add(*FString::Printf(TEXT("glTFRuntime:NodeName:%s"), *Node.Name));
-	Component->ComponentTags.Add(*FString::Printf(TEXT("glTFRuntime:NodeIndex:%d"), Node.Index));
-    
-	if (SocketName != NAME_None)
-	{
-		SocketMapping.Add(Component, SocketName);
-	}
-}
-
-void ARpmActor::ProcessChildNodes(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node)
-{
-	for (int32 ChildIndex : Node.ChildrenIndices)
-	{
-		FglTFRuntimeNode Child;
-		if (!Asset->GetNode(ChildIndex, Child))
-		{
-			return;
-		}
-		ProcessNode(NodeParentComponent, NAME_None, Child);
-	}
-}
-
-// Called every frame
 void ARpmActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-}
-
-void ARpmActor::ReceiveOnStaticMeshComponentCreated_Implementation(UStaticMeshComponent* StaticMeshComponent, const FglTFRuntimeNode& Node)
-{
-
-}
-
-void ARpmActor::ReceiveOnSkeletalMeshComponentCreated_Implementation(USkeletalMeshComponent* SkeletalMeshComponent, const FglTFRuntimeNode& Node)
-{
-	
-}
-
-void ARpmActor::PostUnregisterAllComponents()
-{
-	if (Asset)
-	{
-		Asset->ClearCache();
-		Asset = nullptr;
-	}
-	Super::PostUnregisterAllComponents();
 }

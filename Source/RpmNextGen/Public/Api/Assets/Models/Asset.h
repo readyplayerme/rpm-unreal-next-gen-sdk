@@ -1,11 +1,10 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Common/Models/ApiResponse.h"
 #include "Asset.generated.h"
 
 USTRUCT(BlueprintType)
-struct RPMNEXTGEN_API FAsset : public FApiResponse
+struct RPMNEXTGEN_API FAsset
 {
 	GENERATED_BODY()
 

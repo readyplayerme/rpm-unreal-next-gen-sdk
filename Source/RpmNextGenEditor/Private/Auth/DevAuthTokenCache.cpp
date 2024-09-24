@@ -17,7 +17,7 @@ void FDevAuthTokenCache::Initialize()
 
 		if (!AuthData.IsValid())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("DevAuthTokenCache: Invalid AuthData %s"), *AuthData.ToJsonString());
+			UE_LOG(LogReadyPlayerMe, Warning, TEXT("DevAuthTokenCache: Invalid AuthData %s"), *AuthData.ToJsonString());
 			ClearAuthData();
 		}
 

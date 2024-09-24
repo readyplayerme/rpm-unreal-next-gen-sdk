@@ -2,12 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "EditorAssetLoader.h"
-#include "Api/Assets/AssetLoader.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 
 class FEditorAssetLoader;
-class FAssetLoader;
+class FGlbLoader;
 
 class SCharacterLoaderWidget : public SCompoundWidget
 {
@@ -15,9 +14,10 @@ public:
 	SLATE_BEGIN_ARGS(SCharacterLoaderWidget) {}
 	SLATE_END_ARGS()
 
-	void OnSkeletonSelected(const FAssetData& AssetData);
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
+
+	void OnSkeletonSelected(const FAssetData& AssetData);
 
 private:
 	/** Callback for when the button is clicked */
@@ -35,6 +35,6 @@ private:
 	TSharedPtr<SEditableTextBox> PathTextBox;
 
 	// Store the selected skeleton
-	USkeleton* SelectedSkeleton;
+	USkeleton* SelectedSkeleton = nullptr;
 	FString GetCurrentSkeletonPath() const;
 };

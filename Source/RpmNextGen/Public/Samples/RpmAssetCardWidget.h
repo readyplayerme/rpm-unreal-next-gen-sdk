@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetCardWidget.generated.h"
 
+class FRpmTextureLoader;
 class UImage;
 class UTextBlock;
 
@@ -16,13 +17,16 @@ class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UFUNCTION()
+	void OnTextureLoaded(UTexture2D* Texture2D);
+	
 	virtual void NativeConstruct() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Asset Card")
 	virtual void InitializeCard(const FAsset& Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Asset Card")
-	void LoadImage(const FString& URL);
+	void LoadImage(const FAsset& Asset);
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AssetCategoryText;
@@ -38,4 +42,5 @@ public:
 	
 private:
 	FAsset AssetData;
+	TSharedPtr<FRpmTextureLoader> TextureLoader;
 };

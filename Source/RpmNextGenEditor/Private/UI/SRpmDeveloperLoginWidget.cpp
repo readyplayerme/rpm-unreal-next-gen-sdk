@@ -3,13 +3,14 @@
 #include "UI/SRpmDeveloperLoginWidget.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "EditorCache.h"
+#include "RpmNextGen.h"
 #include "SlateOptMacros.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "Auth/DeveloperTokenAuthStrategy.h"
 #include "Widgets/Input/SEditableTextBox.h"
-#include "RpmImageLoader.h"
+#include "RpmTextureLoader.h"
 #include "Auth/DeveloperAuthApi.h"
 #include "Auth/Models/DeveloperAuth.h"
 #include "Auth/Models/DeveloperLoginRequest.h"
@@ -18,6 +19,7 @@
 #include "DeveloperAccounts/Models/OrganizationListRequest.h"
 #include "DeveloperAccounts/Models/OrganizationListResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
+#include "Utilities/RpmImageHelper.h"
 #include "Widgets/Layout/SScrollBox.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -26,7 +28,6 @@ void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 {
 	FDeveloperAuth AuthData = FDevAuthTokenCache::GetAuthData();
 	FDevAuthTokenCache::SetAuthData(AuthData);
-
 	bIsLoggedIn = AuthData.IsValid();
 	UserName = AuthData.Name;
 
@@ -187,6 +188,8 @@ void SRpmDeveloperLoginWidget::Initialize()
 	{
 		return;
 	}
+
+	ActiveLoaders = TArray<TSharedPtr<FRpmTextureLoader>>();
 	const FDeveloperAuth DevAuthData = FDevAuthTokenCache::GetAuthData();
 	if (!DeveloperAuthApi.IsValid())
 	{
@@ -273,7 +276,7 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 					   .Text(FText::FromString("Load Style"))
 					   .OnClicked_Lambda([this, StyleAsset]() -> FReply
 					             {
-						             OnLoadStyleClicked(StyleAsset.Id);
+						             OnLoadStyleClicked(StyleAsset);
 						             return FReply::Handled();
 					             })
 				]
@@ -293,18 +296,27 @@ void SRpmDeveloperLoginWidget::AddCharacterStyle(const FAsset& StyleAsset)
 		]
 	];
 
-	FRpmImageLoader ImageLoader;
-	ImageLoader.LoadSImageFromURL(ImageWidget, StyleAsset.IconUrl, [this](UTexture2D* texture)
-	{
-		texture->AddToRoot();
-		CharacterStyleTextures.Add(texture);
-	});
+	TSharedPtr<FRpmTextureLoader> ImageLoader = MakeShared<FRpmTextureLoader>();
+	ActiveLoaders.Add(ImageLoader);
+	ImageLoader->OnTextureLoaded.BindRaw(this, &SRpmDeveloperLoginWidget::OnTextureLoaded, ImageWidget, ImageLoader);
+	ImageLoader->LoadIconFromAsset(StyleAsset);
 }
 
-void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FString& StyleId)
+void SRpmDeveloperLoginWidget::OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage, TSharedPtr<FRpmTextureLoader> LoaderToRemove)
+{
+	if (Texture2D)
+	{
+		Texture2D->AddToRoot();
+		CharacterStyleTextures.Add(Texture2D);
+		FRpmImageHelper::LoadTextureToSImage(Texture2D, FVector2D(100.0f, 100.0f), SImage);
+	}
+	ActiveLoaders.Remove(LoaderToRemove);
+}
+
+void SRpmDeveloperLoginWidget::OnLoadStyleClicked(const FAsset& StyleAsset)
 {
 	AssetLoader = FEditorAssetLoader();
-	AssetLoader.LoadGLBFromURLWithId(CharacterStyleAssets[StyleId].GlbUrl, *StyleId);
+	AssetLoader.LoadBaseModelAsset(StyleAsset);
 }
 
 EVisibility SRpmDeveloperLoginWidget::GetLoginViewVisibility() const
@@ -355,7 +367,7 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 		GetOrgList();
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Login request failed"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Login request failed"));
 	FDevAuthTokenCache::ClearAuthData();
 }
 
@@ -366,7 +378,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 	{
 		if (Response.Data.Num() == 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No organizations found"));
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("No organizations found"));
 			return;
 		}
 		FApplicationListRequest Request;
@@ -375,7 +387,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 		return;
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("Failed to list organizations"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to list organizations"));
 }
 
 
@@ -405,7 +417,7 @@ void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationL
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to list applications"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to list applications"));
 	}
 	LoadBaseModelList();
 }
@@ -444,6 +456,7 @@ void SRpmDeveloperLoginWidget::OnComboBoxSelectionChanged(TSharedPtr<FString> Ne
 		RpmSettings->SaveConfig();
 	}
 }
+
 
 FReply SRpmDeveloperLoginWidget::OnUseDemoAccountClicked()
 {
@@ -486,13 +499,13 @@ void SRpmDeveloperLoginWidget::LoadBaseModelList()
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	if (RpmSettings->ApplicationId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Application ID is empty, unable to load base models."));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty, unable to load base models."));
 		return;
 	}
 	FAssetListRequest Request = FAssetListRequest();
 	FAssetListQueryParams Params = FAssetListQueryParams();
 	Params.ApplicationId = RpmSettings->ApplicationId;
-	Params.Type = "baseModel";
+	Params.Type = FAssetApi::BaseModelType;
 	Request.Params = Params;
 	AssetApi->ListAssetsAsync(Request);
 }

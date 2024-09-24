@@ -1,5 +1,6 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
+#include "RpmNextGen.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
@@ -25,6 +26,7 @@ FCharacterApi::~FCharacterApi()
 
 void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 {
+	AssetByType.Append(Request.Data.Assets);
 	FApiRequest ApiRequest;
 	ApiRequest.Url = FString::Printf(TEXT("%s"), *BaseUrl);
 	ApiRequest.Method = POST;
@@ -35,6 +37,7 @@ void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 
 void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
 {
+	AssetByType.Append(Request.Payload.Assets);
 	FApiRequest ApiRequest;
 	ApiRequest.Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
 	ApiRequest.Method = PATCH;
@@ -65,10 +68,7 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 	if (Response->GetResponseCode() == 401)
 	{
-		URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-		
-		UE_LOG(LogTemp, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
-		UE_LOG(LogTemp, Error,TEXT("API Key: %s. Proxy url = %s"), *Settings->ApiKey, *Settings->ApiProxyUrl);
+		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
 		return;
 	}
 	
@@ -96,7 +96,7 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Unhandled verb"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unhandled verb"));
 	}
 }
 

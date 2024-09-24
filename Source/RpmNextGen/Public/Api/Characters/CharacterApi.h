@@ -42,6 +42,7 @@ protected:
 
 private:
 	FString BaseUrl;
+	TMap<FString, FString> AssetByType = TMap<FString, FString>();
 };
 
 template <typename T>

@@ -1,10 +1,11 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "Api/Common/Models/PaginationQueryParams.h"
 #include "AssetListRequest.generated.h"
 
 USTRUCT(BlueprintType)
-struct RPMNEXTGEN_API FAssetListQueryParams
+struct RPMNEXTGEN_API FAssetListQueryParams : public FPaginationQueryParams
 {
 	GENERATED_BODY()
 	
@@ -17,10 +18,12 @@ struct RPMNEXTGEN_API FAssetListQueryParams
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "excludeTypes"))
 	FString ExcludeTypes;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "characterModelAssetId"))
+	FString CharacterModelAssetId;
 };
 
 USTRUCT(BlueprintType)
-struct RPMNEXTGEN_API FAssetListRequest
+struct RPMNEXTGEN_API FAssetListRequest 
 {
 	GENERATED_BODY()
 
@@ -56,6 +59,22 @@ inline FString FAssetListRequest::BuildQueryString() const
 	if (!Params.ExcludeTypes.IsEmpty())
 	{
 		QueryString += TEXT("excludeTypes=") + Params.ExcludeTypes + TEXT("&");
+	}
+	if (!Params.CharacterModelAssetId.IsEmpty())
+	{
+		QueryString += TEXT("characterModelAssetId=") + Params.CharacterModelAssetId + TEXT("&");
+	}
+	if( Params.Limit > 0 )
+	{
+		QueryString += TEXT("limit=") + FString::FromInt(Params.Limit) + TEXT("&");
+	}
+	if( Params.Page > 0 )
+	{
+		QueryString += TEXT("page=") + FString::FromInt(Params.Page) + TEXT("&");
+	}
+	if( !Params.Order.IsEmpty() )
+	{
+		QueryString += TEXT("order=") + Params.Order + TEXT("&");
 	}
 	QueryString.RemoveFromEnd(TEXT("&"));
 	return QueryString;

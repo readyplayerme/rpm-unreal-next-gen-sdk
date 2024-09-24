@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
 #include "Api/Common/Models/ApiResponse.h"
+#include "RpmNextGen.h"
 #include "DeveloperLoginResponse.generated.h"
 
 USTRUCT(BlueprintType)
@@ -42,7 +43,7 @@ struct RPMNEXTGENEDITOR_API FDeveloperLoginResponse : public FApiResponse
 		{
 		return FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), StaticStruct(), &OutObject, 0, 0);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("JsonObject Invalid"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("JsonObject Invalid"));
 		return false;
 	}
 };

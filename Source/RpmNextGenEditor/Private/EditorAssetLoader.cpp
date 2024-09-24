@@ -1,28 +1,38 @@
 #include "EditorAssetLoader.h"
 #include "TransientObjectSaverLibrary.h"
 #include "AssetNameGenerator.h"
+#include "glTFRuntimeFunctionLibrary.h"
 #include "RpmActor.h"
 #include "RpmNextGen.h"
+
 
 FEditorAssetLoader::FEditorAssetLoader()
 {
 	SkeletonToCopy = nullptr;
+	OnGlbLoaded.BindRaw(this, &FEditorAssetLoader::HandleGlbLoaded);
+	GltfConfig = new FglTFRuntimeConfig();
+	GltfConfig->TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 }
 
 FEditorAssetLoader::~FEditorAssetLoader()
 {
 }
 
-void FEditorAssetLoader::OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
-                                                 FString LoadedAssetId)
+void FEditorAssetLoader::HandleGlbLoaded(const FAsset& Asset, const TArray<unsigned char>& Data)
 {
-	if (bWasSuccessful)
+	UglTFRuntimeAsset* GltfAsset = nullptr;
+	if (!Data.IsEmpty())
 	{
-		gltfAsset->AddToRoot();
-		SaveAsUAsset(gltfAsset, LoadedAssetId);
-		LoadAssetToWorldAsURpmActor(gltfAsset, LoadedAssetId);
-		gltfAsset->RemoveFromRoot();
+		GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+		if (GltfAsset)
+		{
+			GltfAsset->AddToRoot();
+			SaveAsUAsset(GltfAsset, Asset.Id);
+			LoadAssetToWorldAsURpmActor(GltfAsset, Asset.Id);
+			GltfAsset->RemoveFromRoot();
+		}
 	}
+	
 }
 
 USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const
@@ -50,29 +60,18 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 	return skeletalMesh;
 }
 
-void FEditorAssetLoader::LoadGLBFromURLWithId(const FString& URL, FString LoadedAssetId)
+void FEditorAssetLoader::LoadBaseModelAsset(const FAsset& Asset)
 {
-	OnGLtfAssetLoaded.BindLambda(
-		[LoadedAssetId, this]( UglTFRuntimeAsset* gltfAsset,
-		                      bool bWasSuccessful)
-		{
-			if (!gltfAsset)
-			{
-				UE_LOG(LogReadyPlayerMe, Log, TEXT("No gltf asset"));
-				return;
-			}
-			OnAssetLoadComplete(gltfAsset, bWasSuccessful, LoadedAssetId);
-		});
-	LoadGLBFromURL(URL);
+	LoadGlb(Asset, Asset.Id, false);
 }
 
-void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId)
+void FEditorAssetLoader::LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId)
 {
-	this->LoadAssetToWorld(AssetId, gltfAsset);
+	this->LoadAssetToWorld(AssetId, GltfAsset);
 }
 
 
-void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gltfAsset)
+void FEditorAssetLoader::LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAsset* GltfAsset)
 {
 	if (!GEditor)
 	{
@@ -87,7 +86,7 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 		return;
 	}
 
-	if (gltfAsset)
+	if (GltfAsset)
 	{
 		FTransform Transform = FTransform::Identity;
 
@@ -110,9 +109,9 @@ void FEditorAssetLoader::LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gl
 			// Register the actor in the editor world and update the editor
 			GEditor->SelectActor(NewActor, true, true);
 			GEditor->EditorUpdateComponents();
-			if (gltfAsset)
+			if (GltfAsset)
 			{
-				NewActor->LoadGltfAsset(gltfAsset);
+				NewActor->LoadGltfAsset(GltfAsset);
 			}
 			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 			return;
