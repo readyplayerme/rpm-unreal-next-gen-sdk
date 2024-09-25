@@ -42,7 +42,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& AssetType = TEXT(""));
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, const FRpmAnimationCharacter& InAnimationCharacter);
 
@@ -55,7 +55,7 @@ public:
 protected:
 	TWeakObjectPtr<USkeletalMeshComponent> MasterPoseComponent;
 private:
-	TArray<USceneComponent*> LoadMeshComponents(UglTFRuntimeAsset* GltfAsset);
+	TArray<USceneComponent*> LoadMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& AssetType);
 	USkeletalMeshComponent* CreateSkeletalMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
 	UStaticMeshComponent* CreateStaticMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me")

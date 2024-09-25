@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "glTFRuntimeAsset.h"
+#include "Api/Assets/Models/Asset.h"
 #include "Api/Characters/Models/RpmCharacter.h"
 #include "Components/ActorComponent.h"
 #include "RpmLoaderComponent.generated.h"
 
+class FFileApi;
 class FGlbLoader;
 struct FCharacterCreateResponse;
 struct FCharacterUpdateResponse;
@@ -58,7 +60,7 @@ struct RPMNEXTGEN_API FRpmCharacterData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCreated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, UglTFRuntimeAsset*, Asset, const FString&, AssetType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, UglTFRuntimeAsset*, GltfRuntimeAsset, const FString&, Asset);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
@@ -68,7 +70,10 @@ class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
 public:
 	URpmLoaderComponent();
 
-	void SetGltfConfig(FglTFRuntimeConfig* Config) const;
+	void SetGltfConfig(FglTFRuntimeConfig* Config);
+
+	void LoadGltfRuntimeAsset(TArray<unsigned char>* Data, const FString& String);
+	
 	FglTFRuntimeConfig* GltfConfig = nullptr;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
@@ -90,7 +95,7 @@ protected:
 	virtual void LoadCharacterFromUrl(FString Url);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	UglTFRuntimeAsset* LoadGltfRuntimeAssetFromCache(const FAsset& Asset);
+	void LoadGltfRuntimeAssetFromCache(const FAsset& Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
@@ -99,9 +104,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
-
-	UFUNCTION()
-	virtual void HandleGltfAssetLoaded(UglTFRuntimeAsset* UglTFRuntimeAsset, const FString& AssetType);
+	
 	UFUNCTION()
 	virtual void HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful);
 	UFUNCTION()
@@ -120,5 +123,5 @@ protected:
 	
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;
-	TSharedPtr<FGlbLoader> GlbLoader;
+	TSharedPtr<FFileApi> FileApi;
 };

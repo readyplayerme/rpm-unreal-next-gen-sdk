@@ -24,7 +24,7 @@ FGlbLoader::~FGlbLoader()
     delete FileWriter;
 }
 
-void FGlbLoader::HandleFileRequestComplete(TArray<uint8>* Data, const FString& FileName, const FString& AssetType)
+void FGlbLoader::HandleFileRequestComplete(TArray<uint8>* Data, const FString& FileName)
 {
     UglTFRuntimeAsset* GltfAsset = nullptr;
     if (Data)
@@ -32,10 +32,10 @@ void FGlbLoader::HandleFileRequestComplete(TArray<uint8>* Data, const FString& F
         if(OnGLtfAssetLoaded.IsBound())
         {
             GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
-            OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, AssetType);
+            OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, TEXT("AssetType"));
         }
         return;
     }
     UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load GLB from URL"));
-    OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, AssetType);
+    OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, TEXT(""));
 }

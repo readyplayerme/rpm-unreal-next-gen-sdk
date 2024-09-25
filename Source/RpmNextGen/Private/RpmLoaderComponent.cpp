@@ -24,8 +24,8 @@ URpmLoaderComponent::URpmLoaderComponent()
 	{
 		GltfConfig = new FglTFRuntimeConfig();
 	}
-	GlbLoader = MakeShared<FGlbLoader>(GltfConfig);
-	GlbLoader->OnGLtfAssetLoaded.BindUObject(this, &URpmLoaderComponent::HandleGltfAssetLoaded);
+	FileApi = MakeShared<FFileApi>();
+	FileApi->OnFileRequestComplete.BindUObject(this, &URpmLoaderComponent::LoadGltfRuntimeAsset);
 	
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
@@ -34,12 +34,9 @@ URpmLoaderComponent::URpmLoaderComponent()
 	CharacterData = FRpmCharacterData();
 }
 
-void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config) const
+void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config)
 {
-	if(GlbLoader)
-	{
-		GlbLoader->SetConfig(Config);
-	}
+	GltfConfig = Config;
 }
 
 void URpmLoaderComponent::BeginPlay()
@@ -61,8 +58,7 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 			TArray<uint8> Data;
 			if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 			{
-				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
-				HandleGltfAssetLoaded(GltfRuntimeAsset, FAssetApi::BaseModelType);
+				LoadGltfRuntimeAsset(&Data, FAssetApi::BaseModelType);
 			}
 			return;
 		}
@@ -78,10 +74,10 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 
 void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
 {
-	GlbLoader->LoadFileFromUrl(Url);
+	FileApi->LoadFileFromUrl(Url);
 }
 
-UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
+void URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
 {
 	FCachedAssetData ExistingAsset;
 	if(FAssetCacheManager::Get().GetCachedAsset(Asset.Id, ExistingAsset))
@@ -90,12 +86,11 @@ UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAss
 		TArray<uint8> Data;
 		if(FFileApi::LoadFileFromPath(ExistingAsset.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 		{
-			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
-			return GltfRuntimeAsset;
+			LoadGltfRuntimeAsset( &Data, Asset.Type);
+			return;
 		}
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset from cache"));
-	return nullptr;
 }
 
 void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap)
@@ -122,8 +117,7 @@ void URpmLoaderComponent::LoadAssetsWithNewStyle()
 		{
 			continue;
 		}
-		UglTFRuntimeAsset* GltfAsset = LoadGltfRuntimeAssetFromCache(PreviewAssets.Value);
-		HandleGltfAssetLoaded(GltfAsset, PreviewAssets.Value.Type);
+		 LoadGltfRuntimeAssetFromCache(PreviewAssets.Value);
 	}
 }
 
@@ -144,13 +138,11 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	
 	if(!FConnectionManager::Get().IsConnected() || bUseCache)
 	{
+		LoadGltfRuntimeAssetFromCache(AssetData);
 		if(bIsBaseModel && CharacterData.Assets.Num() > 1)
 		{
 			LoadAssetsWithNewStyle();
 		}
-
-		UglTFRuntimeAsset* GltfAsset = LoadGltfRuntimeAssetFromCache(AssetData);
-		HandleGltfAssetLoaded(GltfAsset, AssetData.Type);
 		return;
 	}
 	TMap<FString, FString> ParamAssets;
@@ -166,13 +158,14 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	LoadCharacterFromUrl(Url);
 }
 
-void URpmLoaderComponent::HandleGltfAssetLoaded(UglTFRuntimeAsset* gltfRuntimeAsset, const FString& AssetType)
+void URpmLoaderComponent::LoadGltfRuntimeAsset(TArray<unsigned char>* Data, const FString& AssetType)
 {
-	if(!gltfRuntimeAsset)
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
+	if(!GltfRuntimeAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
 	}
-	OnGltfAssetLoaded.Broadcast(gltfRuntimeAsset, AssetType);
+	OnGltfAssetLoaded.Broadcast(GltfRuntimeAsset, AssetType);
 }
 
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse,

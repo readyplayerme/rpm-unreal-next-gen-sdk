@@ -52,11 +52,15 @@ void URpmAssetPanelWidget::LoadAssetsFromCache(const FString& AssetType)
 
 void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
+	if(Assets.Num() < 1)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
+		return;
+	}
 	for (auto Asset : Assets)
 	{
 		CreateButton(Asset);
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
 }
 
 void URpmAssetPanelWidget::ClearAllButtons()
@@ -81,9 +85,7 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 {
 	if (AssetButtonBlueprint)
 	{
-		UWorld* World = GetWorld();
-        
-		if (World)
+		if (UWorld* World = GetWorld())
 		{
 			if (URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint))
 			{

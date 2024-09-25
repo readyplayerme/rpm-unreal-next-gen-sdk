@@ -39,31 +39,24 @@ void ARpmActor::LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& Asset
 		UE_LOG(LogGLTFRuntime, Warning, TEXT("No asset to setup"));
 		return;
 	}
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Start Loading Asset"));
 
 	double LoadingStartTime = FPlatformTime::Seconds();
 
 	RemoveMeshComponentsOfType(AssetType);
-	
-	const TArray<USceneComponent*> NewMeshComponents = LoadMeshComponents(GltfAsset);
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Removed old mesh components"));
+	const TArray<USceneComponent*> NewMeshComponents = LoadMeshComponents(GltfAsset, AssetType);
 	if (NewMeshComponents.Num() > 0)
 	{
 		LoadedMeshComponentsByAssetType.Add(AssetType, NewMeshComponents);
-		if(AssetType != FAssetApi::BaseModelType)
-		{
-			MasterPoseComponent = Cast<USkeletalMeshComponent>(LoadedMeshComponentsByAssetType[FAssetApi::BaseModelType][0]);
-			MasterPoseComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-			MasterPoseComponent->SetAnimInstanceClass(AnimationCharacter.AnimationBlueprint);
-		}
-		for (USceneComponent* NewMeshComponent : NewMeshComponents)
-		{
-			if (USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(NewMeshComponent))
-			{
-				SkeletalMeshComponent->SetMasterPoseComponent(MasterPoseComponent.Get());
-			}
-		}
+		//TODO add check if AnimationCharacter is valid
+		// MasterPoseComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		// MasterPoseComponent->SetAnimInstanceClass(AnimationCharacter.AnimationBlueprint);
+
 		UE_LOG(LogReadyPlayerMe, Log, TEXT("Asset loaded in %f seconds"), FPlatformTime::Seconds() - LoadingStartTime);
 		return;
 	}
+	
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load mesh components"));
 }
 
@@ -77,7 +70,23 @@ void ARpmActor::LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FS
 
 void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
 {
-	if (LoadedMeshComponentsByAssetType.Contains(AssetType))
+	// Remove all meshes if AssetType is empty as the asset is a full character
+	if(AssetType.IsEmpty())
+	{
+		for (auto Element : LoadedMeshComponentsByAssetType)
+		{
+			TArray<USceneComponent*>& ComponentsToRemove = Element.Value;
+			for (USceneComponent* ComponentToRemove : ComponentsToRemove)
+			{
+				if (ComponentToRemove)
+				{
+					ComponentToRemove->DestroyComponent();
+				}
+			}
+		}
+		LoadedMeshComponentsByAssetType.Empty();
+	}
+	if (!LoadedMeshComponentsByAssetType.IsEmpty() && LoadedMeshComponentsByAssetType.Contains(AssetType))
 	{
 		TArray<USceneComponent*>& ComponentsToRemove = LoadedMeshComponentsByAssetType[AssetType];
 		for (USceneComponent* ComponentToRemove : ComponentsToRemove)
@@ -108,10 +117,12 @@ void ARpmActor::RemoveAllMeshes()
 	LoadedMeshComponentsByAssetType.Empty();
 }
 
-TArray<USceneComponent*> ARpmActor::LoadMeshComponents(UglTFRuntimeAsset* GltfAsset)
+TArray<USceneComponent*> ARpmActor::LoadMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& AssetType)
 {
 	TArray<FglTFRuntimeNode> AllNodes = GltfAsset->GetNodes();
 	TArray<USceneComponent*> NewMeshComponents;
+	//if baseModel or full character asset changes we need to update master pose component
+	bool bIsMasterPoseUpdateRequired = AssetType == FAssetApi::BaseModelType || AssetType.IsEmpty();
 	
 	// Loop through all nodes to create mesh components
 	for (const FglTFRuntimeNode& Node : AllNodes)
@@ -124,7 +135,16 @@ TArray<USceneComponent*> ARpmActor::LoadMeshComponents(UglTFRuntimeAsset* GltfAs
 		
 		if (Node.SkinIndex >= 0)
 		{
-			NewMeshComponents.Add(CreateSkeletalMeshComponent(GltfAsset, Node));
+			USkeletalMeshComponent* SkeletalMeshComponent = CreateSkeletalMeshComponent(GltfAsset, Node);
+			if(AssetType == FAssetApi::BaseModelType && !bIsMasterPoseUpdateRequired)
+			{
+				MasterPoseComponent = SkeletalMeshComponent;
+				NewMeshComponents.Add(SkeletalMeshComponent);
+				bIsMasterPoseUpdateRequired = false;
+				continue;
+			}
+			SkeletalMeshComponent->SetMasterPoseComponent(MasterPoseComponent.Get());
+			NewMeshComponents.Add(SkeletalMeshComponent);
 		}
 		else
 		{

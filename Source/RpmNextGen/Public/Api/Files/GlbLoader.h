@@ -28,7 +28,7 @@ public:
 protected:
 	FglTFRuntimeConfig* GltfConfig;
 	UFUNCTION()
-	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String, const FString& AssetType);
+	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String);
 	FFileUtility* FileWriter;
 	FString DownloadDirectory;
 };
