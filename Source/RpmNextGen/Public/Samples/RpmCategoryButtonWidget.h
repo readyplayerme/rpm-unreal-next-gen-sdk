@@ -39,7 +39,7 @@ public:
 	UTexture2D* CategoryImageTexture;
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
-	virtual void InitializeButton(FString Category, UTexture2D* Image);
+	virtual void InitializeButton(FString Category, UTexture2D* Image, const FVector2D& InImageSize);
 
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
 	virtual void SetSelected(bool bIsSelected);

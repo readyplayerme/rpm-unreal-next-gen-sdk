@@ -27,8 +27,6 @@ void URpmAssetPanelWidget::NativeConstruct()
 	}
 	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
-	ButtonSize = FVector2D(200, 200);
-	ImageSize = FVector2D(200, 200);
 }
 
 void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
@@ -108,6 +106,11 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetButtonBlueprint is not set!"));
 	}
+}
+
+void URpmAssetPanelWidget::SynchronizeProperties()
+{
+	Super::SynchronizeProperties();
 }
 
 void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)

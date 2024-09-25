@@ -63,6 +63,8 @@ public:
 	void LoadAssetsOfType(const FString& AssetType);
 	
 	void CreateButton(const FAsset& AssetData);
+
+	virtual void SynchronizeProperties() override;
 private:
 	TArray<TSubclassOf<URpmAssetButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;
