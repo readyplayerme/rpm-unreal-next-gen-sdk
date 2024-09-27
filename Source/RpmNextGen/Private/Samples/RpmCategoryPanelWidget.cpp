@@ -50,7 +50,8 @@ void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 	{
 		URpmCategoryButtonWidget* CategoryButton = CreateWidget<URpmCategoryButtonWidget>(World, CategoryButtonBlueprint);
 		UTexture2D* ButtonTexture = nullptr;
-		if(UObject* LoadedAsset = StaticLoadObject(UTexture2D::StaticClass(), nullptr, *FString::Printf(TEXT("/RpmNextGenSDK/Content/Samples/BasicUI/Icons/T-rpm-%s"), *AssetType)))
+		const auto CleanAssetType = AssetType.Replace(TEXT(" "), TEXT("-"));
+		if(UObject* LoadedAsset = StaticLoadObject(UTexture2D::StaticClass(), nullptr, *FString::Printf(TEXT("/RpmNextGen/Samples/Icons/T-rpm-%s"), *CleanAssetType)))
 		{
 			ButtonTexture = Cast<UTexture2D>(LoadedAsset);
 		}

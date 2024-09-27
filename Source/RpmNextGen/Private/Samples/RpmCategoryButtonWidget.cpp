@@ -24,10 +24,8 @@ void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Im
 	AssetCategoryName = Category;
 
 	if (CategoryImage)
-	{
-		
+	{		
 		CategoryImage->SetDesiredSizeOverride(InImageSize);
-		UE_LOG( LogTemp, Warning, TEXT("Setting image size %s"), *InImageSize.ToString() );
 
 		if(Image)
 		{
