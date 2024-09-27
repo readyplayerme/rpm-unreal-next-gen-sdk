@@ -1,4 +1,4 @@
-﻿#include "Api/Assets/AssetApi.h"
+#include "Api/Assets/AssetApi.h"
 
 #include "RpmNextGen.h"
 #include "Settings/RpmDeveloperSettings.h"

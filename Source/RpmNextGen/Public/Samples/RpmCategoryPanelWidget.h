@@ -12,7 +12,7 @@ class FAssetApi;
 class URpmCategoryButtonWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategorySelected, const FString&, CategoryName);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategoriesLoaded, const TArray<FString>, CategoryNames);
 /**
  * 
  */
@@ -39,6 +39,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnCategorySelected OnCategorySelected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events" )
+	FOnCategoriesLoaded OnCategoriesLoaded;
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	virtual void UpdateSelectedButton(URpmCategoryButtonWidget* CategoryButton);

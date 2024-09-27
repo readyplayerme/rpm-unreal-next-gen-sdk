@@ -17,7 +17,6 @@ void URpmCategoryPanelWidget::NativeConstruct()
 	AssetApi = MakeShared<FAssetApi>();
 	AssetApi->OnListAssetTypeResponse.BindUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded);
 	AssetButtons = TArray<TSubclassOf<URpmCategoryButtonWidget>>();
-	UE_LOG(LogTemp, Warning, TEXT("ButtonSize at Construct: %s"), *ButtonSize.ToString());
 }
 
 void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* CategoryButton)
@@ -47,10 +46,6 @@ void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButtonWidget* 
 
 void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 {
-	// Log the asset type
-	UE_LOG(LogTemp, Warning, TEXT("Asset Type: %s"), *AssetType);
-
-
 	if (UWorld* World = GetWorld())
 	{
 		URpmCategoryButtonWidget* CategoryButton = CreateWidget<URpmCategoryButtonWidget>(World, CategoryButtonBlueprint);
@@ -72,11 +67,8 @@ void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 				CategoryButton->InitializeButton(AssetType, ButtonTexture, ButtonSize);
 				CategoryButton->OnCategoryClicked.AddDynamic(this, &URpmCategoryPanelWidget::OnCategoryButtonClicked);
 				AssetButtons.Add(CategoryButton->GetClass());
-				UE_LOG(LogTemp, Log, TEXT("%s Button created successfully"), *AssetType);
 				return;
 			}
-
-
 			UE_LOG(LogTemp, Error, TEXT("Failed to Load %s button"), *AssetType);
 		}
 	}
@@ -85,22 +77,22 @@ void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 void URpmCategoryPanelWidget::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
-	UE_LOG(LogTemp, Warning, TEXT("ButtonSize at SynchronizeProperties: %s"), *ButtonSize.ToString());
-
 }
 
 void URpmCategoryPanelWidget::AssetTypesLoaded(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful)
 {	
 	if(bWasSuccessful && ButtonContainer)
 	{
-		UE_LOG(LogTemp, Log, TEXT("%d Asset types loaded successfully"), AssetTypeListResponse.Data.Num());
-		// Clear any previous buttons from the container
 		ButtonContainer->ClearChildren();
 
 		for (const FString& AssetType : AssetTypeListResponse.Data)
 		{
 			CreateButton(AssetType);
 		}
+		OnCategoriesLoaded.Broadcast(AssetTypeListResponse.Data);
+		return;
 	}
+	UE_LOG(LogTemp, Error, TEXT("Failed to load asset types"));
+	OnCategoriesLoaded.Broadcast(TArray<FString>());
 }
 

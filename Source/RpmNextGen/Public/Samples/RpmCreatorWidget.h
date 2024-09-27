@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RpmAssetPanelWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "RpmCreatorWidget.generated.h"
 
 class UWidgetSwitcher;
+
 /**
  * 
  */
@@ -16,25 +18,31 @@ class RPMNEXTGEN_API URpmCreatorWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	
 	virtual void NativeConstruct() override;
 
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|UI")
-	void CreateAssetPanelsFromCategories(const TArray<FString>& CategoryNames);
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	void CreateAssetPanelsFromCategories(const TArray<FString>& CategoryArray);
 	
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me|UI")
-	void SwitchToPanel(const FString& WidgetName);
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	void SwitchToPanel(const FString& Category);
 	
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* AssetPanelSwitcher;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me|UI")
-	TSubclassOf<UUserWidget> WidgetBlueprintClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
+	TSubclassOf<URpmAssetPanelWidget> AssetPanelBlueprint;
 
 	virtual void SynchronizeProperties() override;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events" )
+	FOnAssetSelected OnAssetSelected;
+
+	UFUNCTION()
+	void HandleAssetSelectedFromPanel(const FAsset& AssetData);
 	
 	TMap<FString, int32> IndexMapByCategory;
 private:
-	UUserWidget* CreateWidgetFromName(const FString& WidgetName);
-	
+	UUserWidget* CreateAssetPanel(const FString& Category);
 };

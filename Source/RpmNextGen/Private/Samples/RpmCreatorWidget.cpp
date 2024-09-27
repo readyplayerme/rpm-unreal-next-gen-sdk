@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Samples/RpmCreatorWidget.h"
-
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
 #include "Components/WidgetSwitcher.h"
@@ -16,9 +14,9 @@ void URpmCreatorWidget::NativeConstruct()
 	IndexMapByCategory = TMap<FString, int32>();
 }
 
-void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& CategoryNames)
+void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& CategoryArray)
 {
-	if (!AssetPanelSwitcher || !WidgetBlueprintClass)
+	if (!AssetPanelSwitcher || !AssetPanelBlueprint)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WidgetSwitcher or WidgetBlueprintClass is not set!"));
 		return;
@@ -27,26 +25,24 @@ void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& C
 	AssetPanelSwitcher->ClearChildren();
 
 	IndexMapByCategory.Empty();
-	for (int i = 0; i < CategoryNames.Num(); ++i)
+	for (int i = 0; i < CategoryArray.Num(); ++i)
 	{
-		if (UUserWidget* AssetPanelWidget = CreateWidgetFromName(CategoryNames[i]))
-		{
-			AssetPanelSwitcher->AddChild(AssetPanelWidget);
-		}
-		IndexMapByCategory.Add(CategoryNames[i],  i );
+		CreateAssetPanel(CategoryArray[i]);
+		IndexMapByCategory.Add(CategoryArray[i],  i );
 	}
+	SwitchToPanel(CategoryArray[0]);
 }
 
-void URpmCreatorWidget::SwitchToPanel(const FString& WidgetName)
+void URpmCreatorWidget::SwitchToPanel(const FString& Category)
 {
 	if(AssetPanelSwitcher)
 	{
-		if(IndexMapByCategory[WidgetName] == -1)
+		if(IndexMapByCategory[Category] == -1)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Category %s not found!"), *WidgetName);
+			UE_LOG(LogTemp, Error, TEXT("Category %s not found!"), *Category);
 			return;
 		}
-		AssetPanelSwitcher->SetActiveWidgetIndex(IndexMapByCategory[WidgetName]);
+		AssetPanelSwitcher->SetActiveWidgetIndex(IndexMapByCategory[Category]);
 	}
 }
 
@@ -55,9 +51,14 @@ void URpmCreatorWidget::SynchronizeProperties()
 	Super::SynchronizeProperties();
 }
 
-UUserWidget* URpmCreatorWidget::CreateWidgetFromName(const FString& WidgetName)
+void URpmCreatorWidget::HandleAssetSelectedFromPanel(const FAsset& AssetData)
 {
-	if (!WidgetBlueprintClass)
+	OnAssetSelected.Broadcast(AssetData);
+}
+
+UUserWidget* URpmCreatorWidget::CreateAssetPanel(const FString& Category)
+{
+	if (!AssetPanelBlueprint)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WidgetBlueprintClass is not set!"));
 		return nullptr;
@@ -70,15 +71,19 @@ UUserWidget* URpmCreatorWidget::CreateWidgetFromName(const FString& WidgetName)
 		return nullptr;
 	}
 
-	URpmAssetPanelWidget* AssetPanelWidget = CreateWidget<URpmAssetPanelWidget>(World, WidgetBlueprintClass);
+	URpmAssetPanelWidget* AssetPanelWidget = CreateWidget<URpmAssetPanelWidget>(World, AssetPanelBlueprint);
 
 	if (!AssetPanelWidget)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create widget from blueprint class!"));
 		return nullptr;
 	}
-	AssetPanelWidget->Rename(*WidgetName);
-	AssetPanelWidget->SetCategoryName(WidgetName);
-	AssetPanelWidget->LoadAssetsOfType(WidgetName);
+	AssetPanelSwitcher->AddChild(AssetPanelWidget);
+	AssetPanelWidget->Rename(*Category);
+	AssetPanelWidget->SetCategoryName(Category);
+	AssetPanelWidget->ButtonSize = FVector2D(200, 200);
+	AssetPanelWidget->ImageSize = FVector2D(200, 200);
+	AssetPanelWidget->OnAssetSelected.AddDynamic(this, &URpmCreatorWidget::HandleAssetSelectedFromPanel);
+	AssetPanelWidget->LoadAssetsOfType(Category);
 	return AssetPanelWidget;
 }
