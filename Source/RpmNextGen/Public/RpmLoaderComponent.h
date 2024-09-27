@@ -60,7 +60,8 @@ struct RPMNEXTGEN_API FRpmCharacterData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCreated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, UglTFRuntimeAsset*, GltfRuntimeAsset, const FString&, Asset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterAssetLoaded, const FRpmCharacterData&, CharacterData, UglTFRuntimeAsset*, GltfRuntimeAsset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewAssetLoaded, const FAsset&, Asset, UglTFRuntimeAsset*, GltfRuntimeAsset );
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
@@ -72,18 +73,22 @@ public:
 
 	void SetGltfConfig(FglTFRuntimeConfig* Config);
 
-	void LoadGltfRuntimeAsset(TArray<unsigned char>* Data, const FString& String);
+	void HandleAssetLoaded(TArray<unsigned char>* Data, const FAsset& Asset);
+
+	void HandleCharacterAssetLoaded(TArray<unsigned char>* Array, const FString& FileName);
 	
 	FglTFRuntimeConfig* GltfConfig = nullptr;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
-	FOnAssetLoaded OnGltfAssetLoaded;
+	FOnCharacterAssetLoaded OnCharacterAssetLoaded;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
+	FOnNewAssetLoaded OnNewAssetLoaded;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterCreated OnCharacterCreated;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterUpdated OnCharacterUpdated;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterFound OnCharacterFound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me" )
-	TMap<FString, FRpmAnimationCharacter> AnimationCharactersByBaseModelId;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -100,7 +105,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
 	
-	void LoadAssetsWithNewStyle();
+	void LoadAssetsFromCacheWithNewStyle();
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);

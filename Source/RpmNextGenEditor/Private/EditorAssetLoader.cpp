@@ -110,7 +110,7 @@ void FEditorAssetLoader::LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAs
 			GEditor->EditorUpdateComponents();
 			if (GltfAsset)
 			{
-				NewActor->LoadGltfAsset(GltfAsset);
+				NewActor->LoadAsset(FAsset(), GltfAsset);
 			}
 			UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully loaded GLB asset into the editor world"));
 			return;

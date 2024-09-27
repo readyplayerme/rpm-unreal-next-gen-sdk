@@ -36,15 +36,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
 	FRpmAnimationCharacter AnimationCharacter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	TMap<FString, FRpmAnimationCharacter> AnimationCharactersByBaseModelId;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadGltfAssets(TMap<FString, UglTFRuntimeAsset*> GltfAssetsByType);
+	virtual void LoadCharacter(const FRpmCharacterData& InCharacterData, UglTFRuntimeAsset* GltfAsset);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset );
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset, const FString& AssetType = TEXT(""));
-	
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FString& AssetType, const FRpmAnimationCharacter& InAnimationCharacter);
+	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationCharacter& InAnimationCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveAllMeshes();
@@ -52,8 +55,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveMeshComponentsOfType(const FString& AssetType);
 
+	FRpmCharacterData CharacterData;
+
 protected:
 	TWeakObjectPtr<USkeletalMeshComponent> MasterPoseComponent;
+
 private:
 	TArray<USceneComponent*> LoadMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& AssetType);
 	USkeletalMeshComponent* CreateSkeletalMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
