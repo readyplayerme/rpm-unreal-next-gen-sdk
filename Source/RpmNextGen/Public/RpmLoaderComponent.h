@@ -18,7 +18,7 @@ class FCharacterApi;
 struct FAsset;
 
 USTRUCT(BlueprintType)
-struct RPMNEXTGEN_API FRpmAnimationCharacter
+struct RPMNEXTGEN_API FRpmAnimationConfig
 {
 	GENERATED_BODY()
 	
@@ -28,7 +28,7 @@ struct RPMNEXTGEN_API FRpmAnimationCharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	TSubclassOf<UAnimInstance> AnimationBlueprint;
 
-	FRpmAnimationCharacter()
+	FRpmAnimationConfig()
 	{
 		Skeleton = nullptr;
 		AnimationBlueprint = nullptr;
@@ -71,13 +71,13 @@ class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
 public:
 	URpmLoaderComponent();
 
-	void SetGltfConfig(FglTFRuntimeConfig* Config);
+	void SetGltfConfig(const FglTFRuntimeConfig* Config);
 
 	void HandleAssetLoaded(TArray<unsigned char>* Data, const FAsset& Asset);
 
 	void HandleCharacterAssetLoaded(TArray<unsigned char>* Array, const FString& FileName);
 	
-	FglTFRuntimeConfig* GltfConfig = nullptr;
+	FglTFRuntimeConfig GltfConfig;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterAssetLoaded OnCharacterAssetLoaded;
@@ -124,7 +124,6 @@ protected:
 	FString AppId;
 	FRpmCharacter Character;
 	FRpmCharacterData CharacterData;
-
 	
 private:
 	TSharedPtr<FCharacterApi> CharacterApi;

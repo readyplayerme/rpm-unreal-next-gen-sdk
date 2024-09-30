@@ -29,16 +29,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	FRpmAnimationConfig AnimationCharacter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	TMap<FString, FRpmAnimationConfig> AnimationCharactersByBaseModelId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|Glb Import Settings")
 	FglTFRuntimeStaticMeshConfig StaticMeshConfig;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|Glb Import Settings")
 	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
-	FRpmAnimationCharacter AnimationCharacter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
-	TMap<FString, FRpmAnimationCharacter> AnimationCharactersByBaseModelId;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacter(const FRpmCharacterData& InCharacterData, UglTFRuntimeAsset* GltfAsset);
@@ -47,7 +47,7 @@ public:
 	virtual void LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset );
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationCharacter& InAnimationCharacter);
+	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationConfig& InAnimationCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveAllMeshes();

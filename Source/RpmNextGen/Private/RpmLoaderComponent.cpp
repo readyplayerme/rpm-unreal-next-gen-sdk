@@ -20,14 +20,9 @@ URpmLoaderComponent::URpmLoaderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AppId = RpmSettings->ApplicationId;
-	if(GltfConfig == nullptr)
-	{
-		GltfConfig = new FglTFRuntimeConfig();
-	}
 	FileApi = MakeShared<FFileApi>();
 	FileApi->OnAssetFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleAssetLoaded);
 	FileApi->OnFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleCharacterAssetLoaded);
-	
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
@@ -35,9 +30,9 @@ URpmLoaderComponent::URpmLoaderComponent()
 	CharacterData = FRpmCharacterData();
 }
 
-void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config)
+void URpmLoaderComponent::SetGltfConfig(const FglTFRuntimeConfig* Config)
 {
-	GltfConfig = Config;
+	GltfConfig = *Config;
 }
 
 void URpmLoaderComponent::BeginPlay()
@@ -59,7 +54,7 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 			TArray<uint8> Data;
 			if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 			{
-				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
 				if(!GltfRuntimeAsset)
 				{
 					UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
@@ -92,7 +87,7 @@ void URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
 		TArray<uint8> Data;
 		if(FFileApi::LoadFileFromPath(ExistingAsset.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 		{
-			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
+			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
 			if(!GltfRuntimeAsset)
 			{
 				UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
@@ -171,7 +166,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 
 void URpmLoaderComponent::HandleAssetLoaded(TArray<unsigned char>* Data, const FAsset& Asset)
 {
-	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
 	if(!GltfRuntimeAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
@@ -181,7 +176,7 @@ void URpmLoaderComponent::HandleAssetLoaded(TArray<unsigned char>* Data, const F
 
 void URpmLoaderComponent::HandleCharacterAssetLoaded(TArray<unsigned char>* Data, const FString& FileName)
 {
-	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
 	if(!GltfRuntimeAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));

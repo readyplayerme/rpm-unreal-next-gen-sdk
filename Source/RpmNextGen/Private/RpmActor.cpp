@@ -27,6 +27,12 @@ void ARpmActor::BeginPlay()
 void ARpmActor::LoadCharacter(const FRpmCharacterData& InCharacterData, UglTFRuntimeAsset* GltfAsset)
 {
 	CharacterData = InCharacterData;
+	if(AnimationCharactersByBaseModelId.Contains(CharacterData.BaseModelId))
+	{
+		AnimationCharacter = AnimationCharactersByBaseModelId[CharacterData.BaseModelId];
+		SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
+		SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationCharacter.Skeleton;
+	}
 	LoadAsset(FAsset(), GltfAsset);
 }
 
@@ -82,7 +88,7 @@ void ARpmActor::LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset)
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load mesh components"));
 }
 
-void ARpmActor::LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationCharacter& InAnimationCharacter)
+void ARpmActor::LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationConfig& InAnimationCharacter)
 {
 	AnimationCharacter = InAnimationCharacter;
 	SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
