@@ -6,29 +6,56 @@
 #include "Api/Assets/Models/AssetListResponse.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
+#include "Cache/AssetCacheManager.h"
 
+struct FCachedAssetData;
 struct FAssetTypeListRequest;
 const FString FAssetApi::BaseModelType = TEXT("baseModel");
 
-FAssetApi::FAssetApi()
+FAssetApi::FAssetApi() : ApiRequestStrategy(EApiRequestStrategy::FallbackToCache)
 {
-	OnApiResponse.BindRaw(this, &FAssetApi::HandleResponse);
+	Initialize();
+}
+
+FAssetApi::FAssetApi(EApiRequestStrategy InApiRequestStrategy) : ApiRequestStrategy(InApiRequestStrategy)
+{
+	Initialize();
+}
+
+void FAssetApi::Initialize()
+{
+	AssetListApi = MakeShared<FWebApiWithAuth>();
+	AssetTypeListApi = MakeShared<FWebApiWithAuth>();
+	AssetListApi->OnApiResponse.BindRaw(this, &FAssetApi::HandleAssetListResponse);
+	AssetTypeListApi->OnApiResponse.BindRaw(this, &FAssetApi::HandleAssetTypeListResponse);
 
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 
-	if(Settings->ApplicationId.IsEmpty())
+	if (Settings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty. Please set the Application ID in the Ready Player Me Developer Settings"));
 	}
-	
-	if(!Settings->ApiKey.IsEmpty())
+
+	if (!Settings->ApiKey.IsEmpty() || Settings->ApiProxyUrl.IsEmpty())
 	{
-		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+		AssetListApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+		AssetTypeListApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 	}
+}
+
+void FAssetApi::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthStrategy)
+{
+	AssetTypeListApi->SetAuthenticationStrategy(InAuthStrategy);
+	AssetListApi->SetAuthenticationStrategy(InAuthStrategy);
 }
 
 void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 {
+	if(ApiRequestStrategy == EApiRequestStrategy::CacheOnly)
+	{
+		LoadAssetsFromCache();
+		return;
+	}
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = RpmSettings->GetApiBaseUrl();
 	if(RpmSettings->ApplicationId.IsEmpty())
@@ -42,12 +69,16 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
-	
-	DispatchRawWithAuth(ApiRequest);
+	AssetListApi->DispatchRawWithAuth(ApiRequest);
 }
 
 void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 {
+	if(ApiRequestStrategy == EApiRequestStrategy::CacheOnly)
+	{
+		LoadAssetTypesFromCache();
+		return;
+	}
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
 	ApiBaseUrl = Settings->GetApiBaseUrl();
 	if(Settings->ApplicationId.IsEmpty())
@@ -61,61 +92,89 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
-	
-	DispatchRawWithAuth(ApiRequest);
+
+	AssetTypeListApi->DispatchRawWithAuth( ApiRequest);
 }
 
-void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetListResponse(FString Response, bool bWasSuccessful)
 {
     if (bWasSuccessful)
     {    	
-        TSharedPtr<FJsonObject> JsonObject;
-        TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response);
-
-        if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
-        {
-            // Check if the "data" field is an array
-            const TArray<TSharedPtr<FJsonValue>>* DataArray;
-            if (JsonObject->TryGetArrayField(TEXT("data"), DataArray))
-            {
-                if (DataArray->Num() > 0)
-                {
-                    // Check the type of the first element to determine the response type
-                    const TSharedPtr<FJsonValue>& FirstElement = (*DataArray)[0];
-
-                    if (FirstElement->Type == EJson::Object)
-                    {
-                        // Assume this is an FAssetListResponse
-                        FAssetListResponse AssetListResponse;
-                        if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &AssetListResponse, 0, 0))
-                        {
-                            OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
-                            return;
-                        }
-                    }
-                    else if (FirstElement->Type == EJson::String)
-                    {
-                        // Assume this is an FAssetTypeListResponse
-                        FAssetTypeListResponse AssetTypeListResponse;
-                        if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &AssetTypeListResponse, 0, 0))
-                        {
-                            OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
+    	FAssetListResponse AssetListResponse;
+    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, 0))
+    	{
+    		OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
+    		return;
+    	}
 
         UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
     }
-    else
-    {
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("API Response was unsuccessful"));
-    }
+	
+	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
+	{
+		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+		return;
+	}
+	
+    UE_LOG(LogReadyPlayerMe, Error, TEXT("API Response was unsuccessful, loading from cache."));
 
-    // If all parsing attempts fail, execute with default/empty responses
-    OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
-    OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
+
+	LoadAssetsFromCache();
 }
 
+void FAssetApi::HandleAssetTypeListResponse(FString Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+    {    	
+	    	FAssetTypeListResponse AssetTypeListResponse;
+	    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, 0))
+	    	{
+	    		OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
+	    		return;
+	    	}
+
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
+    }
+
+	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
+	{
+		OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
+		return;
+	}
+	
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("API Response was unsuccessful for asset types, loading from cache.")); 
+    
+	LoadAssetTypesFromCache();
+}
+
+void FAssetApi::LoadAssetsFromCache()
+{
+	TArray<FCachedAssetData> CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(BaseModelType);
+	if (CachedAssets.Num() > 0)
+	{
+		FAssetListResponse AssetListResponse;
+		for (const FCachedAssetData& CachedAsset : CachedAssets)
+		{
+			FAsset Asset = CachedAsset.ToAsset();
+			AssetListResponse.Data.Add(Asset);
+		}
+		OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
+		return;
+	}
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
+	OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+}
+
+void FAssetApi::LoadAssetTypesFromCache()
+{
+	TArray<FString> AssetTypes = FAssetCacheManager::Get().LoadAssetTypes();
+	if (AssetTypes.Num() > 0)
+	{
+		FAssetTypeListResponse AssetListResponse;
+		AssetListResponse.Data.Append(AssetTypes);
+		OnListAssetTypeResponse.ExecuteIfBound(AssetListResponse, true);
+		return;
+	}
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
+	OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
+}

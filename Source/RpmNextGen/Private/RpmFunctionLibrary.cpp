@@ -26,14 +26,8 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
 		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to fetch first asset from cache."));
 		return;
 	}
-
 	TSharedPtr<FAssetApi> AssetApi = MakeShared<FAssetApi>();
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
-	if(!RpmSettings->ApiKey.IsEmpty() || RpmSettings->ApiProxyUrl.IsEmpty())
-	{
-		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-	}
-	
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;

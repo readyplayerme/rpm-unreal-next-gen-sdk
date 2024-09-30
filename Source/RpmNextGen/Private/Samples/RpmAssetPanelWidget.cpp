@@ -18,14 +18,7 @@
 void URpmAssetPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AssetApi = MakeShared<FAssetApi>();
-	// TODO -  add smarter setting of auth strategy
-	if(!RpmSettings->ApiKey.IsEmpty() || RpmSettings->ApiProxyUrl.IsEmpty())
-	{
-		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-	}
-	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
 }
 

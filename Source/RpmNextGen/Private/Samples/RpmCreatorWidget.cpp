@@ -16,6 +16,11 @@ void URpmCreatorWidget::NativeConstruct()
 
 void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& CategoryArray)
 {
+	if (CategoryArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No categories to create asset panels from!"));
+		return;
+	}
 	if (!AssetPanelSwitcher || !AssetPanelBlueprint)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WidgetSwitcher or WidgetBlueprintClass is not set!"));

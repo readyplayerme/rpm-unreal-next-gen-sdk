@@ -6,7 +6,6 @@
 #include "Api/Assets/AssetIconLoader.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
-#include "Api/Files/PakFileUtility.h"
 #include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
@@ -21,7 +20,7 @@ const FString FCacheGenerator::ZipFileName = TEXT("CacheAssets.pak");
 FCacheGenerator::FCacheGenerator() : CurrentBaseModelIndex(0), MaxItemsPerCategory(10)
 {
 	Http = &FHttpModule::Get();
-	AssetApi = MakeUnique<FAssetApi>();
+	AssetApi = MakeUnique<FAssetApi>(EApiRequestStrategy::ApiOnly);
 	AssetApi->OnListAssetsResponse.BindRaw(this, &FCacheGenerator::OnListAssetsResponse);
 	AssetApi->OnListAssetTypeResponse.BindRaw(this, &FCacheGenerator::OnListAssetTypesResponse);
 }
@@ -341,7 +340,7 @@ void FCacheGenerator::ExtractCache()
 
 void FCacheGenerator::FetchBaseModels() const
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	FAssetListRequest AssetListRequest = FAssetListRequest();
 	FAssetListQueryParams QueryParams = FAssetListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
@@ -353,7 +352,7 @@ void FCacheGenerator::FetchBaseModels() const
 
 void FCacheGenerator::FetchAssetTypes() const
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	FAssetTypeListRequest AssetListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
