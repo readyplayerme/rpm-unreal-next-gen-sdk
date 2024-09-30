@@ -21,7 +21,6 @@ class RPMNEXTGEN_API URpmAssetPanelWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	virtual void NativeConstruct() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel" )
 	TSubclassOf<URpmAssetButtonWidget> AssetButtonBlueprint;
@@ -65,6 +64,8 @@ public:
 	void CreateButton(const FAsset& AssetData);
 
 	virtual void SynchronizeProperties() override;
+	virtual void NativeConstruct() override;
+	
 private:
 	TArray<TSubclassOf<URpmAssetButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;

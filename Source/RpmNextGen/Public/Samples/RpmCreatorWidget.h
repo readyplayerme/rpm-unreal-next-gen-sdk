@@ -18,31 +18,30 @@ class RPMNEXTGEN_API URpmCreatorWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	
-	virtual void NativeConstruct() override;
-
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void CreateAssetPanelsFromCategories(const TArray<FString>& CategoryArray);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void SwitchToPanel(const FString& Category);
+
+	virtual void NativeConstruct() override;
 	
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* AssetPanelSwitcher;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
-	TSubclassOf<URpmAssetPanelWidget> AssetPanelBlueprint;
-
-	virtual void SynchronizeProperties() override;
-
+	
 	UPROPERTY(BlueprintAssignable, Category = "Events" )
 	FOnAssetSelected OnAssetSelected;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
+	TSubclassOf<URpmAssetPanelWidget> AssetPanelBlueprint;
+	TMap<FString, int32> IndexMapByCategory;
+	
 	UFUNCTION()
 	void HandleAssetSelectedFromPanel(const FAsset& AssetData);
 	
-	TMap<FString, int32> IndexMapByCategory;
+	virtual void SynchronizeProperties() override;
+
 private:
 	UUserWidget* CreateAssetPanel(const FString& Category);
 };

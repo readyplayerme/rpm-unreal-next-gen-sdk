@@ -19,26 +19,26 @@ DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse,
 class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>, public FWebApiWithAuth
 {
 public:
+	FOnWebApiResponse OnApiResponse;
+	FOnCharacterCreateResponse OnCharacterCreateResponse;
+	FOnCharacterUpdatResponse OnCharacterUpdateResponse;
+	FOnCharacterFindResponse OnCharacterFindResponse;
+	
 	FCharacterApi();
 	virtual ~FCharacterApi() override;
-	FOnWebApiResponse OnApiResponse;
 
 	void CreateAsync(const FCharacterCreateRequest& Request);
 	void UpdateAsync(const FCharacterUpdateRequest& Request);
 	void FindByIdAsync(const FCharacterFindByIdRequest& Request);
 	FString GeneratePreviewUrl(const FCharacterPreviewRequest& Request);
 
-	FOnCharacterCreateResponse OnCharacterCreateResponse;
-	FOnCharacterUpdatResponse OnCharacterUpdateResponse;
-	FOnCharacterFindResponse OnCharacterFindResponse;
-
 protected:
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
+	FHttpModule* Http;
 	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
-	FHttpModule* Http;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
 
 private:
 	FString BaseUrl;

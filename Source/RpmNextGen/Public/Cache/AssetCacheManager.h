@@ -237,6 +237,8 @@ public:
 	}
 
 private:
+	TMap<FString, FCachedAssetData> StoredAssets;
+	
 	FAssetCacheManager()
 	{
 		LoadManifest();
@@ -244,15 +246,14 @@ private:
 
 	template <typename KeyType, typename ValueType>
 	void MergeTMaps(TMap<KeyType, ValueType>& DestinationMap, const TMap<KeyType, ValueType>& SourceMap)
+	{
+		for (const TPair<KeyType, ValueType>& Elem : SourceMap)
 		{
-			for (const TPair<KeyType, ValueType>& Elem : SourceMap)
+			// Add only if the key doesn't already exist in the destination map
+			if (!DestinationMap.Contains(Elem.Key))
 			{
-				// Add only if the key doesn't already exist in the destination map
-				if (!DestinationMap.Contains(Elem.Key))
-				{
-					DestinationMap.Add(Elem.Key, Elem.Value);
-				}
+				DestinationMap.Add(Elem.Key, Elem.Value);
 			}
 		}
-	TMap<FString, FCachedAssetData> StoredAssets; 
+	}
 };

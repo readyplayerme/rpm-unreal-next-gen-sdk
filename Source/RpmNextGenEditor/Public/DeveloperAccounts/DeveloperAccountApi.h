@@ -14,16 +14,18 @@ DECLARE_DELEGATE_TwoParams(FOnOrganizationListResponse, const FOrganizationListR
 class RPMNEXTGENEDITOR_API FDeveloperAccountApi : public FWebApiWithAuth
 {
 public:
+	FOnApplicationListResponse OnApplicationListResponse;
+	FOnOrganizationListResponse OnOrganizationResponse;
+	
 	FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy);
 	void ListApplicationsAsync(const FApplicationListRequest& Request);
 	void ListOrganizationsAsync(const FOrganizationListRequest& Request);
-	
-	FOnApplicationListResponse OnApplicationListResponse;
-	FOnOrganizationListResponse OnOrganizationResponse;
+
 private:
-	static FString BuildQueryString(const TMap<FString, FString>& Params);
+	FString ApiBaseUrl;
+	
 	void HandleOrgListResponse(FString Data, bool bWasSuccessful);
 	void HandleAppListResponse(FString Data, bool bWasSuccessful);
-
-	FString ApiBaseUrl;
+	
+	static FString BuildQueryString(const TMap<FString, FString>& Params);
 };

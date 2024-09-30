@@ -6,19 +6,17 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "glTFRuntimeSkeletalMeshComponent.h"
 #include "RpmNextGen.h"
+#include "RpmCharacterTypes.h"
 #include "Api/Assets/AssetApi.h"
 
-// Sets default values
 ARpmActor::ARpmActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	AssetRoot = CreateDefaultSubobject<USceneComponent>(TEXT("AssetRoot"));
 	RootComponent = AssetRoot;
 	MasterPoseComponent = nullptr;
 }
 
-// Called when the game starts or when spawned
 void ARpmActor::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,11 +25,11 @@ void ARpmActor::BeginPlay()
 void ARpmActor::LoadCharacter(const FRpmCharacterData& InCharacterData, UglTFRuntimeAsset* GltfAsset)
 {
 	CharacterData = InCharacterData;
-	if(AnimationCharactersByBaseModelId.Contains(CharacterData.BaseModelId))
+	if(AnimationConfigsByBaseModelId.Contains(CharacterData.BaseModelId))
 	{
-		AnimationCharacter = AnimationCharactersByBaseModelId[CharacterData.BaseModelId];
-		SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
-		SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationCharacter.Skeleton;
+		AnimationConfig = AnimationConfigsByBaseModelId[CharacterData.BaseModelId];
+		SkeletalMeshConfig.Skeleton =  AnimationConfig.Skeleton;
+		SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationConfig.Skeleton;
 	}
 	LoadAsset(FAsset(), GltfAsset);
 }
@@ -46,11 +44,11 @@ void ARpmActor::LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset)
 	if(Asset.Type == FAssetApi::BaseModelType)
 	{
 		CharacterData.BaseModelId = Asset.Id;
-		if(AnimationCharactersByBaseModelId.Contains(CharacterData.BaseModelId))
+		if(AnimationConfigsByBaseModelId.Contains(CharacterData.BaseModelId))
 		{
-			AnimationCharacter = AnimationCharactersByBaseModelId[CharacterData.BaseModelId];
-			SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
-			SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationCharacter.Skeleton;
+			AnimationConfig = AnimationConfigsByBaseModelId[CharacterData.BaseModelId];
+			SkeletalMeshConfig.Skeleton =  AnimationConfig.Skeleton;
+			SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationConfig.Skeleton;
 		}
 	}
 	RemoveMeshComponentsOfType(Asset.Type);
@@ -60,7 +58,7 @@ void ARpmActor::LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset)
 	if (NewMeshComponents.Num() > 0)
 	{
 		LoadedMeshComponentsByAssetType.Add(Asset.Type, NewMeshComponents);
-		if(AnimationCharactersByBaseModelId.Contains(CharacterData.BaseModelId))
+		if(AnimationConfigsByBaseModelId.Contains(CharacterData.BaseModelId))
 		{
 			// Check if MasterPoseComponent is valid before using it
 			if (MasterPoseComponent == nullptr)
@@ -70,14 +68,14 @@ void ARpmActor::LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset)
 			}
 
 			// Check if Animation Blueprint is valid
-			if (!AnimationCharacter.AnimationBlueprint)
+			if (!AnimationConfig.AnimationBlueprint)
 			{
 				UE_LOG(LogReadyPlayerMe, Error, TEXT("AnimationBlueprint is null for base model %s"), *CharacterData.BaseModelId);
 				return;
 			}
 			
 			MasterPoseComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-			MasterPoseComponent->SetAnimClass(AnimationCharacter.AnimationBlueprint);
+			MasterPoseComponent->SetAnimClass(AnimationConfig.AnimationBlueprint);
 			UE_LOG(LogReadyPlayerMe, Log, TEXT("Set Animation Blueprint for %s"), *CharacterData.BaseModelId);
 		}
 
@@ -90,9 +88,9 @@ void ARpmActor::LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset)
 
 void ARpmActor::LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationConfig& InAnimationCharacter)
 {
-	AnimationCharacter = InAnimationCharacter;
-	SkeletalMeshConfig.Skeleton =  AnimationCharacter.Skeleton;
-	SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationCharacter.Skeleton;
+	AnimationConfig = InAnimationCharacter;
+	SkeletalMeshConfig.Skeleton =  AnimationConfig.Skeleton;
+	SkeletalMeshConfig.SkeletonConfig.CopyRotationsFrom =  AnimationConfig.Skeleton;
 	LoadAsset(Asset, GltfAsset);
 }
 

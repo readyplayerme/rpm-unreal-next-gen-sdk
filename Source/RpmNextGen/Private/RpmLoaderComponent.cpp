@@ -28,6 +28,8 @@ URpmLoaderComponent::URpmLoaderComponent()
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);
 	CharacterData = FRpmCharacterData();
+	GltfConfig = FglTFRuntimeConfig();
+	GltfConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 }
 
 void URpmLoaderComponent::SetGltfConfig(const FglTFRuntimeConfig* Config)

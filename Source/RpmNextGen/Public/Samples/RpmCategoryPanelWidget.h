@@ -22,9 +22,6 @@ class RPMNEXTGEN_API URpmCategoryPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-
-	virtual void NativeConstruct() override;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Category Panel")
 	TSubclassOf<URpmCategoryButtonWidget> CategoryButtonBlueprint;
 	
@@ -53,12 +50,11 @@ public:
 	virtual void OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton);
 	
 	virtual void CreateButton(const FString& AssetType);
-
 	virtual void SynchronizeProperties() override;
+	virtual void NativeConstruct() override;
 private:
-	void AssetTypesLoaded(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
-
 	TArray<TSubclassOf<URpmCategoryButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;
 	
+	void AssetTypesLoaded(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
 };

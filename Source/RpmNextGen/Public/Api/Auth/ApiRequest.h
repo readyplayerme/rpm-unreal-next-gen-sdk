@@ -13,7 +13,6 @@ enum ERequestMethod {
 	PATCH
 };
 
-
 USTRUCT(BlueprintType)
 struct RPMNEXTGEN_API FApiRequest
 {
