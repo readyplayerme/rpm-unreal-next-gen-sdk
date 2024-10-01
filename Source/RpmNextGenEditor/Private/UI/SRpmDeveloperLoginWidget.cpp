@@ -214,7 +214,6 @@ void SRpmDeveloperLoginWidget::Initialize()
 		{
 			DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
 		}
-
 		DeveloperAccountApi->OnOrganizationResponse.BindRaw(
 			this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
 		DeveloperAccountApi->OnApplicationListResponse.BindRaw(

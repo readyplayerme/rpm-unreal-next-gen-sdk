@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Samples/RpmCategoryButtonWidget.h"
+
+#include "RpmNextGen.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
@@ -31,7 +33,7 @@ void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Im
 		{
 			CategoryImageTexture = Image;
 			CategoryImage->SetBrushFromTexture(CategoryImageTexture);
-			UE_LOG( LogTemp, Warning, TEXT("Setting image on button for Category: %s"), *Category );
+			UE_LOG( LogReadyPlayerMe, Warning, TEXT("Setting image on button for Category: %s"), *Category );
 		}
 	}	
 }
