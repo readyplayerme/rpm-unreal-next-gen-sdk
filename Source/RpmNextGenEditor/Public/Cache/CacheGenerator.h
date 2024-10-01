@@ -16,7 +16,7 @@ DECLARE_DELEGATE_OneParam(FOnCacheDataLoaded, bool);
 DECLARE_DELEGATE_OneParam(FOnLocalCacheGenerated, bool);
 DECLARE_DELEGATE_OneParam(FOnDownloadRemoteCache, bool);
 
-class RPMNEXTGEN_API FCacheGenerator : public TSharedFromThis<FCacheGenerator>
+class RPMNEXTGENEDITOR_API FCacheGenerator : public TSharedFromThis<FCacheGenerator>
 {
 public:
 	FOnDownloadRemoteCache OnDownloadRemoteCacheDelegate;

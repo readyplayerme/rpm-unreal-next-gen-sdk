@@ -7,7 +7,7 @@
 struct FglTFRuntimeConfig;
 class UglTFRuntimeAsset;
 
-class FEditorAssetLoader : public FAssetGlbLoader
+class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetGlbLoader
 {
 public:
 	USkeleton* SkeletonToCopy;
