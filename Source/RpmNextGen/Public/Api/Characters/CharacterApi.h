@@ -39,7 +39,7 @@ protected:
 	FString ConvertToJsonString(const T& Data);
 
 	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
-
+	void CreateCharacterFromCache();
 private:
 	FString BaseUrl;
 	TMap<FString, FString> AssetByType = TMap<FString, FString>();

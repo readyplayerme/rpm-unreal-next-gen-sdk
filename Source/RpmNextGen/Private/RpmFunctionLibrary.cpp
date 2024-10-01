@@ -40,12 +40,21 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
 		return;
 	}
 
-	AssetApi->OnListAssetsResponse.BindLambda([OnAssetIdFetched, AssetApi](const FAssetListResponse& Response, bool bWasSuccessful)
+	AssetApi->OnListAssetsResponse.BindLambda([OnAssetIdFetched](const FAssetListResponse& Response, bool bWasSuccessful)
 	{
 		FString FirstAssetId;
 		if (bWasSuccessful && Response.Data.Num() > 0)
 		{
 			FirstAssetId = Response.Data[0].Id;
+			OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
+			return;
+		}
+		TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType("baseModel");
+		if(Assets.Num() > 0)
+		{
+			FirstAssetId = Assets[0].Id;
+			OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
+			return;
 		}
 		OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
 	});

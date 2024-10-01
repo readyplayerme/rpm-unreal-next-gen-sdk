@@ -1,10 +1,12 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
+#include "RpmCharacterTypes.h"
 #include "RpmNextGen.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
 #include "Api/Characters/Models/CharacterPreviewRequest.h"
 #include "Api/Characters/Models/CharacterUpdateRequest.h"
+#include "Cache/AssetCacheManager.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -13,7 +15,6 @@ FCharacterApi::FCharacterApi()
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *RpmSettings->GetApiBaseUrl());
 	Http = &FHttpModule::Get();
-	SetAuthenticationStrategy(nullptr);
 	if(!RpmSettings->ApiKey.IsEmpty() && RpmSettings->ApiProxyUrl.IsEmpty())
 	{
 		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
@@ -66,37 +67,62 @@ void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 {
 	FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful);
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+
+
 	if (Response->GetResponseCode() == 401)
 	{
 		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
 		return;
 	}
-	
-	const FString Verb = Request->GetVerb();
-	if (Verb == "POST")
+	if(bSuccess)
 	{
-		FCharacterCreateResponse CharacterCreateResponse;
-		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-			Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
-		OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, bSuccess);
+		const FString Verb = Request->GetVerb();
+		if (Verb == "POST")
+		{
+			FCharacterCreateResponse CharacterCreateResponse;
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
+				Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
+			OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, bSuccess);
+		}
+		else if (Verb == "PATCH")
+		{
+			FCharacterUpdateResponse CharacterUpdateResponse;
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
+				Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
+			OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, bSuccess);
+		}
+		else if (Verb == "GET")
+		{
+			FCharacterFindByIdResponse CharacterFindByIdResponse;
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
+				Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
+			OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, bSuccess);
+		}
+		return;
 	}
-	else if (Verb == "PATCH")
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to process response from character API. Falling back to cache."));
+	CreateCharacterFromCache();
+}
+
+void FCharacterApi::CreateCharacterFromCache()
+{
+	TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType("baseModel");
+	if(Assets.Num() == 0)
 	{
-		FCharacterUpdateResponse CharacterUpdateResponse;
-		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-			Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
-		OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, bSuccess);
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No base model found in cache"));
+		OnCharacterCreateResponse.ExecuteIfBound(FCharacterCreateResponse(), false);
+		return;
 	}
-	else if (Verb == "GET")
-	{
-		FCharacterFindByIdResponse CharacterFindByIdResponse;
-		bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-			Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
-		OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, bSuccess);
-	}
-	else
-	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unhandled verb"));
-	}
+	FRpmCharacter RpmCharacter;
+	RpmCharacter.Assets = TMap<FString, FString>();
+	FAsset Asset = Assets[0].ToAsset();
+	RpmCharacter.Assets.Add(Asset.Type, Asset.Id);
+	FGuid NewGuid = FGuid::NewGuid();
+	FString GuidString = NewGuid.ToString();
+	RpmCharacter.Id = GuidString;
+	RpmCharacter.CreatedAt = FDateTime::UtcNow();
+	RpmCharacter.UpdatedAt = FDateTime::UtcNow();
+	FCharacterCreateResponse CharacterCreateResponse = FCharacterCreateResponse(RpmCharacter);
+	OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, true);
 }
 

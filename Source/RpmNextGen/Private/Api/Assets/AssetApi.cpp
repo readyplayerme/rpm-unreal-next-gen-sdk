@@ -142,8 +142,7 @@ void FAssetApi::HandleAssetTypeListResponse(FString Response, bool bWasSuccessfu
 		return;
 	}
 	
-	UE_LOG(LogReadyPlayerMe, Error, TEXT("API Response was unsuccessful for asset types, loading from cache.")); 
-    
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for asset types, falling back to cache.")); 
 	LoadAssetTypesFromCache();
 }
 

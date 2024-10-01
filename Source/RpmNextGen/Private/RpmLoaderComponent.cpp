@@ -45,28 +45,28 @@ void URpmLoaderComponent::BeginPlay()
 void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseCache)
 {
 	CharacterData.BaseModelId = BaseModelId;
-	if(!FConnectionManager::Get().IsConnected() || bUseCache)
-	{
-		FCachedAssetData CachedAssetData;
-		if(FAssetCacheManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
-		{
-			const FAsset AssetFromCache = CachedAssetData.ToAsset();
-			CharacterData.Assets.Add(FAssetApi::BaseModelType, AssetFromCache);
-			OnCharacterCreated.Broadcast(CharacterData);
-			TArray<uint8> Data;
-			if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
-			{
-				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
-				if(!GltfRuntimeAsset)
-				{
-					UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
-				}
-				OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
-			}
-			return;
-		}
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to create character from cache. Will try to create from Url."), *CachedAssetData.Id);
-	}
+	// if(!FConnectionManager::Get().IsConnected() || bUseCache)
+	// {
+	// 	FCachedAssetData CachedAssetData;
+	// 	if(FAssetCacheManager::Get().GetCachedAsset(BaseModelId, CachedAssetData))
+	// 	{
+	// 		const FAsset AssetFromCache = CachedAssetData.ToAsset();
+	// 		CharacterData.Assets.Add(FAssetApi::BaseModelType, AssetFromCache);
+	// 		OnCharacterCreated.Broadcast(CharacterData);
+	// 		TArray<uint8> Data;
+	// 		if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
+	// 		{
+	// 			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
+	// 			if(!GltfRuntimeAsset)
+	// 			{
+	// 				UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+	// 			}
+	// 			OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
+	// 		}
+	// 		return;
+	// 	}
+	// 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to create character from cache. Will try to create from Url."), *CachedAssetData.Id);
+	// }
 
 	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
 	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
@@ -186,22 +186,25 @@ void URpmLoaderComponent::HandleCharacterAssetLoaded(TArray<unsigned char>* Data
 	OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
 }
 
-void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse,
-                                                        bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful)
 {
 	CharacterData.Id = CharacterCreateResponse.Data.Id;
 	OnCharacterCreated.Broadcast(CharacterData);
+	if(CharacterCreateResponse.Data.GlbUrl.IsEmpty())
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("CharacterCreateResponse.GlbUrl is empty. Loading from cache."));
+		LoadCharacterFromAssetMapCache(CharacterData.Assets);
+		return;
+	}
 	LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
 }
 
-void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse,
-	bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse, bool bWasSuccessful)
 {
 	OnCharacterUpdated.Broadcast(CharacterData);
 }
 
-void URpmLoaderComponent::HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse,
-	bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse, bool bWasSuccessful)
 {
 	OnCharacterFound.Broadcast(CharacterData);
 }

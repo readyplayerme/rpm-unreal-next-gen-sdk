@@ -7,7 +7,7 @@ USTRUCT(BlueprintType)
 struct RPMNEXTGEN_API FRpmCharacter
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "id"))
 	FString Id;
 

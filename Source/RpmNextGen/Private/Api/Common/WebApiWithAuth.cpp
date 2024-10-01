@@ -4,6 +4,7 @@
 FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)
 {
     FWebApi();
+    SetAuthenticationStrategy(nullptr);
 }
 
 FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrategy) : AuthenticationStrategy(nullptr)

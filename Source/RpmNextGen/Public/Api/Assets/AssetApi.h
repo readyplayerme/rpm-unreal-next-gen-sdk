@@ -20,8 +20,8 @@ public:
 	
 	FAssetApi();
 	FAssetApi(EApiRequestStrategy InApiRequestStrategy);
+	
 	void Initialize();
-
 	void SetAuthenticationStrategy(IAuthenticationStrategy* InAuthStrategy);
 	void ListAssetsAsync(const FAssetListRequest& Request);
 	void ListAssetTypesAsync(const FAssetTypeListRequest& Request);
