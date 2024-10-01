@@ -21,12 +21,11 @@ class RPMNEXTGEN_API URpmAssetPanelWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(meta = (BindWidget))
+	UPanelWidget* ButtonContainer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel" )
 	TSubclassOf<URpmAssetButtonWidget> AssetButtonBlueprint;
-
-	UPROPERTY(meta = (BindWidget))
-	UPanelWidget* ButtonContainer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Asset Panel")
 	URpmAssetButtonWidget* SelectedAssetButton;

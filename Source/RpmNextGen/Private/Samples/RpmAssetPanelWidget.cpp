@@ -129,6 +129,7 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;
+	QueryParams.Limit = 100;
 	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);	
 }

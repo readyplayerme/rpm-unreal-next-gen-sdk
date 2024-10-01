@@ -31,11 +31,11 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {
 	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	FAssetTypeListRequest AssetListRequest;
+	FAssetTypeListRequest AssetTypeListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
-	AssetListRequest.Params = QueryParams;
-	AssetApi->ListAssetTypesAsync(AssetListRequest);
+	AssetTypeListRequest.Params = QueryParams;
+	AssetApi->ListAssetTypesAsync(AssetTypeListRequest);
 }
 
 void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton)

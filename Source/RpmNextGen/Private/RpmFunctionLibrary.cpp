@@ -31,6 +31,7 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;
+	QueryParams.Limit = 1;
 	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 
 	if (!WorldContextObject)
