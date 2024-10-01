@@ -2,11 +2,9 @@
 
 
 #include "Samples/RpmAssetPanelWidget.h"
-
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Cache/AssetCacheManager.h"
 #include "Cache/CachedAssetData.h"
 #include "Components/PanelWidget.h"
