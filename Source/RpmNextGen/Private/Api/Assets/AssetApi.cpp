@@ -99,7 +99,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 
 void FAssetApi::HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-    if (bWasSuccessful)
+    if (bWasSuccessful && Response.IsValid())
     {    	
     	FAssetListResponse AssetListResponse;
     	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetListResponse, 0, 0))
@@ -125,7 +125,7 @@ void FAssetApi::HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePt
 
 void FAssetApi::HandleAssetTypeListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (bWasSuccessful)
+	if (bWasSuccessful && Response.IsValid())
     {    	
 	    	FAssetTypeListResponse AssetTypeListResponse;
 	    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetTypeListResponse, 0, 0))

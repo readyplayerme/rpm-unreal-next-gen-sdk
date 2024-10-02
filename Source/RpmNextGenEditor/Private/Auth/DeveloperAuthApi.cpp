@@ -14,12 +14,16 @@ FDeveloperAuthApi::FDeveloperAuthApi()
 void FDeveloperAuthApi::HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) const
 {
 	FDeveloperLoginResponse DevLoginResponse;
-	FString Data = Response->GetContentAsString();
-	if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &DevLoginResponse, 0, 0))
+	if(bWasSuccessful && Response.IsValid())
 	{
-		OnLoginResponse.ExecuteIfBound(DevLoginResponse, true);
-		return;
+		FString Data = Response->GetContentAsString();
+		if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &DevLoginResponse, 0, 0))
+		{
+			OnLoginResponse.ExecuteIfBound(DevLoginResponse, true);
+			return;
+		}
 	}
+
 	OnLoginResponse.ExecuteIfBound(DevLoginResponse, bWasSuccessful);
 }
 
