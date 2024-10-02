@@ -1,24 +1,26 @@
 ﻿#include "Auth/DeveloperAuthApi.h"
 #include "Auth/Models/DeveloperLoginRequest.h"
 #include "Auth/Models/DeveloperLoginResponse.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FDeveloperAuthApi::FDeveloperAuthApi()
 {
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	ApiUrl = FString::Printf(TEXT("%s/login"), *RpmSettings->ApiBaseAuthUrl);
-	OnApiResponse.BindRaw(this, &FDeveloperAuthApi::HandleLoginResponse);
+	OnRequestComplete.BindRaw(this, &FDeveloperAuthApi::HandleLoginResponse);
 }
 
-void FDeveloperAuthApi::HandleLoginResponse(FString JsonData, bool bIsSuccessful) const
+void FDeveloperAuthApi::HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) const
 {
-	FDeveloperLoginResponse Response;
-	if (bIsSuccessful && !JsonData.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(JsonData, &Response, 0, 0))
+	FDeveloperLoginResponse DevLoginResponse;
+	FString Data = Response->GetContentAsString();
+	if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &DevLoginResponse, 0, 0))
 	{
-		OnLoginResponse.ExecuteIfBound(Response, true);
+		OnLoginResponse.ExecuteIfBound(DevLoginResponse, true);
 		return;
 	}
-	OnLoginResponse.ExecuteIfBound(Response, bIsSuccessful);
+	OnLoginResponse.ExecuteIfBound(DevLoginResponse, bWasSuccessful);
 }
 
 void FDeveloperAuthApi::LoginWithEmail(FDeveloperLoginRequest Request)

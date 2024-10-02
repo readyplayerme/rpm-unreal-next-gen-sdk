@@ -30,7 +30,7 @@ void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)
         DispatchRaw(*ApiRequestData);
         return;
     }
-    OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
+    OnRequestComplete.ExecuteIfBound(FHttpRequestPtr(), FHttpResponsePtr() , false);
 }
 
 void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful)
@@ -47,7 +47,7 @@ void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Resp
         return;
     }
 
-    OnApiResponse.ExecuteIfBound(TEXT("Auth failed"), false);
+    OnRequestComplete.ExecuteIfBound(FHttpRequestPtr(), FHttpResponsePtr() , false);
 }
 
 void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
@@ -66,7 +66,7 @@ void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePt
 {
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
+        OnRequestComplete.ExecuteIfBound(Request, Response, bWasSuccessful);
         return;
     }
     if(EHttpResponseCodes::Denied == Response->GetResponseCode() && AuthenticationStrategy != nullptr)

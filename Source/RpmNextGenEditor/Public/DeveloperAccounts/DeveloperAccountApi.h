@@ -24,8 +24,8 @@ public:
 private:
 	FString ApiBaseUrl;
 	
-	void HandleOrgListResponse(FString Data, bool bWasSuccessful);
-	void HandleAppListResponse(FString Data, bool bWasSuccessful);
+	void HandleOrgListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAppListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	static FString BuildQueryString(const TMap<FString, FString>& Params);
 };

@@ -7,17 +7,19 @@
 #include "Misc/ScopeExit.h"
 
 class FHttpModule;
-DECLARE_DELEGATE_TwoParams(FOnWebApiResponse, FString, bool);
+
 
 class RPMNEXTGEN_API FWebApi
 {
 public:
-	FOnWebApiResponse OnApiResponse;
+	DECLARE_DELEGATE_ThreeParams(FOnRequestComplete, FHttpRequestPtr, FHttpResponsePtr, bool);
+	
+	FOnRequestComplete OnRequestComplete;
 	
 	FWebApi();
 	virtual ~FWebApi();
 	
-protected:
+protected:	
 	FHttpModule* Http;
 	
 	void DispatchRaw(

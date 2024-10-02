@@ -4,6 +4,7 @@
 #include "DeveloperAccounts/Models/ApplicationListResponse.h"
 #include "DeveloperAccounts/Models/OrganizationListRequest.h"
 #include "DeveloperAccounts/Models/OrganizationListResponse.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy) : FWebApiWithAuth(InAuthenticationStrategy)
@@ -23,7 +24,7 @@ void FDeveloperAccountApi::ListApplicationsAsync(const FApplicationListRequest& 
     const FString Url = FString::Printf(TEXT("%s/v1/applications%s"), *ApiBaseUrl, *QueryString);
     FApiRequest ApiRequest;
     ApiRequest.Url = Url;
-    OnApiResponse.BindRaw(this, &FDeveloperAccountApi::HandleAppListResponse);
+    OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleAppListResponse);
     DispatchRawWithAuth(ApiRequest);
 }
 
@@ -36,14 +37,15 @@ void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest
     const FString Url = FString::Printf(TEXT("%s/v1/organizations%s"), *ApiBaseUrl, *QueryString);
     FApiRequest ApiRequest;
     ApiRequest.Url = Url;
-    OnApiResponse.BindRaw(this, &FDeveloperAccountApi::HandleOrgListResponse);
+    OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleOrgListResponse);
     DispatchRawWithAuth(ApiRequest);
 }
 
 
-void FDeveloperAccountApi::HandleAppListResponse(FString Data, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleAppListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FApplicationListResponse ApplicationListResponse;
+    FString Data = Response->GetContentAsString();
     if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &ApplicationListResponse, 0, 0))
     {
         OnApplicationListResponse.ExecuteIfBound(ApplicationListResponse, true);
@@ -52,9 +54,10 @@ void FDeveloperAccountApi::HandleAppListResponse(FString Data, bool bWasSuccessf
     OnApplicationListResponse.ExecuteIfBound(ApplicationListResponse, false);
 }
 
-void FDeveloperAccountApi::HandleOrgListResponse(FString Data, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleOrgListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FOrganizationListResponse OrganizationListResponse;
+    FString Data = Response->GetContentAsString();
     if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &OrganizationListResponse, 0, 0))
     {
         OnOrganizationResponse.ExecuteIfBound(OrganizationListResponse, true);

@@ -19,7 +19,7 @@ DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse,
 class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>, public FWebApiWithAuth
 {
 public:
-	FOnWebApiResponse OnApiResponse;
+	FOnRequestComplete OnApiResponse;
 	FOnCharacterCreateResponse OnCharacterCreateResponse;
 	FOnCharacterUpdatResponse OnCharacterUpdateResponse;
 	FOnCharacterFindResponse OnCharacterFindResponse;

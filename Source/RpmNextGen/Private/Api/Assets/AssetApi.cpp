@@ -7,6 +7,7 @@
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Cache/AssetCacheManager.h"
+#include "Interfaces/IHttpResponse.h"
 
 struct FCachedAssetData;
 struct FAssetTypeListRequest;
@@ -26,8 +27,8 @@ void FAssetApi::Initialize()
 {
 	AssetListApi = MakeShared<FWebApiWithAuth>();
 	AssetTypeListApi = MakeShared<FWebApiWithAuth>();
-	AssetListApi->OnApiResponse.BindRaw(this, &FAssetApi::HandleAssetListResponse);
-	AssetTypeListApi->OnApiResponse.BindRaw(this, &FAssetApi::HandleAssetTypeListResponse);
+	AssetListApi->OnRequestComplete.BindRaw(this, &FAssetApi::HandleAssetListResponse);
+	AssetTypeListApi->OnRequestComplete.BindRaw(this, &FAssetApi::HandleAssetTypeListResponse);
 
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 
@@ -96,18 +97,18 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	AssetTypeListApi->DispatchRawWithAuth( ApiRequest);
 }
 
-void FAssetApi::HandleAssetListResponse(FString Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     if (bWasSuccessful)
     {    	
     	FAssetListResponse AssetListResponse;
-    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, 0))
+    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetListResponse, 0, 0))
     	{
     		OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
     		return;
     	}
 
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response->GetContentAsString());
     }
 	
 	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
@@ -122,18 +123,18 @@ void FAssetApi::HandleAssetListResponse(FString Response, bool bWasSuccessful)
 	LoadAssetsFromCache();
 }
 
-void FAssetApi::HandleAssetTypeListResponse(FString Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetTypeListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
     {    	
 	    	FAssetTypeListResponse AssetTypeListResponse;
-	    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, 0))
+	    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetTypeListResponse, 0, 0))
 	    	{
 	    		OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
 	    		return;
 	    	}
 
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response->GetContentAsString());
     }
 
 	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)

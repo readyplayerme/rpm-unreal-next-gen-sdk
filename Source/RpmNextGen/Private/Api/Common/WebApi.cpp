@@ -35,12 +35,12 @@ void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Respon
 {
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), true);
+        OnRequestComplete.ExecuteIfBound(Request, Response, true);
         return;
     }
     FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
     UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
-    OnApiResponse.ExecuteIfBound(Response->GetContentAsString(), false);
+    OnRequestComplete.ExecuteIfBound(Request, Response, false);
 }
 
 FString FWebApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
