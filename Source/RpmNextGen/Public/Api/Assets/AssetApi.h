@@ -33,8 +33,8 @@ private:
 	TSharedPtr<FWebApiWithAuth> AssetListApi;
 	TSharedPtr<FWebApiWithAuth> AssetTypeListApi;
 	
-	void HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void HandleAssetTypeListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	void LoadAssetsFromCache();
 	void LoadAssetTypesFromCache();

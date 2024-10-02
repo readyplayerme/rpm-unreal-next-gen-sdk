@@ -20,7 +20,7 @@ public:
 protected:
 	TSharedPtr<FApiRequest> ApiRequestData;
 
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest) override;
 
 private:
 	IAuthenticationStrategy* AuthenticationStrategy;

@@ -65,11 +65,11 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 		return;
 	}
-	FString QueryString = Request.BuildQueryString();
-	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets%s"), *ApiBaseUrl, *QueryString);
+	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets"), *ApiBaseUrl);
 	FApiRequest ApiRequest = FApiRequest();
 	ApiRequest.Url = Url;
 	ApiRequest.Method = GET;
+	ApiRequest.QueryParams = Request.BuildQueryMap();
 	AssetListApi->DispatchRawWithAuth(ApiRequest);
 }
 
@@ -97,7 +97,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	AssetTypeListApi->DispatchRawWithAuth( ApiRequest);
 }
 
-void FAssetApi::HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     if (bWasSuccessful && Response.IsValid())
     {    	
@@ -123,7 +123,7 @@ void FAssetApi::HandleAssetListResponse(FHttpRequestPtr Request, FHttpResponsePt
 	LoadAssetsFromCache();
 }
 
-void FAssetApi::HandleAssetTypeListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful && Response.IsValid())
     {    	

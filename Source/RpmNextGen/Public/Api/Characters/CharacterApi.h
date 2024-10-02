@@ -33,13 +33,12 @@ public:
 	FString GeneratePreviewUrl(const FCharacterPreviewRequest& Request);
 
 protected:
-	FHttpModule* Http;
-	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest) override;
 	void CreateCharacterFromCache();
+	
 private:
 	FString BaseUrl;
 	TMap<FString, FString> AssetByType = TMap<FString, FString>();

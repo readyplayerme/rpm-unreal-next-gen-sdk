@@ -11,7 +11,7 @@ FDeveloperAuthApi::FDeveloperAuthApi()
 	OnRequestComplete.BindRaw(this, &FDeveloperAuthApi::HandleLoginResponse);
 }
 
-void FDeveloperAuthApi::HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) const
+void FDeveloperAuthApi::HandleLoginResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful) const
 {
 	FDeveloperLoginResponse DevLoginResponse;
 	if(bWasSuccessful && Response.IsValid())

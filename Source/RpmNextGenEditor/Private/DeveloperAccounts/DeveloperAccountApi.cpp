@@ -42,7 +42,7 @@ void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest
 }
 
 
-void FDeveloperAccountApi::HandleAppListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleAppListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FApplicationListResponse ApplicationListResponse;
     FString Data = Response->GetContentAsString();
@@ -54,7 +54,7 @@ void FDeveloperAccountApi::HandleAppListResponse(FHttpRequestPtr Request, FHttpR
     OnApplicationListResponse.ExecuteIfBound(ApplicationListResponse, false);
 }
 
-void FDeveloperAccountApi::HandleOrgListResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleOrgListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FOrganizationListResponse OrganizationListResponse;
     FString Data = Response->GetContentAsString();

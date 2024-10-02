@@ -63,10 +63,11 @@ FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Reques
 	return url;
 }
 
-void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest)
 {
-	FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful);
+	//FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful, ApiRequest);
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+	UE_LOG(LogReadyPlayerMe, Warning,TEXT("Response from character API"));
 
 
 	if (Response->GetResponseCode() == 401)

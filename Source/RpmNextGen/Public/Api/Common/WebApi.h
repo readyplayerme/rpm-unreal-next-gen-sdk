@@ -12,7 +12,7 @@ class FHttpModule;
 class RPMNEXTGEN_API FWebApi : public TSharedFromThis<FWebApi>
 {
 public:
-	DECLARE_DELEGATE_ThreeParams(FOnRequestComplete, FHttpRequestPtr, FHttpResponsePtr, bool);
+	DECLARE_DELEGATE_ThreeParams(FOnRequestComplete, const FApiRequest&, FHttpResponsePtr, bool);
 	
 	FOnRequestComplete OnRequestComplete;
 	
@@ -31,7 +31,7 @@ protected:
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 	
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest);
 
 };
 

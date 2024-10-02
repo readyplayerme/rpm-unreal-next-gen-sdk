@@ -26,6 +26,8 @@ struct RPMNEXTGEN_API FApiRequest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	TMap<FString, FString> Headers;
 
+	TMap<FString, FString> QueryParams;
+
 	FString Payload;
 
 	FString GetVerb() const
