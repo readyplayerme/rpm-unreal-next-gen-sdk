@@ -9,7 +9,7 @@
 class FHttpModule;
 
 
-class RPMNEXTGEN_API FWebApi
+class RPMNEXTGEN_API FWebApi : public TSharedFromThis<FWebApi>
 {
 public:
 	DECLARE_DELEGATE_ThreeParams(FOnRequestComplete, FHttpRequestPtr, FHttpResponsePtr, bool);
