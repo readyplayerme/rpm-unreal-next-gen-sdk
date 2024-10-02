@@ -46,7 +46,7 @@ private:
 	EVisibility GetLoginViewVisibility() const;
 	EVisibility GetLoggedInViewVisibility() const;
 	TArray<TSharedPtr<FRpmTextureLoader>> ActiveLoaders;
-	FEditorAssetLoader AssetLoader;
+	TSharedPtr<FEditorAssetLoader> AssetLoader;
 	TUniquePtr<FAssetApi> AssetApi;
 	TUniquePtr<FDeveloperAccountApi> DeveloperAccountApi;
 	TUniquePtr<FDeveloperAuthApi> DeveloperAuthApi;
@@ -71,7 +71,7 @@ private:
 	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
 	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
 	void HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful);
-	void OnLoadStyleClicked(const FAsset& Asset);
+	void OnLoadBaseModelClicked(const FAsset& Asset);
 	void SetLoggedInState(const bool IsLoggedIn);
 	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);

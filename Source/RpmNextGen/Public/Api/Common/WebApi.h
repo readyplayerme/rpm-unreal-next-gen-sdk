@@ -12,24 +12,25 @@ DECLARE_DELEGATE_TwoParams(FOnWebApiResponse, FString, bool);
 class RPMNEXTGEN_API FWebApi
 {
 public:
+	FOnWebApiResponse OnApiResponse;
+	
 	FWebApi();
 	virtual ~FWebApi();
 	
-	FOnWebApiResponse OnApiResponse;
-	
 protected:
+	FHttpModule* Http;
+	
 	void DispatchRaw(
 		const FApiRequest& Data
 	);
-	
-	 virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
 	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
+	
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FHttpModule* Http;
 };
 
 template <typename T>

@@ -1,19 +1,23 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "RpmNextGen.h"
 #include "Interfaces/IHttpRequest.h"
 
-DECLARE_DELEGATE_ThreeParams(FOnFileRequestComplete, TArray<uint8>*, const FString&, const FString&);
+struct FAsset;
+DECLARE_DELEGATE_TwoParams(FOnFileRequestComplete, TArray<uint8>*, const FString&);
+DECLARE_DELEGATE_TwoParams(FOnAssetFileRequestComplete, TArray<uint8>*, const FAsset&);
 
 class RPMNEXTGEN_API FFileApi : public TSharedFromThis<FFileApi>
 {
 public:
+	FOnAssetFileRequestComplete OnAssetFileRequestComplete;
+	FOnFileRequestComplete OnFileRequestComplete;
+	
 	FFileApi();
 	virtual ~FFileApi();
-	virtual void LoadFileFromUrl(const FString& URL, const FString& AssetType = TEXT(""));
-	virtual void FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString AssetType);
+	virtual void LoadFileFromUrl(const FString& URL);
+	virtual void LoadAssetFileFromUrl(const FString& URL, FAsset Asset);
+	virtual void FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	virtual void AssetFileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FAsset Asset);
 	static bool LoadFileFromPath(const FString& Path, TArray<uint8>& OutContent);
-
-	FOnFileRequestComplete OnFileRequestComplete;
 };

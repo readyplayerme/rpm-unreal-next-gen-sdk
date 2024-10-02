@@ -21,7 +21,6 @@ class RPMNEXTGEN_API URpmCategoryButtonWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	virtual void NativeConstruct() override;
 	
 	UPROPERTY(meta = (BindWidget))
 	UImage* CategoryImage;
@@ -39,7 +38,7 @@ public:
 	UTexture2D* CategoryImageTexture;
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
-	virtual void InitializeButton(FString Category, UTexture2D* Image);
+	virtual void InitializeButton(FString Category, UTexture2D* Image, const FVector2D& InImageSize);
 
 	UFUNCTION(BlueprintCallable, Category = "Category Button")
 	virtual void SetSelected(bool bIsSelected);
@@ -52,10 +51,11 @@ public:
 #endif
 
 	virtual void SynchronizeProperties() override;
+	virtual void NativeConstruct() override;
 	
 private:
+	FLinearColor DefaultColor;
+	
 	UFUNCTION()
 	virtual void HandleButtonClicked();
-	
-	FLinearColor DefaultColor;
 };

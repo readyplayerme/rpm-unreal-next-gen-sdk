@@ -16,17 +16,18 @@ class RPMNEXTGENEDITOR_API UAssetNameGenerator : public UObject
 	GENERATED_BODY()
 
 public:
+	FTransientObjectSaverMaterialNameGenerator MaterialNameGeneratorDelegate;
+	FTransientObjectSaverTextureNameGenerator TextureNameGeneratorDelegate;
+	
 	UAssetNameGenerator();
-	void SetPath(FString path);
+	
 	UFUNCTION()
 	FString GenerateMaterialName(UMaterialInterface* Material, int32 MaterialIndex, const FString& SlotName) const;
 	UFUNCTION()
-	FString GenerateTextureName(UTexture* Texture, UMaterialInterface* Material, const FString& MaterialPath,
-	                            const FString& ParamName) const;
-
-	FTransientObjectSaverMaterialNameGenerator MaterialNameGeneratorDelegate;
-	FTransientObjectSaverTextureNameGenerator TextureNameGeneratorDelegate;
+	FString GenerateTextureName(UTexture* Texture, UMaterialInterface* Material, const FString& MaterialPath, const FString& ParamName) const;
+	
+	void SetPath(FString Path);
 
 private:
-	FString path;
+	FString Path;
 };

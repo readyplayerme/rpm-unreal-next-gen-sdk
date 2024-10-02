@@ -15,8 +15,10 @@ public:
 	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> Request) override;
 	virtual void OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
 	virtual void TryRefresh(TSharedPtr<FApiRequest> Request) override;
+	
 private:
-	void RefreshTokenAsync(const FRefreshTokenRequest& Request);
 	FOnWebApiResponse OnWebApiResponse;
 	FAuthApi AuthApi;
+	
+	void RefreshTokenAsync(const FRefreshTokenRequest& Request);
 };

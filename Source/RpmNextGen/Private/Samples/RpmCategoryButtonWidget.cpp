@@ -19,14 +19,20 @@ void URpmCategoryButtonWidget::NativeConstruct()
 	}
 }
 
-void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Image)
+void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Image, const FVector2D& InImageSize)
 {
 	AssetCategoryName = Category;
 
 	if (CategoryImage)
-	{
-		CategoryImageTexture = Image;
-		CategoryImage->SetBrushFromTexture(CategoryImageTexture);
+	{		
+		CategoryImage->SetDesiredSizeOverride(InImageSize);
+
+		if(Image)
+		{
+			CategoryImageTexture = Image;
+			CategoryImage->SetBrushFromTexture(CategoryImageTexture);
+			UE_LOG( LogTemp, Warning, TEXT("Setting image on button for Category: %s"), *Category );
+		}
 	}	
 }
 

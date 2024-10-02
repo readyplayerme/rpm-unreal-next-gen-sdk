@@ -14,8 +14,10 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
-
+	float ItemsPerCategory = 10.0f;
+	FString CacheUrl;
 	TUniquePtr<FCacheGenerator> CacheGenerator;
+	
 	// Callback functions for your buttons
 	FReply OnGenerateOfflineCacheClicked();
 	FReply OnExtractCacheClicked();
@@ -40,10 +42,9 @@ private:
 	{
 		CacheUrl = NewText.ToString();
 	}
-
-	float ItemsPerCategory = 10.0f;
+	
 	void OnItemsPerCategoryChanged(float NewValue);
 
-	FString CacheUrl;
+
 	void OnCacheUrlChanged(const FText& NewText);
 };

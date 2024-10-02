@@ -11,9 +11,11 @@ DECLARE_DELEGATE_TwoParams(FOnRefreshTokenResponse, const FRefreshTokenResponse&
 class RPMNEXTGEN_API FAuthApi :  public FWebApi
 {
 public:
+	FOnRefreshTokenResponse OnRefreshTokenResponse;
+	
 	FAuthApi();
 	void RefreshToken(const FRefreshTokenRequest& Request);
-	FOnRefreshTokenResponse OnRefreshTokenResponse;
+	
 	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
 
 private:

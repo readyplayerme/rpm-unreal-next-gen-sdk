@@ -12,13 +12,17 @@ DECLARE_DELEGATE_TwoParams(FOnListAssetTypeResponse, const FAssetTypeListRespons
 class RPMNEXTGEN_API FAssetApi : public FWebApiWithAuth
 {
 public:
+	static const FString BaseModelType;
+	
+	FOnListAssetsResponse OnListAssetsResponse;
+	FOnListAssetTypeResponse OnListAssetTypeResponse;
+	
 	FAssetApi();
 	void ListAssetsAsync(const FAssetListRequest& Request);
 	void ListAssetTypesAsync(const FAssetTypeListRequest& Request);
-	FOnListAssetsResponse OnListAssetsResponse;
-	FOnListAssetTypeResponse OnListAssetTypeResponse;
-	static const FString BaseModelType;
+
 private:
-	void HandleResponse(FString Response, bool bWasSuccessful);
 	FString ApiBaseUrl;
+	
+	void HandleResponse(FString Response, bool bWasSuccessful);
 };

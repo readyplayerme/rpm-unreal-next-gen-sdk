@@ -1,4 +1,4 @@
-﻿#include "Api/Assets/AssetApi.h"
+#include "Api/Assets/AssetApi.h"
 
 #include "RpmNextGen.h"
 #include "Settings/RpmDeveloperSettings.h"
@@ -68,9 +68,7 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
 {
     if (bWasSuccessful)
-    {
-        #if ENGINE_MAJOR_VERSION < 5 || ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 1 // Manual parsing for Unreal Engine 5.0 and earlier
-    	
+    {    	
         TSharedPtr<FJsonObject> JsonObject;
         TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response);
 
@@ -110,26 +108,6 @@ void FAssetApi::HandleResponse(FString Response, bool bWasSuccessful)
         }
 
         UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse JSON into known structs from response: %s"), *Response);
-
-        #else
-
-        // Use EStructJsonFlags::SkipMissingProperties for Unreal Engine 5.1 and later
-        FAssetListResponse AssetListResponse = FAssetListResponse();
-        if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetListResponse, 0, EStructJsonFlags::SkipMissingProperties))
-        {
-            OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
-            return;
-        }
-    	FAssetTypeListResponse AssetTypeListResponse = FAssetTypeListResponse();
-        if (FJsonObjectConverter::JsonObjectStringToUStruct(Response, &AssetTypeListResponse, 0, EStructJsonFlags::SkipMissingProperties))
-        {
-            OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
-            return;
-        }
-
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse API from response %s"), *Response);
-
-        #endif
     }
     else
     {

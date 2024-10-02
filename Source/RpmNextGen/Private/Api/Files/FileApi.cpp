@@ -2,6 +2,7 @@
 
 #include "HttpModule.h"
 #include "RpmNextGen.h"
+#include "Api/Assets/Models/Asset.h"
 #include "Interfaces/IHttpResponse.h"
 
 FFileApi::FFileApi()
@@ -12,16 +13,25 @@ FFileApi::~FFileApi()
 {
 }
 
-void FFileApi::LoadFileFromUrl(const FString& URL, const FString& AssetType)
+void FFileApi::LoadFileFromUrl(const FString& URL)
 {
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FFileApi::FileRequestComplete, AssetType);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FFileApi::FileRequestComplete);
 	HttpRequest->SetURL(URL);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->ProcessRequest();
 }
 
-void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString AssetType)
+void FFileApi::LoadAssetFileFromUrl(const FString& URL, FAsset Asset)
+{
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FFileApi::AssetFileRequestComplete, Asset);
+	HttpRequest->SetURL(URL);
+	HttpRequest->SetVerb("GET");
+	HttpRequest->ProcessRequest();
+}
+
+void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	FString URL = Request->GetURL();
 	FString FileName;
@@ -33,11 +43,24 @@ void FFileApi::FileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Res
 	if (bWasSuccessful && Response.IsValid() && Response->GetContentLength() > 0)
 	{
 		TArray<uint8> Content = Response->GetContent();
-		OnFileRequestComplete.ExecuteIfBound(&Content, FileName, AssetType);
+		OnFileRequestComplete.ExecuteIfBound(&Content, FileName);
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load file from URL"));
-	OnFileRequestComplete.ExecuteIfBound(nullptr, FileName, AssetType);
+	OnFileRequestComplete.ExecuteIfBound(nullptr, FileName);
+}
+
+void FFileApi::AssetFileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FAsset Asset)
+{
+	
+	if (bWasSuccessful && Response.IsValid() && Response->GetContentLength() > 0)
+	{
+		TArray<uint8> Content = Response->GetContent();
+		OnAssetFileRequestComplete.ExecuteIfBound(&Content, Asset);
+		return;
+	}
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load file from URL"));
+	OnAssetFileRequestComplete.ExecuteIfBound(nullptr, Asset);
 }
 
 bool FFileApi::LoadFileFromPath(const FString& Path, TArray<uint8>& OutContent)

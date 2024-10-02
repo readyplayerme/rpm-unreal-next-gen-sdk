@@ -20,26 +20,21 @@ URpmLoaderComponent::URpmLoaderComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AppId = RpmSettings->ApplicationId;
-	if(GltfConfig == nullptr)
-	{
-		GltfConfig = new FglTFRuntimeConfig();
-	}
-	GlbLoader = MakeShared<FGlbLoader>(GltfConfig);
-	GlbLoader->OnGLtfAssetLoaded.BindUObject(this, &URpmLoaderComponent::HandleGltfAssetLoaded);
-	
+	FileApi = MakeShared<FFileApi>();
+	FileApi->OnAssetFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleAssetLoaded);
+	FileApi->OnFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleCharacterAssetLoaded);
 	CharacterApi = MakeShared<FCharacterApi>();
 	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
 	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
 	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);
 	CharacterData = FRpmCharacterData();
+	GltfConfig = FglTFRuntimeConfig();
+	GltfConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
 }
 
-void URpmLoaderComponent::SetGltfConfig(FglTFRuntimeConfig* Config) const
+void URpmLoaderComponent::SetGltfConfig(const FglTFRuntimeConfig* Config)
 {
-	if(GlbLoader)
-	{
-		GlbLoader->SetConfig(Config);
-	}
+	GltfConfig = *Config;
 }
 
 void URpmLoaderComponent::BeginPlay()
@@ -61,8 +56,12 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 			TArray<uint8> Data;
 			if(FFileApi::LoadFileFromPath(CachedAssetData.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 			{
-				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
-				HandleGltfAssetLoaded(GltfRuntimeAsset, FAssetApi::BaseModelType);
+				UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
+				if(!GltfRuntimeAsset)
+				{
+					UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+				}
+				OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
 			}
 			return;
 		}
@@ -78,10 +77,10 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId, bool bUseC
 
 void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
 {
-	GlbLoader->LoadFileFromUrl(Url);
+	FileApi->LoadFileFromUrl(Url);
 }
 
-UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
+void URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
 {
 	FCachedAssetData ExistingAsset;
 	if(FAssetCacheManager::Get().GetCachedAsset(Asset.Id, ExistingAsset))
@@ -90,12 +89,16 @@ UglTFRuntimeAsset* URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAss
 		TArray<uint8> Data;
 		if(FFileApi::LoadFileFromPath(ExistingAsset.GetGlbPathForBaseModelId(CharacterData.BaseModelId), Data))
 		{
-			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
-			return GltfRuntimeAsset;
+			UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
+			if(!GltfRuntimeAsset)
+			{
+				UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+			}
+			OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
+			return;
 		}
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset from cache"));
-	return nullptr;
 }
 
 void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap)
@@ -114,7 +117,7 @@ void URpmLoaderComponent::LoadCharacterFromAssetMapCache(TMap<FString, FAsset> A
 	LoadCharacterFromUrl(Url);
 }
 
-void URpmLoaderComponent::LoadAssetsWithNewStyle()
+void URpmLoaderComponent::LoadAssetsFromCacheWithNewStyle()
 {
 	for (auto PreviewAssets : CharacterData.Assets)
 	{
@@ -122,8 +125,7 @@ void URpmLoaderComponent::LoadAssetsWithNewStyle()
 		{
 			continue;
 		}
-		UglTFRuntimeAsset* GltfAsset = LoadGltfRuntimeAssetFromCache(PreviewAssets.Value);
-		HandleGltfAssetLoaded(GltfAsset, PreviewAssets.Value.Type);
+		 LoadGltfRuntimeAssetFromCache(PreviewAssets.Value);
 	}
 }
 
@@ -144,13 +146,11 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	
 	if(!FConnectionManager::Get().IsConnected() || bUseCache)
 	{
+		LoadGltfRuntimeAssetFromCache(AssetData);
 		if(bIsBaseModel && CharacterData.Assets.Num() > 1)
 		{
-			LoadAssetsWithNewStyle();
+			LoadAssetsFromCacheWithNewStyle();
 		}
-
-		UglTFRuntimeAsset* GltfAsset = LoadGltfRuntimeAssetFromCache(AssetData);
-		HandleGltfAssetLoaded(GltfAsset, AssetData.Type);
 		return;
 	}
 	TMap<FString, FString> ParamAssets;
@@ -163,20 +163,31 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	PreviewRequest.Params.Assets = ParamAssets;
 	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
 
-	LoadCharacterFromUrl(Url);
+	FileApi->LoadAssetFileFromUrl(Url, AssetData);
 }
 
-void URpmLoaderComponent::HandleGltfAssetLoaded(UglTFRuntimeAsset* gltfRuntimeAsset, const FString& AssetType)
+void URpmLoaderComponent::HandleAssetLoaded(TArray<unsigned char>* Data, const FAsset& Asset)
 {
-	if(!gltfRuntimeAsset)
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
+	if(!GltfRuntimeAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
 	}
-	OnGltfAssetLoaded.Broadcast(gltfRuntimeAsset, AssetType);
+	OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
+}
+
+void URpmLoaderComponent::HandleCharacterAssetLoaded(TArray<unsigned char>* Data, const FString& FileName)
+{
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
+	if(!GltfRuntimeAsset)
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+	}
+	OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
 }
 
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse,
-	bool bWasSuccessful)
+                                                        bool bWasSuccessful)
 {
 	CharacterData.Id = CharacterCreateResponse.Data.Id;
 	OnCharacterCreated.Broadcast(CharacterData);

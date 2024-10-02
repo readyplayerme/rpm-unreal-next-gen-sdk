@@ -10,6 +10,7 @@ class UglTFRuntimeAsset;
 class FEditorAssetLoader : public FAssetGlbLoader
 {
 public:
+	USkeleton* SkeletonToCopy;
 
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;
@@ -18,11 +19,11 @@ public:
 	void LoadBaseModelAsset(const FAsset& Asset);
 	
 	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
-	USkeleton* SkeletonToCopy;
 
 private:
+	FglTFRuntimeConfig* GltfConfig;
+	
 	void LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAsset* GltfAsset);
 	UFUNCTION()
 	void HandleGlbLoaded(const FAsset& Asset, const TArray<unsigned char>& Data);
-	FglTFRuntimeConfig* GltfConfig;
 };

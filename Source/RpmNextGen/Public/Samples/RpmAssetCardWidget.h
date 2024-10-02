@@ -17,17 +17,6 @@ class RPMNEXTGEN_API URpmAssetCardWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION()
-	void OnTextureLoaded(UTexture2D* Texture2D);
-	
-	virtual void NativeConstruct() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Asset Card")
-	virtual void InitializeCard(const FAsset& Asset);
-
-	UFUNCTION(BlueprintCallable, Category = "Asset Card")
-	void LoadImage(const FAsset& Asset);
-
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AssetCategoryText;
 	
@@ -39,6 +28,17 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AssetIdText;
+	
+	UFUNCTION()
+	void OnTextureLoaded(UTexture2D* Texture2D);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void InitializeCard(const FAsset& Asset);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	void LoadImage(const FAsset& Asset);
+
+	virtual void NativeConstruct() override;
 	
 private:
 	FAsset AssetData;

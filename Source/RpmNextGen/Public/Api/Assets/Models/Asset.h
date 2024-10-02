@@ -28,4 +28,17 @@ struct RPMNEXTGEN_API FAsset
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "updatedAt"))
 	FDateTime UpdatedAt;
+	
+private:
+	UPROPERTY(meta = (JsonIgnore))
+	FString organizationId = "";
+	
+	UPROPERTY(meta = (JsonIgnore))
+	FString cageMeshId = "";
+	
+	UPROPERTY(meta = (JsonIgnore))
+	bool active = false;
+	
+	UPROPERTY(meta = (JsonIgnore))
+	FString _id = "";
 };

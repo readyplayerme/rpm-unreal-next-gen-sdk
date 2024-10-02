@@ -27,8 +27,6 @@ void URpmAssetPanelWidget::NativeConstruct()
 	}
 	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
-	ButtonSize = FVector2D(200, 200);
-	ImageSize = FVector2D(200, 200);
 }
 
 void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
@@ -52,11 +50,15 @@ void URpmAssetPanelWidget::LoadAssetsFromCache(const FString& AssetType)
 
 void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
+	if(Assets.Num() < 1)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
+		return;
+	}
 	for (auto Asset : Assets)
 	{
 		CreateButton(Asset);
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
 }
 
 void URpmAssetPanelWidget::ClearAllButtons()
@@ -81,9 +83,7 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 {
 	if (AssetButtonBlueprint)
 	{
-		UWorld* World = GetWorld();
-        
-		if (World)
+		if (UWorld* World = GetWorld())
 		{
 			if (URpmAssetButtonWidget* AssetButtonInstance = CreateWidget<URpmAssetButtonWidget>(World, AssetButtonBlueprint))
 			{
@@ -106,6 +106,11 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetButtonBlueprint is not set!"));
 	}
+}
+
+void URpmAssetPanelWidget::SynchronizeProperties()
+{
+	Super::SynchronizeProperties();
 }
 
 void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButton)

@@ -13,6 +13,8 @@ DECLARE_DELEGATE_TwoParams(FOnGlbDownloaded, UglTFRuntimeAsset*, const FString&)
 class RPMNEXTGEN_API FGlbLoader : public FFileApi
 {
 public:
+	FOnGlbDownloaded OnGLtfAssetLoaded;
+	
 	FGlbLoader();
 	FGlbLoader(FglTFRuntimeConfig* Config);
 	
@@ -23,12 +25,11 @@ public:
 		GltfConfig = Config;
 	}
 
-	FOnGlbDownloaded OnGLtfAssetLoaded;
-
 protected:
 	FglTFRuntimeConfig* GltfConfig;
-	UFUNCTION()
-	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String, const FString& AssetType);
 	FFileUtility* FileWriter;
 	FString DownloadDirectory;
+	
+	UFUNCTION()
+	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String);
 };
