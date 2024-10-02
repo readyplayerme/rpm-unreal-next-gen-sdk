@@ -19,27 +19,14 @@ void URpmPaginatorWidget::NativeConstruct()
 	{
 		NextButton->OnClicked.AddDynamic(this, &URpmPaginatorWidget::OnNextButtonClicked);
 	}
-	
-	SetButtons();
+	UpdateState(FPagination());
 }
 
-void URpmPaginatorWidget::Initialize(const FPagination& InPagination)
-{
-	Pagination = InPagination;
-	
-	SetButtons();
-}
-
-FText URpmPaginatorWidget::GetPageCountText()
-{
-	return FText::FromString(FString::Printf(TEXT("%d / %d"), Pagination.Page, Pagination.TotalPages));
-}
-
-void URpmPaginatorWidget::SetButtons()
-{
+void URpmPaginatorWidget::UpdateState(const FPagination& Pagination)
+{	
 	if (PageText)
 	{
-		PageText->SetText(GetPageCountText());
+		PageText->SetText(GetPageCountText(Pagination));
 	}
 
 	if (PreviousButton)
@@ -53,20 +40,17 @@ void URpmPaginatorWidget::SetButtons()
 	}
 }
 
+FText URpmPaginatorWidget::GetPageCountText(const FPagination& Pagination)
+{
+	return FText::FromString(FString::Printf(TEXT("%d / %d"), Pagination.Page, Pagination.TotalPages));
+}
+
 void URpmPaginatorWidget::OnPrevButtonClicked()
 {
-	ChangePage(-1);
+	OnPreviousButtonEvent.Broadcast();
 }
 
 void URpmPaginatorWidget::OnNextButtonClicked()
 {
-	ChangePage(1);
-}
-
-void URpmPaginatorWidget::ChangePage(const int32 Index)
-{
-	Pagination.Page = FMath::Clamp(Pagination.Page + Index, 1, Pagination.TotalPages);
-	SetButtons();
-	
-	OnPageChanged.Broadcast(Pagination);
+	OnNextButtonEvent.Broadcast();
 }

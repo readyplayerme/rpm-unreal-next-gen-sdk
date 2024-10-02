@@ -84,6 +84,7 @@ UUserWidget* URpmCreatorWidget::CreateAssetPanel(const FString& Category)
 		return nullptr;
 	}
 	AssetPanelSwitcher->AddChild(AssetPanelWidget);
+	AssetPanelWidget->PaginationLimit = PaginationLimit;
 	AssetPanelWidget->Rename(*Category);
 	AssetPanelWidget->SetCategoryName(Category);
 	AssetPanelWidget->ButtonSize = FVector2D(200, 200);

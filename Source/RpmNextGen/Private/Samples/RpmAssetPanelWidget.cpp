@@ -24,6 +24,8 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 {
 	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
 	{
+		Pagination = AssetListResponse.Pagination;
+		OnPaginationUpdated.Broadcast(Pagination);
 		CreateButtonsFromAssets(AssetListResponse.Data);
 		return;
 	}
@@ -54,11 +56,24 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 
 void URpmAssetPanelWidget::ClearAllButtons()
 {
-	if(!AssetButtons.IsEmpty())
+	if (ButtonContainer)
 	{
-		AssetButtons.Empty();
+		ButtonContainer->ClearChildren();
+        
+		for (auto& ButtonPair : AssetButtonMap)
+		{
+			if (URpmAssetButtonWidget* ButtonWidget = Cast<URpmAssetButtonWidget>(ButtonPair.Value->GetDefaultObject()))
+			{
+				ButtonWidget->RemoveFromParent();
+				ButtonWidget->ConditionalBeginDestroy(); 
+			}
+		}
 	}
+
+	AssetButtonMap.Empty();
 	SelectedAssetButton = nullptr;
+
+	UE_LOG(LogTemp, Log, TEXT("All asset buttons cleared."));
 }
 
 void URpmAssetPanelWidget::UpdateSelectedButton(URpmAssetButtonWidget* AssetButton)
@@ -88,7 +103,7 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 				}
 				
 				AssetButtonInstance->InitializeButton(AssetData, ImageSize);
-				AssetButtons.Add(AssetButtonBlueprint);
+				AssetButtonMap.Add(AssetData.Id, AssetButtonBlueprint);
 				AssetButtonInstance->OnAssetButtonClicked.AddDynamic(this, &URpmAssetPanelWidget::OnAssetButtonClicked);
 			}
 		}
@@ -112,6 +127,7 @@ void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* Ass
 
 void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 {
+	CurrentAssetType = AssetType;
 	if (!AssetApi.IsValid())
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi is null or invalid"));
@@ -127,7 +143,33 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;
-	QueryParams.Limit = 100;
-	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+	QueryParams.Limit = PaginationLimit;
+	QueryParams.Page = Pagination.Page;
+	const FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);	
+}
+
+void URpmAssetPanelWidget::LoadNextPage()
+{
+	if (!Pagination.HasNextPage)
+	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Already on the last page"));
+
+		return;
+	}
+	ClearAllButtons();
+	Pagination.Page++;
+	LoadAssetsOfType(CurrentAssetType);
+}
+
+void URpmAssetPanelWidget::LoadPreviousPage()
+{
+	if (!Pagination.HasPrevPage)
+	{
+		UE_LOG(LogReadyPlayerMe, Log, TEXT("Already on the first page"));
+		return;
+	}
+	ClearAllButtons();
+	Pagination.Page--;
+	LoadAssetsOfType(CurrentAssetType);  
 }

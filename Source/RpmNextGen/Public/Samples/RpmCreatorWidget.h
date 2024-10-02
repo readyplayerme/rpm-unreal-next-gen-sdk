@@ -23,7 +23,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void SwitchToPanel(const FString& Category);
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me" )
+	int32 PaginationLimit = 50;
+	
 	virtual void NativeConstruct() override;
 	
 protected:

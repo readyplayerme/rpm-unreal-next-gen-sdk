@@ -11,7 +11,8 @@ class UTextBlock;
 class UButton;
 struct FPagination;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPageChanged, const FPagination&, Pargination);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNextButtonClicked);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPreviousButtonClicked);
 
 /**
  * 
@@ -23,10 +24,13 @@ class RPMNEXTGEN_API URpmPaginatorWidget : public UUserWidget
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Events" )
-	FOnPageChanged OnPageChanged;
+	FOnNextButtonClicked OnNextButtonEvent;
+
+	UPROPERTY( BlueprintAssignable, Category = "Events" )
+	FOnPreviousButtonClicked OnPreviousButtonEvent;
 	
-	void Initialize(const FPagination& InPagination);
-	FText GetPageCountText();
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me" )
+	void UpdateState(const FPagination& Pagination);
 
 	UFUNCTION()
 	void OnPrevButtonClicked();
@@ -34,7 +38,6 @@ public:
 	void OnNextButtonClicked();
 
 protected:
-	FPagination Pagination;
 	
 	virtual void NativeConstruct() override;
 	
@@ -47,7 +50,6 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PageText;
-	
-	void SetButtons();
-	void ChangePage(int32 Index);
+
+	FText GetPageCountText(const FPagination& Pagination);
 };
