@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Samples/RpmCategoryPanelWidget.h"
-
-#include "HttpModule.h"
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
@@ -48,42 +46,6 @@ void URpmCategoryPanelWidget::OnProcessResponse(TSharedPtr<IHttpRequest> HttpReq
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("RpmCategory Widget from URL %s : FAILED"), *HttpRequest->GetURL());
 
 }
-
-// void URpmCategoryPanelWidget::LoadAndCreateButtons()
-// {
-// 	// make manual HTTPRequest
-// 	TSharedPtr<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-// 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
-// 	FAssetTypeListRequest AssetTypeListRequest;
-// 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
-// 	QueryParams.ApplicationId = Settings->ApplicationId;
-// 	AssetTypeListRequest.Params = QueryParams;
-// 	
-// 	auto ApiBaseUrl = Settings->GetApiBaseUrl();
-// 	FString QueryString = AssetTypeListRequest.BuildQueryString();
-// 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets/types%s"), *ApiBaseUrl, *QueryString);
-// 	FApiRequest ApiRequest = FApiRequest();
-// 	ApiRequest.Url = Url;
-// 	ApiRequest.Method = GET;
-// 	Request->SetURL(Url);
-// 	Request->SetVerb(ApiRequest.GetVerb());
-// 	Request->SetTimeout(10);
-// 	FString Headers;
-// 	Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
-// 	for (const auto& Header : ApiRequest.Headers)
-// 	{
-// 		Request->SetHeader(Header.Key, Header.Value);
-// 		Headers.Append(FString::Printf(TEXT("%s: %s\n"), *Header.Key, *Header.Value));
-// 	}
-//
-// 	if (!ApiRequest.Payload.IsEmpty() && ApiRequest.Method != ERequestMethod::GET)
-// 	{
-// 		Request->SetContentAsString(ApiRequest.Payload);
-// 	}
-// 	Request->OnProcessRequestComplete().BindUObject(this, &URpmCategoryPanelWidget::OnProcessResponse, &ApiRequest);
-// 	UE_LOG( LogTemp, Warning, TEXT("Process request to url %s with headers %s"), *Request->GetURL(), *Headers);
-// 	Request->ProcessRequest();
-// }
 
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {

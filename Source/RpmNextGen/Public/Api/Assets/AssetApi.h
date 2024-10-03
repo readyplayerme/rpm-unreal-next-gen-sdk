@@ -30,7 +30,7 @@ protected:
 	
 private:
 	FString ApiBaseUrl;
-
+	bool bIsInitialized = false;
 	//void HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	void HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	//HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);

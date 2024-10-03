@@ -36,6 +36,7 @@ void DeveloperTokenAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 	FRefreshTokenRequest RefreshRequest;
 	RefreshRequest.Data.Token = FDevAuthTokenCache::GetAuthData().Token;
 	RefreshRequest.Data.RefreshToken = FDevAuthTokenCache::GetAuthData().RefreshToken;
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("TryRefresh"));
 
 	RefreshTokenAsync(RefreshRequest);
 }
@@ -49,6 +50,7 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenRespo
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
 		FDevAuthTokenCache::SetAuthData(DeveloperAuth);
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Refresh token success"));
 		OnTokenRefreshed.ExecuteIfBound(Response.Data, true);
 		return;
 	}

@@ -25,6 +25,8 @@ FAssetApi::FAssetApi(EApiRequestStrategy InApiRequestStrategy) : ApiRequestStrat
 
 void FAssetApi::Initialize()
 {
+	if (bIsInitialized)	return;
+	
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Initializing AssetApi"));
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	OnRequestComplete.BindRaw(this, &FAssetApi::HandleAssetResponse);
@@ -37,6 +39,7 @@ void FAssetApi::Initialize()
 	{
 		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 	}
+	bIsInitialized = true;
 }
 
 void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
@@ -114,24 +117,24 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 
 void FAssetApi::HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi:HandleAssetResponse request failed"));
-
+	const bool bIsTypeRequest = ApiRequest.Url.Contains(TEXT("/types"));
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
 		FAssetTypeListResponse AssetTypeListResponse;
-		if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetTypeListResponse, 0, 0))
+		
+		if (bIsTypeRequest && FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetTypeListResponse, 0, 0))
 		{
 			OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
 			return;
 		}
 		FAssetListResponse AssetListResponse;
-		if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetListResponse, 0, 0))
+		if (!bIsTypeRequest && FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetListResponse, 0, 0))
 		{
 			OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
 			return;
 		}
 	}
-	const bool bIsTypeRequest = ApiRequest.Url.Contains(TEXT("/types"));
+	
 	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
 	{
 		if(bIsTypeRequest)

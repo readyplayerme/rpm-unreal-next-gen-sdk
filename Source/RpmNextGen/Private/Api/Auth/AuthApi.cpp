@@ -1,4 +1,6 @@
 ﻿#include "Api/Auth/AuthApi.h"
+
+#include "RpmNextGen.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
@@ -8,6 +10,7 @@ FAuthApi::FAuthApi()
 {
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	ApiUrl = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
+	OnRequestComplete.BindRaw(this, &FAuthApi::OnProcessComplete);
 }
 
 void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
@@ -20,15 +23,20 @@ void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
 	DispatchRaw(ApiRequest);
 }
 
-void FAuthApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest)
+void FAuthApi::OnProcessComplete(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	FString data = Response->GetContentAsString();
-	
-	FRefreshTokenResponse TokenResponse;
-	if (bWasSuccessful && !data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(data, &TokenResponse, 0, 0))
+	if(bWasSuccessful, Response.IsValid() && Response->GetResponseCode() == 200)
 	{
-		OnRefreshTokenResponse.ExecuteIfBound(TokenResponse, true);
-		return;
+		FString Data = Response->GetContentAsString();
+	
+		FRefreshTokenResponse TokenResponse;
+		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &TokenResponse, 0, 0))
+		{
+			OnRefreshTokenResponse.ExecuteIfBound(TokenResponse, true);
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Refresh token success"));
+			return;
+		}
 	}
+    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
 	OnRefreshTokenResponse.ExecuteIfBound(FRefreshTokenResponse(), false);
 }

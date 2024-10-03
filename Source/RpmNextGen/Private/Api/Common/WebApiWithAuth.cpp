@@ -6,6 +6,7 @@ FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStra
 {
     FWebApi();
     SetAuthenticationStrategy(nullptr);
+    ApiRequestData = MakeShared<FApiRequest>();
 }
 
 FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrategy) : AuthenticationStrategy(nullptr)
@@ -69,7 +70,7 @@ void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePt
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
         UE_LOG(LogReadyPlayerMe, Warning, TEXT("FWebApiWithAuth::OnProcessResponse OnRequestComplete.ExecuteIfBound"));
-        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, bWasSuccessful);
+        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, true);
     }
     else if(Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Denied && AuthenticationStrategy != nullptr)
     {

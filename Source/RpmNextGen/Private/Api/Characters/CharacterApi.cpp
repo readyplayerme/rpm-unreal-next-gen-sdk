@@ -67,7 +67,7 @@ void FCharacterApi::HandleCharacterResponse(const FApiRequest& ApiRequest, FHttp
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
 
 	const FString Verb = ApiRequest.GetVerb();
-	if (Response->GetResponseCode() == 401)
+	if (Response.IsValid() && Response->GetResponseCode() == 401)
 	{
 		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
 		bSuccess = false;
