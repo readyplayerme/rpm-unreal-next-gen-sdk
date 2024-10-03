@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
@@ -16,7 +16,7 @@ DECLARE_DELEGATE_TwoParams(FOnCharacterCreateResponse, FCharacterCreateResponse,
 DECLARE_DELEGATE_TwoParams(FOnCharacterUpdatResponse, FCharacterUpdateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse, bool);
 
-class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>, public FWebApiWithAuth
+class RPMNEXTGEN_API FCharacterApi : public FWebApiWithAuth
 {
 public:
 	FOnRequestComplete OnApiResponse;

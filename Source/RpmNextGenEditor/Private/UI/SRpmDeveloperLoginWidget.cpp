@@ -193,14 +193,14 @@ void SRpmDeveloperLoginWidget::Initialize()
 	const FDeveloperAuth DevAuthData = FDevAuthTokenCache::GetAuthData();
 	if (!DeveloperAuthApi.IsValid())
 	{
-		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
+		DeveloperAuthApi = MakeShared<FDeveloperAuthApi>();
 
 		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
 	}
 
 	if (!AssetApi.IsValid())
 	{
-		AssetApi = MakeUnique<FAssetApi>();
+		AssetApi = MakeShared<FAssetApi>();
 		if (!DevAuthData.IsDemo)
 		{
 			AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
@@ -209,7 +209,7 @@ void SRpmDeveloperLoginWidget::Initialize()
 	}
 	if (!DeveloperAccountApi.IsValid())
 	{
-		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(nullptr);
+		DeveloperAccountApi = MakeShared<FDeveloperAccountApi>(nullptr);
 		if (!DevAuthData.IsDemo)
 		{
 			DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
