@@ -2,10 +2,13 @@
 
 #include "Samples/RpmCategoryPanelWidget.h"
 
+#include "HttpModule.h"
+#include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/SizeBox.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Samples/RpmCategoryButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -14,6 +17,13 @@ class URpmDeveloperSettings;
 void URpmCategoryPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if(bIsInitialized)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("URpmCategoryPanelWidget Already initialized"));
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Initiizing URpmCategoryPanelWidget"));
+	bIsInitialized = true;
 	AssetApi = MakeShared<FAssetApi>();
 	AssetApi->OnListAssetTypeResponse.BindUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded);
 	AssetButtons = TArray<TSubclassOf<URpmCategoryButtonWidget>>();
@@ -28,9 +38,57 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 	SelectedCategoryButton = CategoryButton;
 }
 
+void URpmCategoryPanelWidget::OnProcessResponse(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bWasSuccessful, FApiRequest* ApiRequest)
+{
+	if(bWasSuccessful && HttpResponse.IsValid() && EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("RpmCategory Widget from URL %s SUCCESS"), *HttpRequest->GetURL());
+		return;
+	}
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("RpmCategory Widget from URL %s : FAILED"), *HttpRequest->GetURL());
+
+}
+
+// void URpmCategoryPanelWidget::LoadAndCreateButtons()
+// {
+// 	// make manual HTTPRequest
+// 	TSharedPtr<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+// 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
+// 	FAssetTypeListRequest AssetTypeListRequest;
+// 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
+// 	QueryParams.ApplicationId = Settings->ApplicationId;
+// 	AssetTypeListRequest.Params = QueryParams;
+// 	
+// 	auto ApiBaseUrl = Settings->GetApiBaseUrl();
+// 	FString QueryString = AssetTypeListRequest.BuildQueryString();
+// 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets/types%s"), *ApiBaseUrl, *QueryString);
+// 	FApiRequest ApiRequest = FApiRequest();
+// 	ApiRequest.Url = Url;
+// 	ApiRequest.Method = GET;
+// 	Request->SetURL(Url);
+// 	Request->SetVerb(ApiRequest.GetVerb());
+// 	Request->SetTimeout(10);
+// 	FString Headers;
+// 	Request->SetHeader(TEXT("X-API-KEY"), Settings->ApiKey);
+// 	for (const auto& Header : ApiRequest.Headers)
+// 	{
+// 		Request->SetHeader(Header.Key, Header.Value);
+// 		Headers.Append(FString::Printf(TEXT("%s: %s\n"), *Header.Key, *Header.Value));
+// 	}
+//
+// 	if (!ApiRequest.Payload.IsEmpty() && ApiRequest.Method != ERequestMethod::GET)
+// 	{
+// 		Request->SetContentAsString(ApiRequest.Payload);
+// 	}
+// 	Request->OnProcessRequestComplete().BindUObject(this, &URpmCategoryPanelWidget::OnProcessResponse, &ApiRequest);
+// 	UE_LOG( LogTemp, Warning, TEXT("Process request to url %s with headers %s"), *Request->GetURL(), *Headers);
+// 	Request->ProcessRequest();
+// }
+
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
+	UE_LOG(LogTemp, Warning, TEXT("Creating buttons on URpmCategoryPanelWidget"));
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	FAssetTypeListRequest AssetTypeListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;

@@ -20,7 +20,7 @@ void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
 	DispatchRaw(ApiRequest);
 }
 
-void FAuthApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest)
+void FAuthApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest)
 {
 	FString data = Response->GetContentAsString();
 	

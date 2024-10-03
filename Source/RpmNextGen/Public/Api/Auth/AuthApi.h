@@ -16,7 +16,7 @@ public:
 	FAuthApi();
 	void RefreshToken(const FRefreshTokenRequest& Request);
 	
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest) override;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest) override;
 
 private:
 	FString ApiUrl;

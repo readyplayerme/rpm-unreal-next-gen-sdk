@@ -2,7 +2,6 @@
 
 #include "RpmNextGen.h"
 #include "Auth/DevAuthTokenCache.h"
-#include "Api/Auth/ApiRequest.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
 #include "Auth/Models/DeveloperAuth.h"
@@ -43,6 +42,7 @@ void DeveloperTokenAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 
 void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful)
 {
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("refresh token response"));
 	if (bWasSuccessful && !Response.Data.Token.IsEmpty())
 	{
 		FDeveloperAuth DeveloperAuth = FDevAuthTokenCache::GetAuthData();

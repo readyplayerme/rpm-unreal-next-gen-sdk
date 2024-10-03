@@ -1,6 +1,5 @@
 #include "Api/Characters/CharacterApi.h"
 #include "HttpModule.h"
-#include "RpmCharacterTypes.h"
 #include "RpmNextGen.h"
 #include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Characters/Models/CharacterFindByIdRequest.h"
@@ -14,11 +13,11 @@ FCharacterApi::FCharacterApi()
 {
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	BaseUrl = FString::Printf(TEXT("%s/v1/characters"), *RpmSettings->GetApiBaseUrl());
-	Http = &FHttpModule::Get();
 	if(!RpmSettings->ApiKey.IsEmpty() && RpmSettings->ApiProxyUrl.IsEmpty())
 	{
 		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
 	}
+	OnRequestComplete.BindRaw(this, &FCharacterApi::HandleCharacterResponse);
 }
 
 FCharacterApi::~FCharacterApi()
@@ -63,46 +62,53 @@ FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Reques
 	return url;
 }
 
-void FCharacterApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest)
+void FCharacterApi::HandleCharacterResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	//FWebApiWithAuth::OnProcessResponse(Request, Response, bWasSuccessful, ApiRequest);
 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
-	UE_LOG(LogReadyPlayerMe, Warning,TEXT("Response from character API"));
 
-
+	const FString Verb = ApiRequest.GetVerb();
 	if (Response->GetResponseCode() == 401)
 	{
 		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
-		return;
+		bSuccess = false;
 	}
 	if(bSuccess)
 	{
-		const FString Verb = Request->GetVerb();
 		if (Verb == "POST")
 		{
+			FString Base64Payload = FBase64::Encode(ApiRequest.Payload);
 			FCharacterCreateResponse CharacterCreateResponse;
-			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-				Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterCreateResponse, 0, 0);
 			OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, bSuccess);
 		}
 		else if (Verb == "PATCH")
 		{
 			FCharacterUpdateResponse CharacterUpdateResponse;
-			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-				Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0);
 			OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, bSuccess);
 		}
 		else if (Verb == "GET")
 		{
 			FCharacterFindByIdResponse CharacterFindByIdResponse;
-			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(
-				Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
+			bSuccess = bSuccess && FJsonObjectConverter::JsonObjectStringToUStruct(	Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0);
 			OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, bSuccess);
 		}
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to process response from character API. Falling back to cache."));
-	CreateCharacterFromCache();
+	if (Verb == "POST")
+	{
+		OnCharacterCreateResponse.ExecuteIfBound(FCharacterCreateResponse() , bSuccess);
+		CreateCharacterFromCache();
+	}
+	else if (Verb == "PATCH")
+	{
+		OnCharacterUpdateResponse.ExecuteIfBound(FCharacterUpdateResponse(), bSuccess);
+	}
+	else if (Verb == "GET")
+	{
+		OnCharacterFindResponse.ExecuteIfBound(FCharacterFindByIdResponse(), bSuccess);
+	}
 }
 
 void FCharacterApi::CreateCharacterFromCache()

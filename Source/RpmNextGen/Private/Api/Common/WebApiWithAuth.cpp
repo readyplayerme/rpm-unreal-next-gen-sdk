@@ -1,4 +1,5 @@
 ﻿#include "Api/Common/WebApiWithAuth.h"
+#include "RpmNextGen.h"
 #include "Interfaces/IHttpResponse.h"
 
 FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)
@@ -62,15 +63,22 @@ void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
     AuthenticationStrategy->AddAuthToRequest(this->ApiRequestData);
 }
 
-void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest)
+void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest)
 {
+    UE_LOG(LogReadyPlayerMe, Warning, TEXT("FWebApiWithAuth::OnProcessResponse"));
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        OnRequestComplete.ExecuteIfBound(ApiRequest, Response, bWasSuccessful);
-        return;
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("FWebApiWithAuth::OnProcessResponse OnRequestComplete.ExecuteIfBound"));
+        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, bWasSuccessful);
     }
-    if(EHttpResponseCodes::Denied == Response->GetResponseCode() && AuthenticationStrategy != nullptr)
+    else if(Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Denied && AuthenticationStrategy != nullptr)
     {
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("TryRefresh"));
         AuthenticationStrategy->TryRefresh(ApiRequestData);
+    }
+    else
+    {
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed"), *Request->GetURL());
+        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, false);
     }
 }

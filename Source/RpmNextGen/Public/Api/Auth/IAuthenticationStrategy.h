@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Auth/ApiRequest.h"
 #include "Models/RefreshTokenResponse.h"
 
 DECLARE_DELEGATE_OneParam(FOnAuthComplete, bool);

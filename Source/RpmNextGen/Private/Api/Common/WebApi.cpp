@@ -9,45 +9,44 @@ FWebApi::FWebApi()
     Http = &FHttpModule::Get();
 }
 
-FWebApi::~FWebApi() {}
+FWebApi::~FWebApi()
+{
+    
+}
 
 void FWebApi::DispatchRaw(const FApiRequest& Data)
 {
-    TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-    const FString& Url = Data.Url + BuildQueryString(Data.QueryParams);
-    Request->SetURL(Url);
-    Request->SetVerb(Data.GetVerb());
-
+    CurrentRequest = Http->CreateRequest();
+    FString Url = Data.Url + BuildQueryString(Data.QueryParams);
+    CurrentRequest->SetURL(Url);
+    CurrentRequest->SetVerb(Data.GetVerb());
+    CurrentRequest->SetTimeout(10);
+    FString Headers;
     for (const auto& Header : Data.Headers)
     {
-        Request->SetHeader(Header.Key, Header.Value);
+        CurrentRequest->SetHeader(Header.Key, Header.Value);
+        Headers.Append(FString::Printf(TEXT("%s: %s\n"), *Header.Key, *Header.Value));
     }
 
-    if (!Data.Payload.IsEmpty())
+    if (!Data.Payload.IsEmpty() && Data.Method != ERequestMethod::GET)
     {
-        Request->SetContentAsString(Data.Payload);
+        CurrentRequest->SetContentAsString(Data.Payload);
     }
-    TWeakPtr<FWebApi> WeakThisPtr = AsShared();
-    Request->OnProcessRequestComplete().BindLambda([WeakThisPtr, Data](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-    {
-        if (TSharedPtr<FWebApi> StrongThis = WeakThisPtr.Pin())
-        {
-            StrongThis->OnProcessResponse(Request, Response, bWasSuccessful, Data);
-        }
-    });
-    Request->ProcessRequest();
+    CurrentRequest->OnProcessRequestComplete().BindRaw(this, &FWebApi::OnProcessResponse, &Data);
+    UE_LOG( LogTemp, Warning, TEXT("Process request to url %s with headers %s"), *CurrentRequest->GetURL(), *Headers);
+    CurrentRequest->ProcessRequest();
 }
 
-void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest)
+void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest)
 {
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        OnRequestComplete.ExecuteIfBound(ApiRequest, Response, true);
+        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, true);
         return;
     }
     FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
     UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
-    OnRequestComplete.ExecuteIfBound(ApiRequest, Response, false);
+    OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, false);
 }
 
 FString FWebApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
@@ -58,9 +57,10 @@ FString FWebApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
         QueryString.Append(TEXT("?"));
         for (const auto& Param : QueryParams)
         {
-            QueryString.Append(FString::Printf(TEXT("%s=%s&"), *FGenericPlatformHttp::UrlEncode(Param.Key), *FGenericPlatformHttp::UrlEncode(Param.Value)));
+            QueryString.Append(FString::Printf(TEXT("%s=%s&"), *Param.Key, *Param.Value));
         }
         QueryString.RemoveFromEnd(TEXT("&"));
     }
+    QueryString = QueryString.Replace( TEXT(" "), TEXT("%20") );
     return QueryString;
 }

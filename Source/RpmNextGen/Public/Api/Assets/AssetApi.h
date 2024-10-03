@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Api/Common/ApiRequestStrategy.h"
 #include "Api/Common/WebApiWithAuth.h"
 #include "Models/AssetTypeListResponse.h"
@@ -11,7 +11,7 @@ struct FAssetListResponse;
 DECLARE_DELEGATE_TwoParams(FOnListAssetsResponse, const FAssetListResponse&, bool);
 DECLARE_DELEGATE_TwoParams(FOnListAssetTypeResponse, const FAssetTypeListResponse&, bool);
 
-class RPMNEXTGEN_API FAssetApi : public TSharedFromThis<FAssetApi>
+class RPMNEXTGEN_API FAssetApi :  public FWebApiWithAuth
 {
 public:
 	static const FString BaseModelType;
@@ -23,7 +23,6 @@ public:
 	FAssetApi(EApiRequestStrategy InApiRequestStrategy);
 	
 	void Initialize();
-	void SetAuthenticationStrategy(IAuthenticationStrategy* InAuthStrategy);
 	void ListAssetsAsync(const FAssetListRequest& Request);
 	void ListAssetTypesAsync(const FAssetTypeListRequest& Request);
 protected:
@@ -31,12 +30,13 @@ protected:
 	
 private:
 	FString ApiBaseUrl;
-	TSharedPtr<FWebApiWithAuth> AssetListApi;
-	TSharedPtr<FWebApiWithAuth> AssetTypeListApi;
+
+	//void HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	//HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	
-	void HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
-	void HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
-	
-	void LoadAssetsFromCache();
+	void LoadAssetsFromCache(TMap<FString, FString> QueryParams);
 	void LoadAssetTypesFromCache();
+
+	TArray<FString> ExtractQueryValues(const FString& QueryString, const FString& Key);
 };

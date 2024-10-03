@@ -18,9 +18,9 @@ public:
 
 	void DispatchRawWithAuth(FApiRequest& Data);
 protected:
-	TSharedPtr<FApiRequest> ApiRequestData;
+	TSharedPtr<FApiRequest, ESPMode::ThreadSafe> ApiRequestData;
 
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest) override;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest) override;
 
 private:
 	IAuthenticationStrategy* AuthenticationStrategy;

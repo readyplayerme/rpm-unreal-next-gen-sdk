@@ -20,24 +20,12 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
     if (!WorldContextObject)
     {
         UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is null"));
+        OnAssetIdFetched.ExecuteIfBound(FString());
         return;
     }
 
-    if (!IsInternetConnected())
-    {
-        TArray<FCachedAssetData> CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
-        if (CachedAssets.Num() > 0)
-        {
-            OnAssetIdFetched.ExecuteIfBound(CachedAssets[0].Id);
-            return;
-        }
-        UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to fetch first asset from cache."));
-        return;
-    }
-
-    // Store the AssetApi inside the WorldContextObject to bind its lifecycle
-    TWeakObjectPtr<UObject> WeakContextObject(WorldContextObject);
     TSharedPtr<FAssetApi> AssetApi = MakeShared<FAssetApi>();
+    TSharedPtr<FOnAssetIdFetched> SharedDelegate = MakeShared<FOnAssetIdFetched>(OnAssetIdFetched);
 
     const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
     FAssetListQueryParams QueryParams;
@@ -46,37 +34,39 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
     QueryParams.Limit = 1;
     FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 
-    // Bind the lambda to the lifecycle of the WorldContextObject
-    AssetApi->OnListAssetsResponse.BindLambda([WeakContextObject, OnAssetIdFetched](const FAssetListResponse& Response, bool bWasSuccessful)
+    TWeakObjectPtr<UObject> WeakContextObject(WorldContextObject);
+
+    AssetApi->OnListAssetsResponse.BindLambda([WeakContextObject, SharedDelegate, AssetApi, AssetType](const FAssetListResponse& Response, bool bWasSuccessful)
     {
-        if (!WeakContextObject.IsValid()) // Ensure the object is still valid
+        if (!WeakContextObject.IsValid())
         {
             UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is no longer valid."));
+            SharedDelegate->ExecuteIfBound(FString());
             return;
         }
 
-        FString FirstAssetId;
         if (bWasSuccessful && Response.Data.Num() > 0)
         {
-            FirstAssetId = Response.Data[0].Id;
-            OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
-            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId is NOT empty"));
+            FString FirstAssetId = Response.Data[0].Id;
+            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched: %s"), *FirstAssetId);
+            SharedDelegate->ExecuteIfBound(FirstAssetId);
             return;
         }
 
-        TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType("baseModel");
+        // Fallback to cache if online request failed or returned no data
+        TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
         if (Assets.Num() > 0)
         {
-            FirstAssetId = Assets[0].Id;
-            OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
-            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId is NOT empty (from cache)"));
+            FString FirstAssetId = Assets[0].Id;
+            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched from cache: %s"), *FirstAssetId);
+            SharedDelegate->ExecuteIfBound(FirstAssetId);
             return;
         }
 
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("FirstAssetId is empty"));
-        OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch FirstAssetId"));
+        SharedDelegate->ExecuteIfBound(FString());
     });
-
+    
     AssetApi->ListAssetsAsync(AssetListRequest);
 }
 
@@ -98,7 +88,7 @@ void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefre
 
 void URpmFunctionLibrary::ExtractCachePakFile()
 {
-	FString PakFilePath = FFileUtility::GetFullPersistentPath(FPakFileUtility::CachePakFilePath);
+    const FString PakFilePath = FFileUtility::GetFullPersistentPath(FPakFileUtility::CachePakFilePath);
 
 	FPakFileUtility::ExtractFilesFromPak(PakFilePath);
 }

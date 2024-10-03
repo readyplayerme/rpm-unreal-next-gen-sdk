@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
@@ -36,7 +36,7 @@ protected:
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest& ApiRequest) override;
+	void HandleCharacterResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CreateCharacterFromCache();
 	
 private:

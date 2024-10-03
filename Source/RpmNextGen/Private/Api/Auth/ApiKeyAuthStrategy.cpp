@@ -1,4 +1,6 @@
 ﻿#include "Api/Auth/ApiKeyAuthStrategy.h"
+
+#include "RpmNextGen.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 class URpmSettings;
@@ -26,6 +28,7 @@ void FApiKeyAuthStrategy::OnRefreshTokenResponse(const FRefreshTokenResponse& Re
 
 void FApiKeyAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> Request)
 {
+	OnAuthComplete.ExecuteIfBound(false);
 }
 
 

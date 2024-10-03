@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Api/Assets/Models/AssetTypeListResponse.h"
+#include "Api/Common/Models/ApiRequest.h"
 #include "Blueprint/UserWidget.h"
 #include "RpmCategoryPanelWidget.generated.h"
 
+class IHttpRequest;
+class IHttpResponse;
 class URpmAssetButtonWidget;
 class FAssetApi;
 class URpmCategoryButtonWidget;
@@ -43,6 +46,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	virtual void UpdateSelectedButton(URpmCategoryButtonWidget* CategoryButton);
 
+
+	void OnProcessResponse(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg, FApiRequest* ApiRequest);
+	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	void LoadAndCreateButtons();
 
@@ -55,6 +61,6 @@ public:
 private:
 	TArray<TSubclassOf<URpmCategoryButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;
-	
+	bool bIsInitialized = false;
 	void AssetTypesLoaded(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
 };

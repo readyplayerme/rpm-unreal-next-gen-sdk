@@ -11,7 +11,6 @@ class UVerticalBox;
 void URpmCreatorWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	IndexMapByCategory = TMap<FString, int32>();
 }
 
 void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& CategoryArray)
@@ -35,16 +34,19 @@ void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& C
 		CreateAssetPanel(CategoryArray[i]);
 		IndexMapByCategory.Add(CategoryArray[i],  i );
 	}
-	SwitchToPanel(CategoryArray[0]);
+	if(IndexMapByCategory.Num() > 0)
+	{
+		SwitchToPanel(CategoryArray[0]);
+	}
 }
 
 void URpmCreatorWidget::SwitchToPanel(const FString& Category)
 {
 	if(AssetPanelSwitcher)
 	{
-		if(IndexMapByCategory[Category] == -1)
+		if(IndexMapByCategory.Num() < 1 || IndexMapByCategory[Category] == -1)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Category %s not found!"), *Category);
+			UE_LOG(LogTemp, Error, TEXT("Category %s not found! Category length %d"), *Category, IndexMapByCategory.Num());
 			return;
 		}
 		AssetPanelSwitcher->SetActiveWidgetIndex(IndexMapByCategory[Category]);
