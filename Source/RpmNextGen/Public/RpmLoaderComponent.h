@@ -59,7 +59,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void CreateCharacter(const FString& BaseModelId, bool bUseCache);
+	virtual void CreateCharacter(const FString& BaseModelId);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadCharacterFromUrl(FString Url);
@@ -68,8 +68,8 @@ protected:
 	void LoadGltfRuntimeAssetFromCache(const FAsset& Asset);
 
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadCharacterFromAssetMapCache(TMap<FString, FAsset> AssetMap);
-
+	virtual void LoadCharacterAssetsFromCache(TMap<FString, FAsset> AssetMap);
+	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
 	

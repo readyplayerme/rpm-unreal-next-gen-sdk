@@ -59,7 +59,7 @@ void FFileApi::AssetFileRequestComplete(FHttpRequestPtr Request, FHttpResponsePt
 		OnAssetFileRequestComplete.ExecuteIfBound(&Content, Asset);
 		return;
 	}
-	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load file from URL"));
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to load file from URL. Try loading from cache"));
 	OnAssetFileRequestComplete.ExecuteIfBound(nullptr, Asset);
 }
 

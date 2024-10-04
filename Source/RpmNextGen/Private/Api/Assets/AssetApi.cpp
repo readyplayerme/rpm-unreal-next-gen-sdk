@@ -27,7 +27,6 @@ void FAssetApi::Initialize()
 {
 	if (bIsInitialized)	return;
 	
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Initializing AssetApi"));
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	OnRequestComplete.BindRaw(this, &FAssetApi::HandleAssetResponse);
 	if (Settings->ApplicationId.IsEmpty())
@@ -89,32 +88,6 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	DispatchRawWithAuth( ApiRequest);
 }
 
-// void FAssetApi::HandleAssetListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
-// {
-//     if (bWasSuccessful && Response.IsValid())
-//     {    	
-//     	FAssetListResponse AssetListResponse;
-//     	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetListResponse, 0, 0))
-//     	{
-//     		OnListAssetsResponse.ExecuteIfBound(AssetListResponse, true);
-//     		return;
-//     	}
-//
-//         UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to parse JSON into known structs from response: %s"), *Response->GetContentAsString());
-//     }
-// 	
-// 	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
-// 	{
-// 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi:ListAssetsAsync request failed: %s"), *Response->GetContentAsString());
-//
-// 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
-// 		return;
-// 	}
-// 	
-//     UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful, loading from cache."));
-// 	LoadAssetsFromCache(ApiRequest.QueryParams);
-// }
-
 void FAssetApi::HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	const bool bIsTypeRequest = ApiRequest.Url.Contains(TEXT("/types"));
@@ -156,31 +129,6 @@ void FAssetApi::HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponse
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for assets, falling back to cache."));
 	LoadAssetsFromCache(ApiRequest.QueryParams);
 }
-
-// void FAssetApi::HandleAssetTypeListResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
-// {
-// 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-//     {    	
-// 	    	FAssetTypeListResponse AssetTypeListResponse;
-// 	    	if (FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &AssetTypeListResponse, 0, 0))
-// 	    	{
-// 	    		OnListAssetTypeResponse.ExecuteIfBound(AssetTypeListResponse, true);
-// 	    		return;
-// 	    	}
-//
-//         UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to parse JSON into known structs from response: %s"), *Response->GetContentAsString());
-//     }
-//
-// 	if(ApiRequestStrategy == EApiRequestStrategy::ApiOnly)
-// 	{
-// 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi:ListAssetTypesAsync request failed: %s"), *Response->GetContentAsString());
-// 		OnListAssetTypeResponse.ExecuteIfBound(FAssetTypeListResponse(), false);
-// 		return;
-// 	}
-// 	
-// 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for asset types, falling back to cache.")); 
-// 	LoadAssetTypesFromCache();
-// }
 
 void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 {

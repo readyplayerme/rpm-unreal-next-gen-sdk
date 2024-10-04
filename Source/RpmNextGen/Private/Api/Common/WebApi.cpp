@@ -33,7 +33,6 @@ void FWebApi::DispatchRaw(const FApiRequest& Data)
         CurrentRequest->SetContentAsString(Data.Payload);
     }
     CurrentRequest->OnProcessRequestComplete().BindRaw(this, &FWebApi::OnProcessResponse, &Data);
-    UE_LOG( LogTemp, Warning, TEXT("Process request to url %s with headers %s"), *CurrentRequest->GetURL(), *Headers);
     CurrentRequest->ProcessRequest();
 }
 

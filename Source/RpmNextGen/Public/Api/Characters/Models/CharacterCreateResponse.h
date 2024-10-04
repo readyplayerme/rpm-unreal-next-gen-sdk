@@ -21,4 +21,9 @@ struct RPMNEXTGEN_API FCharacterCreateResponse : public FApiResponse
 	{
 		this->Data = Data;
 	}
+
+	bool IsValid() const 
+	{
+		return !Data.Id.IsEmpty() && !Data.GlbUrl.IsEmpty() && !Data.IconUrl.IsEmpty();
+	}
 };

@@ -33,7 +33,6 @@ void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Im
 		{
 			CategoryImageTexture = Image;
 			CategoryImage->SetBrushFromTexture(CategoryImageTexture);
-			UE_LOG( LogReadyPlayerMe, Warning, TEXT("Setting image on button for Category: %s"), *Category );
 		}
 	}	
 }

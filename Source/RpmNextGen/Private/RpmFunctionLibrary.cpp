@@ -6,17 +6,13 @@
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Files/PakFileUtility.h"
 #include "Cache/AssetCacheManager.h"
 #include "Cache/CachedAssetData.h"
 #include "Settings/RpmDeveloperSettings.h"
-#include "Utilities/ConnectionManager.h"
 
 void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const FString& AssetType, FOnAssetIdFetched OnAssetIdFetched)
 {
-    UE_LOG(LogReadyPlayerMe, Warning, TEXT("FETCH FIRST ASSET ID"));
-
     if (!WorldContextObject)
     {
         UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is null"));
@@ -68,22 +64,6 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
     });
     
     AssetApi->ListAssetsAsync(AssetListRequest);
-}
-
-
-bool URpmFunctionLibrary::IsInternetConnected()
-{
-	return FConnectionManager::Get().IsConnected();
-}
-
-void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefreshedDelegate& OnConnectionStatusRefreshed)
-{
-	FConnectionManager::Get().OnConnectionStatusRefreshed.BindLambda([OnConnectionStatusRefreshed](bool bIsConnected)
-	{
-		OnConnectionStatusRefreshed.ExecuteIfBound(bIsConnected);
-	});
-
-	FConnectionManager::Get().CheckInternetConnection();
 }
 
 void URpmFunctionLibrary::ExtractCachePakFile()

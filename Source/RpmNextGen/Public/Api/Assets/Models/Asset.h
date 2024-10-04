@@ -28,6 +28,17 @@ struct RPMNEXTGEN_API FAsset
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "updatedAt"))
 	FDateTime UpdatedAt;
+
+	FAsset()
+	{
+		Id = "";
+		Name = "";
+		GlbUrl = "";
+		IconUrl = "";
+		Type = "";
+		CreatedAt = FDateTime();
+		UpdatedAt = FDateTime();
+	}
 	
 private:
 	UPROPERTY(meta = (JsonIgnore))

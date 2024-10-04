@@ -133,12 +133,7 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi is null or invalid"));
 		return;
 	}
-	if(!FConnectionManager::Get().IsConnected())
-	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No internet connection, loading assets from cache"));
-		LoadAssetsFromCache(AssetType);
-		return;
-	}
+	
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
