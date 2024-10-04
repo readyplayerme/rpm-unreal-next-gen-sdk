@@ -45,9 +45,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	virtual void UpdateSelectedButton(URpmCategoryButtonWidget* CategoryButton);
-
-
-	void OnProcessResponse(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bArg, FApiRequest* ApiRequest);
 	
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	void LoadAndCreateButtons();

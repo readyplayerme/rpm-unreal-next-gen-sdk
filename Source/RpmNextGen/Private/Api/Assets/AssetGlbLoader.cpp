@@ -23,11 +23,8 @@ void FAssetGlbLoader::LoadGlb(const FAsset& Asset, const FString& BaseModelId, b
         if(FFileHelper::LoadFileToArray(GlbData, *StoredGlbPath))
         {
             OnGlbLoaded.ExecuteIfBound(Asset, GlbData);
-            UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading GLB from cache"));
             return;
         }
-        
-        UE_LOG(LogReadyPlayerMe, Log, TEXT("Unable to load GLB from cache"));
     }
     const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, BaseModelId, bStoreInCache);
     LoadGlb(Context);

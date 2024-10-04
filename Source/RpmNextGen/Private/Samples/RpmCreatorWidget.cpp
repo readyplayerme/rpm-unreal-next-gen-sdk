@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Samples/RpmCreatorWidget.h"
+
+#include "RpmNextGen.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
 #include "Components/WidgetSwitcher.h"
@@ -17,12 +19,12 @@ void URpmCreatorWidget::CreateAssetPanelsFromCategories(const TArray<FString>& C
 {
 	if (CategoryArray.Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No categories to create asset panels from!"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No categories to create asset panels from!"));
 		return;
 	}
 	if (!AssetPanelSwitcher || !AssetPanelBlueprint)
 	{
-		UE_LOG(LogTemp, Error, TEXT("WidgetSwitcher or WidgetBlueprintClass is not set!"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("WidgetSwitcher or WidgetBlueprintClass is not set!"));
 		return;
 	}
 
@@ -46,7 +48,7 @@ void URpmCreatorWidget::SwitchToPanel(const FString& Category)
 	{
 		if(IndexMapByCategory.Num() < 1 || IndexMapByCategory[Category] == -1)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Category %s not found! Category length %d"), *Category, IndexMapByCategory.Num());
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Category %s not found! Category length %d"), *Category, IndexMapByCategory.Num());
 			return;
 		}
 		AssetPanelSwitcher->SetActiveWidgetIndex(IndexMapByCategory[Category]);
@@ -67,14 +69,14 @@ UUserWidget* URpmCreatorWidget::CreateAssetPanel(const FString& Category)
 {
 	if (!AssetPanelBlueprint)
 	{
-		UE_LOG(LogTemp, Error, TEXT("WidgetBlueprintClass is not set!"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("WidgetBlueprintClass is not set!"));
 		return nullptr;
 	}
 
 	UWorld* World = GetWorld();
 	if (!World)
 	{
-		UE_LOG(LogTemp, Error, TEXT("World is null!"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("World is null!"));
 		return nullptr;
 	}
 
@@ -82,7 +84,7 @@ UUserWidget* URpmCreatorWidget::CreateAssetPanel(const FString& Category)
 
 	if (!AssetPanelWidget)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create widget from blueprint class!"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create widget from blueprint class!"));
 		return nullptr;
 	}
 	AssetPanelSwitcher->AddChild(AssetPanelWidget);

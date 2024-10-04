@@ -6,7 +6,6 @@
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/SizeBox.h"
-#include "Interfaces/IHttpResponse.h"
 #include "Samples/RpmCategoryButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
 
@@ -17,10 +16,9 @@ void URpmCategoryPanelWidget::NativeConstruct()
 	Super::NativeConstruct();
 	if(bIsInitialized)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("URpmCategoryPanelWidget Already initialized"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("URpmCategoryPanelWidget Already initialized"));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Initiizing URpmCategoryPanelWidget"));
 	bIsInitialized = true;
 	AssetApi = MakeShared<FAssetApi>();
 	AssetApi->OnListAssetTypeResponse.BindUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded);
@@ -36,20 +34,8 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 	SelectedCategoryButton = CategoryButton;
 }
 
-void URpmCategoryPanelWidget::OnProcessResponse(TSharedPtr<IHttpRequest> HttpRequest, TSharedPtr<IHttpResponse> HttpResponse, bool bWasSuccessful, FApiRequest* ApiRequest)
-{
-	if(bWasSuccessful && HttpResponse.IsValid() && EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("RpmCategory Widget from URL %s SUCCESS"), *HttpRequest->GetURL());
-		return;
-	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("RpmCategory Widget from URL %s : FAILED"), *HttpRequest->GetURL());
-
-}
-
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Creating buttons on URpmCategoryPanelWidget"));
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
 	FAssetTypeListRequest AssetTypeListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
@@ -90,7 +76,7 @@ void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 				AssetButtons.Add(CategoryButton->GetClass());
 				return;
 			}
-			UE_LOG(LogTemp, Error, TEXT("Failed to Load %s button"), *AssetType);
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to Load %s button"), *AssetType);
 		}
 	}
 }
@@ -113,7 +99,7 @@ void URpmCategoryPanelWidget::AssetTypesLoaded(const FAssetTypeListResponse& Ass
 		OnCategoriesLoaded.Broadcast(AssetTypeListResponse.Data);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to load asset types"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load asset types"));
 	OnCategoriesLoaded.Broadcast(TArray<FString>());
 }
 

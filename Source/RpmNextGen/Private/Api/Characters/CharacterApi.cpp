@@ -94,11 +94,10 @@ void FCharacterApi::HandleCharacterCreateResponse(FHttpResponsePtr Response, boo
 		if(FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterCreateResponse, 0, 0))
 		{
 			OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, true);
-			UE_LOG(LogReadyPlayerMe, Warning, TEXT("HandleCharacterCreateResponse SUCCESS."));
 			return;
 		}
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character created request failed."));
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character CREATE request failed."));
 	OnCharacterCreateResponse.ExecuteIfBound(FCharacterCreateResponse(), false);
 }
 
@@ -110,11 +109,10 @@ void FCharacterApi::HandleUpdateResponse(FHttpResponsePtr Response, bool bWasSuc
 		if(FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0))
 		{
 			OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, true);
-			UE_LOG(LogReadyPlayerMe, Warning, TEXT("CharacterUpdate SUCCESS."));
 			return;
 		}
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character update request failed."));
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character UPDATE request failed."));
 	OnCharacterUpdateResponse.ExecuteIfBound(FCharacterUpdateResponse(), false);
 }
 
@@ -126,11 +124,10 @@ void FCharacterApi::HandleFindResponse(FHttpResponsePtr Response, bool bWasSucce
 		if(FJsonObjectConverter::JsonObjectStringToUStruct(	Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0))
 		{
 			OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, true);
-			UE_LOG(LogReadyPlayerMe, Warning, TEXT("CharacterFind SUCCESS."));
 			return;
 		}
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character find by id request failed."));
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character FIND request failed."));
 	OnCharacterFindResponse.ExecuteIfBound(FCharacterFindByIdResponse(), false);
 }
 

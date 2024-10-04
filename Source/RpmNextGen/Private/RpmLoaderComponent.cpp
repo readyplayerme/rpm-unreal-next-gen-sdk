@@ -115,7 +115,6 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	if(bIsBaseModel)
 	{
 		CharacterData.BaseModelId = AssetData.Id;
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Asset is %s setting BaseModelId to AssetId."), *AssetData.Type);
 	}
 	CharacterData.Assets.Add(AssetData.Type, AssetData);
 	
@@ -173,19 +172,17 @@ void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<unsigned char>
 
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful)
 {
-	UE_LOG( LogReadyPlayerMe, Error, TEXT("HandleCharacterCreateResponse. Id = %s GLbUrl = %s IconUrl = %s "), *CharacterCreateResponse.Data.Id, *CharacterCreateResponse.Data.GlbUrl, *CharacterCreateResponse.Data.IconUrl); 
 	if(bWasSuccessful && CharacterCreateResponse.IsValid())
 	{
-		UE_LOG( LogReadyPlayerMe, Error, TEXT("Create success, loading from URL"));
 		CharacterData.Id = CharacterCreateResponse.Data.Id;
 		OnCharacterCreated.Broadcast(CharacterData);
 		LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
 		return;
 	}
-
 	
-	UE_LOG( LogReadyPlayerMe, Error, TEXT("Failed to create character from web. Was successful: %d. IsValid %d"), bWasSuccessful, CharacterCreateResponse.IsValid());
+
 	OnCharacterCreated.Broadcast(CharacterData);
+	UE_LOG( LogReadyPlayerMe, Error, TEXT("Failed to create character from web Api. Falling back to cache."));
 	LoadCharacterAssetsFromCache(CharacterData.Assets);
 }
 

@@ -27,7 +27,7 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 {
 	if (!ApiRequest.IsValid())
 	{
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid ApiRequest in OnProcessComplete."));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid ApiRequest in FAuthApi::OnProcessComplete."));
 		return;
 	}
 

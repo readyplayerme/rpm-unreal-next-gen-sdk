@@ -196,7 +196,7 @@ void FCacheGenerator::AddFolderToNonAssetDirectory() const
 		if (CurrentValue.Contains(FolderToAdd))
 		{
 			// Folder already exists, no need to add it
-			UE_LOG(LogTemp, Log, TEXT("Folder already added to Additional Non-Asset Directories: %s"), *FolderToAdd);
+			UE_LOG(LogReadyPlayerMe, Log, TEXT("Folder already added to Additional Non-Asset Directories: %s"), *FolderToAdd);
 			return;
 		}
 	}
@@ -207,7 +207,7 @@ void FCacheGenerator::AddFolderToNonAssetDirectory() const
 	// Force update the config file
 	GConfig->Flush(false, ConfigFilePath);
 
-	UE_LOG(LogTemp, Log, TEXT("Added folder to Additional Non-Asset Directories: %s"), *FolderToAdd);
+	UE_LOG(LogReadyPlayerMe, Log, TEXT("Added folder to Additional Non-Asset Directories: %s"), *FolderToAdd);
 }
 
 void FCacheGenerator::OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)

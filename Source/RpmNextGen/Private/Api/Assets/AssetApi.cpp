@@ -123,11 +123,11 @@ void FAssetApi::HandleAssetResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpRes
 	}
 	if(bIsTypeRequest)
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for asset types, falling back to cache."));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("FAssetApi::ListAssetTypesAsync request failed, falling back to cache."));
 		LoadAssetTypesFromCache();
 		return;
 	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for assets, falling back to cache."));
+	UE_LOG(LogReadyPlayerMe, Warning, TEXT("FAssetApi::ListAssetsAsync request failed, falling back to cache."));
 	LoadAssetsFromCache(ApiRequest->QueryParams);
 }
 
@@ -135,8 +135,6 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 {
 	if(QueryParams.Num() < 1)
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No query parameters provided, returning all assets from cache."));
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
 		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 		return;
 	}
@@ -148,12 +146,10 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 	
 	if(ExcludeType.IsEmpty())
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Getting Assets of type: %s"), *Type);
 		CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(Type);
 	}
 	else
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Getting Assets excluding types: %s"), *ExcludeType);
 		auto ExtractQueryString = TEXT("excludeType=") + ExcludeType;
 		auto ExtractQueryArray = ExtractQueryValues(ExcludeType, ExcludeTypeKey);
 		CachedAssets = FAssetCacheManager::Get().GetAssetsExcludingTypes(ExtractQueryArray);
@@ -161,7 +157,6 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 
 	if (CachedAssets.Num() > 0)
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Found %d assets in the cache."), CachedAssets.Num());
 		FAssetListResponse AssetListResponse;
 		for (const FCachedAssetData& CachedAsset : CachedAssets)
 		{

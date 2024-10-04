@@ -44,7 +44,7 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
 	if(Assets.Num() < 1)
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No assets found"));
 		return;
 	}
 	for (auto Asset : Assets)
@@ -71,8 +71,6 @@ void URpmAssetPanelWidget::ClearAllButtons()
 
 	AssetButtonMap.Empty();
 	SelectedAssetButton = nullptr;
-
-	UE_LOG(LogTemp, Log, TEXT("All asset buttons cleared."));
 }
 
 void URpmAssetPanelWidget::UpdateSelectedButton(URpmAssetButtonWidget* AssetButton)
@@ -147,8 +145,7 @@ void URpmAssetPanelWidget::LoadNextPage()
 {
 	if (!Pagination.HasNextPage)
 	{
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Already on the last page"));
-
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Already on the last page"));
 		return;
 	}
 	ClearAllButtons();
@@ -160,7 +157,7 @@ void URpmAssetPanelWidget::LoadPreviousPage()
 {
 	if (!Pagination.HasPrevPage)
 	{
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Already on the first page"));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Already on the first page"));
 		return;
 	}
 	ClearAllButtons();

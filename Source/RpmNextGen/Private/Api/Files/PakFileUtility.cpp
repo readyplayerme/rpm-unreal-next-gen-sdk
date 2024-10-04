@@ -22,11 +22,11 @@ void FPakFileUtility::CreatePakFile(const FString& PakFilePath)
         FPlatformProcess::WaitForProc(ProcHandle);
         FPlatformProcess::CloseProc(ProcHandle);
 
-        UE_LOG(LogTemp, Log, TEXT("Pak file and I/O Store files created successfully: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Log, TEXT("Pak file and I/O Store files created successfully: %s"), *PakFilePath);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create Pak and I/O Store files: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create Pak and I/O Store files: %s"), *PakFilePath);
     }
 }
 
@@ -83,7 +83,7 @@ void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
 {
     if(!FPaths::FileExists(PakFilePath) )
     {
-        UE_LOG(LogTemp, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
         return;
     }
     const FString UnrealPakPath = FPaths::ConvertRelativePathToFull(FPaths::EngineDir() / TEXT("Binaries/Win64/UnrealPak.exe"));
@@ -97,11 +97,11 @@ void FPakFileUtility::ExtractPakFile(const FString& PakFilePath)
         FPlatformProcess::WaitForProc(ProcHandle);
         FPlatformProcess::CloseProc(ProcHandle);
 
-        UE_LOG(LogTemp, Log, TEXT("Pak file extracted successfully to: %s"), *DestinationPath);
+        UE_LOG(LogReadyPlayerMe, Log, TEXT("Pak file extracted successfully to: %s"), *DestinationPath);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to extract Pak file: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to extract Pak file: %s"), *PakFilePath);
     }
 }
 
@@ -109,7 +109,7 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
 {
     if(!FPaths::FileExists(PakFilePath) )
     {
-        UE_LOG(LogTemp, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Pak file does not exist: %s"), *PakFilePath);
         return;
     }
     
@@ -124,11 +124,11 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
         FPlatformFileManager::Get().SetPlatformFile(*PakPlatformFile);
         if (!PakPlatformFile->Initialize(&InnerPlatformFile, TEXT("")))
         {
-            UE_LOG(LogTemp, Error, TEXT("Failed to initialize Pak Platform File"));
+            UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to initialize Pak Platform File"));
             delete PakPlatformFile;
             return;
         }
-        UE_LOG(LogTemp, Log, TEXT("Initializing new Pak Platform File"));
+        UE_LOG(LogReadyPlayerMe, Log, TEXT("Initializing new Pak Platform File"));
     }
 
     // Step 2: Define mount point and destination paths
@@ -138,11 +138,11 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
     // Step 3: Mount the Pak file
     if (!PakPlatformFile->Mount(*PakFilePath, 0, *MountPoint))
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to mount Pak file: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to mount Pak file: %s"), *PakFilePath);
         //return;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("Successfully mounted Pak file: %s"), *PakFilePath);
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully mounted Pak file: %s"), *PakFilePath);
     
     // Step 4: List files in the mounted Pak file
     TArray<FString> Files;
@@ -150,11 +150,11 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
 
     if (Files.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No files found in Pak file: %s"), *PakFilePath);
+        UE_LOG(LogReadyPlayerMe, Warning, TEXT("No files found in Pak file: %s"), *PakFilePath);
         return;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("Found %d files in Pak file: %s"), Files.Num(), *PakFilePath);
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Found %d files in Pak file: %s"), Files.Num(), *PakFilePath);
 
     // Step 5: Extract each file from the Pak
     for (const FString& File : Files)
@@ -167,7 +167,7 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
         // Step 6: Handle JSON files separately
         if (File.EndsWith(TEXT(".json")))
         {
-            UE_LOG(LogTemp, Log, TEXT("Processing JSON file: %s"), *File);
+            UE_LOG(LogReadyPlayerMe, Log, TEXT("Processing JSON file: %s"), *File);
             FString JsonContent;
             if (FFileHelper::LoadFileToString(JsonContent, *File))
             {
@@ -180,26 +180,26 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
 
                 if (FJsonSerializer::Deserialize(Reader, JsonObject))
                 {
-                    UE_LOG(LogTemp, Log, TEXT("Successfully parsed JSON content"));
+                    UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully parsed JSON content"));
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("Invalid JSON content in file: %s"), *File);
+                    UE_LOG(LogReadyPlayerMe, Warning, TEXT("Invalid JSON content in file: %s"), *File);
                 }
 
                 // Save JSON file to disk
                 if (FFileHelper::SaveStringToFile(JsonContent, *DestinationFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
                 {
-                    UE_LOG(LogTemp, Log, TEXT("Successfully saved JSON file: %s"), *DestinationFilePath);
+                    UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully saved JSON file: %s"), *DestinationFilePath);
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Error, TEXT("Failed to save JSON file: %s"), *DestinationFilePath);
+                    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to save JSON file: %s"), *DestinationFilePath);
                 }
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("Failed to read JSON file from Pak: %s"), *File);
+                UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to read JSON file from Pak: %s"), *File);
             }
         }
         else
@@ -210,20 +210,20 @@ void FPakFileUtility::ExtractFilesFromPak(const FString& PakFilePath)
             {
                 if (FFileHelper::SaveArrayToFile(FileData, *DestinationFilePath))
                 {
-                    UE_LOG(LogTemp, Log, TEXT("Successfully extracted file: %s"), *DestinationFilePath);
+                    UE_LOG(LogReadyPlayerMe, Log, TEXT("Successfully extracted file: %s"), *DestinationFilePath);
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Error, TEXT("Failed to save file: %s"), *DestinationFilePath);
+                    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to save file: %s"), *DestinationFilePath);
                 }
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("Failed to read file from Pak: %s"), *File);
+                UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to read file from Pak: %s"), *File);
             }
         }
     }
 
-    UE_LOG(LogTemp, Log, TEXT("Finished extracting files from Pak: %s"), *PakFilePath);
+    UE_LOG(LogReadyPlayerMe, Log, TEXT("Finished extracting files from Pak: %s"), *PakFilePath);
 }
 
