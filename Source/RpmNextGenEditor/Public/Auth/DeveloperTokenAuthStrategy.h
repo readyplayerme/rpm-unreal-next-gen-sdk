@@ -11,12 +11,12 @@ class RPMNEXTGENEDITOR_API DeveloperTokenAuthStrategy : public IAuthenticationSt
 public:
 	DeveloperTokenAuthStrategy();
 	
-	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> Request) override;
-	virtual void OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
-	virtual void TryRefresh(TSharedPtr<FApiRequest> Request) override;
+	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest) override;
+	virtual void OnRefreshTokenResponse(TSharedPtr<FApiRequest>, const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest) override;
 	
 private:
-	FAuthApi AuthApi;
+	TSharedPtr<FAuthApi> AuthApi;
 	
 	void RefreshTokenAsync(const FRefreshTokenRequest& Request);
 };

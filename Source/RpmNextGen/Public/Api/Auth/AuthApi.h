@@ -6,7 +6,7 @@
 struct FRefreshTokenResponse;
 struct FRefreshTokenRequest;
 
-DECLARE_DELEGATE_TwoParams(FOnRefreshTokenResponse, const FRefreshTokenResponse&, bool);
+DECLARE_DELEGATE_ThreeParams(FOnRefreshTokenResponse, TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool);
 
 class RPMNEXTGEN_API FAuthApi :  public FWebApi
 {
@@ -16,7 +16,7 @@ public:
 	FAuthApi();
 	void RefreshToken(const FRefreshTokenRequest& Request);
 	
-	void OnProcessComplete(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 
 private:
 	FString ApiUrl;

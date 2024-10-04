@@ -36,7 +36,7 @@ void FAssetApi::Initialize()
 
 	if (!Settings->ApiKey.IsEmpty() || Settings->ApiProxyUrl.IsEmpty())
 	{
-		SetAuthenticationStrategy(new FApiKeyAuthStrategy());
+		SetAuthenticationStrategy(MakeShared<FApiKeyAuthStrategy>());
 	}
 	bIsInitialized = true;
 }
@@ -57,10 +57,11 @@ void FAssetApi::ListAssetsAsync(const FAssetListRequest& Request)
 		return;
 	}
 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets"), *ApiBaseUrl);
-	FApiRequest ApiRequest = FApiRequest();
-	ApiRequest.Url = Url;
-	ApiRequest.Method = GET;
-	ApiRequest.QueryParams = Request.BuildQueryMap();
+	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = Url;
+	ApiRequest->Method = GET;
+	ApiRequest->QueryParams = Request.BuildQueryMap();
+	
 	DispatchRawWithAuth(ApiRequest);
 }
 
@@ -81,16 +82,16 @@ void FAssetApi::ListAssetTypesAsync(const FAssetTypeListRequest& Request)
 	}
 	FString QueryString = Request.BuildQueryString();
 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets/types%s"), *ApiBaseUrl, *QueryString);
-	FApiRequest ApiRequest = FApiRequest();
-	ApiRequest.Url = Url;
-	ApiRequest.Method = GET;
-
+	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = Url;
+	ApiRequest->Method = GET;
+	
 	DispatchRawWithAuth( ApiRequest);
 }
 
-void FAssetApi::HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
+void FAssetApi::HandleAssetResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	const bool bIsTypeRequest = ApiRequest.Url.Contains(TEXT("/types"));
+	const bool bIsTypeRequest = ApiRequest->Url.Contains(TEXT("/types"));
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
 		FAssetTypeListResponse AssetTypeListResponse;
@@ -127,11 +128,18 @@ void FAssetApi::HandleAssetResponse(const FApiRequest& ApiRequest, FHttpResponse
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("API Response was unsuccessful for assets, falling back to cache."));
-	LoadAssetsFromCache(ApiRequest.QueryParams);
+	LoadAssetsFromCache(ApiRequest->QueryParams);
 }
 
 void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 {
+	if(QueryParams.Num() < 1)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No query parameters provided, returning all assets from cache."));
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
+		OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+		return;
+	}
 	const FString TypeKey = TEXT("type");
 	const FString ExcludeTypeKey = TEXT("excludeType");
 	FString Type = QueryParams.Contains(TypeKey) ? *QueryParams.Find(TypeKey) : FString();
@@ -140,10 +148,12 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 	
 	if(ExcludeType.IsEmpty())
 	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Getting Assets of type: %s"), *Type);
 		CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(Type);
 	}
 	else
 	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Getting Assets excluding types: %s"), *ExcludeType);
 		auto ExtractQueryString = TEXT("excludeType=") + ExcludeType;
 		auto ExtractQueryArray = ExtractQueryValues(ExcludeType, ExcludeTypeKey);
 		CachedAssets = FAssetCacheManager::Get().GetAssetsExcludingTypes(ExtractQueryArray);
@@ -151,6 +161,7 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams)
 
 	if (CachedAssets.Num() > 0)
 	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Found %d assets in the cache."), CachedAssets.Num());
 		FAssetListResponse AssetListResponse;
 		for (const FCachedAssetData& CachedAsset : CachedAssets)
 		{

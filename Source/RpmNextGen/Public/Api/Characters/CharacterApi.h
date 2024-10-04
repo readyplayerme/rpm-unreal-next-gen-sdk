@@ -37,7 +37,7 @@ protected:
 	FString ConvertToJsonString(const T& Data);
 
 
-	void HandleCharacterResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleCharacterResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	void HandleCharacterCreateResponse(FHttpResponsePtr Response, bool bWasSuccessful);
 	void HandleUpdateResponse( FHttpResponsePtr Response, bool bWasSuccessful);
 	void HandleFindResponse(FHttpResponsePtr Response, bool bWasSuccessful);

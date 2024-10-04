@@ -11,7 +11,6 @@
 #include "Components/SizeBox.h"
 #include "Samples/RpmAssetButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
-#include "Utilities/ConnectionManager.h"
 
 void URpmAssetPanelWidget::NativeConstruct()
 {

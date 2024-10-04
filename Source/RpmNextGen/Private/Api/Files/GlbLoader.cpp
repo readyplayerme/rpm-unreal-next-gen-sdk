@@ -24,7 +24,7 @@ FGlbLoader::~FGlbLoader()
     delete FileWriter;
 }
 
-void FGlbLoader::HandleFileRequestComplete(TArray<uint8>* Data, const FString& FileName)
+void FGlbLoader::HandleFileRequestComplete(const TArray<uint8>* Data, const FString& FileName)
 {
     UglTFRuntimeAsset* GltfAsset = nullptr;
     if (Data)

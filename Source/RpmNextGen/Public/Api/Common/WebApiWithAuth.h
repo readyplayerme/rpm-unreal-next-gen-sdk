@@ -9,19 +9,18 @@ class RPMNEXTGEN_API FWebApiWithAuth : public FWebApi
 {
 public:
 	FWebApiWithAuth();
-	FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrategy);
+	FWebApiWithAuth(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy);
 
-	void SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy);
+	void SetAuthenticationStrategy(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy);
 	
-	void OnAuthComplete(bool bWasSuccessful); 
-	void OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful); 
+	void OnAuthComplete(TSharedPtr<FApiRequest> ApiRequest, bool bWasSuccessful); 
+	void OnAuthTokenRefreshed(TSharedPtr<FApiRequest> ApiRequest, const FRefreshTokenResponseBody& Response, bool bWasSuccessful); 
 
-	void DispatchRawWithAuth(FApiRequest& Data);
+	void DispatchRawWithAuth(TSharedPtr<FApiRequest> ApiRequest);
+	
 protected:
-	TSharedPtr<FApiRequest, ESPMode::ThreadSafe> ApiRequestData;
-
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest) override;
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSharedPtr<FApiRequest> ApiRequest) override;
 
 private:
-	IAuthenticationStrategy* AuthenticationStrategy;
+	TSharedPtr<IAuthenticationStrategy> AuthenticationStrategy;
 };

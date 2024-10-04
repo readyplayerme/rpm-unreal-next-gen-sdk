@@ -15,28 +15,40 @@ FAuthApi::FAuthApi()
 
 void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
 {
-	FApiRequest ApiRequest = FApiRequest();
-	ApiRequest.Url = ApiUrl;
-	ApiRequest.Method = POST;
-	ApiRequest.Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest.Payload = Request.ToJsonString();
+	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = ApiUrl;
+	ApiRequest->Method = POST;
+	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	ApiRequest->Payload = Request.ToJsonString();
 	DispatchRaw(ApiRequest);
 }
 
-void FAuthApi::OnProcessComplete(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
+void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if(bWasSuccessful, Response.IsValid() && Response->GetResponseCode() == 200)
+	if (!ApiRequest.IsValid())
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid ApiRequest in OnProcessComplete."));
+		return;
+	}
+
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
 		FString Data = Response->GetContentAsString();
-	
 		FRefreshTokenResponse TokenResponse;
+
 		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &TokenResponse, 0, 0))
 		{
-			OnRefreshTokenResponse.ExecuteIfBound(TokenResponse, true);
-			UE_LOG(LogReadyPlayerMe, Log, TEXT("Refresh token success"));
+			if (OnRefreshTokenResponse.IsBound())
+			{
+				OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, TokenResponse, true);
+			}
 			return;
 		}
 	}
-    UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
-	OnRefreshTokenResponse.ExecuteIfBound(FRefreshTokenResponse(), false);
+
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
+	if (OnRefreshTokenResponse.IsBound())
+	{
+		OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
+	}
 }

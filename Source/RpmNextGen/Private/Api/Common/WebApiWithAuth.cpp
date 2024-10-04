@@ -2,84 +2,81 @@
 #include "RpmNextGen.h"
 #include "Interfaces/IHttpResponse.h"
 
-FWebApiWithAuth::FWebApiWithAuth() : ApiRequestData(nullptr), AuthenticationStrategy(nullptr)
+FWebApiWithAuth::FWebApiWithAuth() : AuthenticationStrategy(nullptr)
 {
     FWebApi();
     SetAuthenticationStrategy(nullptr);
-    ApiRequestData = MakeShared<FApiRequest>();
 }
 
-FWebApiWithAuth::FWebApiWithAuth(IAuthenticationStrategy* InAuthenticationStrategy) : AuthenticationStrategy(nullptr)
+FWebApiWithAuth::FWebApiWithAuth(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy) : AuthenticationStrategy(nullptr)
 {
     SetAuthenticationStrategy(InAuthenticationStrategy);
 }
 
-void FWebApiWithAuth::SetAuthenticationStrategy(IAuthenticationStrategy* InAuthenticationStrategy)
+void FWebApiWithAuth::SetAuthenticationStrategy(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy)
 {
     AuthenticationStrategy = InAuthenticationStrategy;
-
-    if (AuthenticationStrategy != nullptr)
+    if (AuthenticationStrategy.IsValid())
     {
+        AuthenticationStrategy->OnAuthComplete.Unbind();
+        AuthenticationStrategy->OnTokenRefreshed.Unbind();
+        
         AuthenticationStrategy->OnAuthComplete.BindRaw(this, &FWebApiWithAuth::OnAuthComplete);
         AuthenticationStrategy->OnTokenRefreshed.BindRaw(this, &FWebApiWithAuth::OnAuthTokenRefreshed);
     }
 }
 
-void FWebApiWithAuth::OnAuthComplete(bool bWasSuccessful)
+void FWebApiWithAuth::OnAuthComplete(TSharedPtr<FApiRequest> ApiRequest, bool bWasSuccessful)
 {
-    if(bWasSuccessful && ApiRequestData != nullptr)
+    if(bWasSuccessful && ApiRequest.IsValid())
     {
-        DispatchRaw(*ApiRequestData);
+        DispatchRaw(ApiRequest);
         return;
     }
-    OnRequestComplete.ExecuteIfBound(*ApiRequestData, FHttpResponsePtr() , false);
+    OnRequestComplete.ExecuteIfBound(ApiRequest, FHttpResponsePtr() , false);
 }
 
-void FWebApiWithAuth::OnAuthTokenRefreshed(const FRefreshTokenResponseBody& Response, bool bWasSuccessful)
+void FWebApiWithAuth::OnAuthTokenRefreshed(TSharedPtr<FApiRequest> ApiRequest, const FRefreshTokenResponseBody& Response, bool bWasSuccessful)
 {
-    if(bWasSuccessful)
+    if(bWasSuccessful && ApiRequest.IsValid())
     {
         const FString Key = TEXT("Authorization");
-        if (ApiRequestData->Headers.Contains(Key))
+        if (ApiRequest->Headers.Contains(Key))
         {
-            ApiRequestData->Headers.Remove(Key);
+            ApiRequest->Headers.Remove(Key);
         }
-        ApiRequestData->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Response.Token));
-        DispatchRaw(*ApiRequestData);
+        ApiRequest->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Response.Token));
+        DispatchRaw(ApiRequest);
         return;
     }
 
-    OnRequestComplete.ExecuteIfBound(*ApiRequestData, FHttpResponsePtr() , false);
+    OnRequestComplete.ExecuteIfBound(ApiRequest, FHttpResponsePtr() , false);
 }
 
-void FWebApiWithAuth::DispatchRawWithAuth(FApiRequest& Data)
+void FWebApiWithAuth::DispatchRawWithAuth(TSharedPtr<FApiRequest> ApiRequest)
 {
-    this->ApiRequestData = MakeShared<FApiRequest>(Data);
     if (AuthenticationStrategy == nullptr)
     {
-        DispatchRaw(Data);
+        DispatchRaw(ApiRequest);
         return;
     }
 
-    AuthenticationStrategy->AddAuthToRequest(this->ApiRequestData);
+    AuthenticationStrategy->AddAuthToRequest(ApiRequest);
 }
 
-void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FApiRequest* ApiRequest)
+void FWebApiWithAuth::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSharedPtr<FApiRequest> ApiRequest)
 {
-    UE_LOG(LogReadyPlayerMe, Warning, TEXT("FWebApiWithAuth::OnProcessResponse"));
     if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
     {
-        UE_LOG(LogReadyPlayerMe, Warning, TEXT("FWebApiWithAuth::OnProcessResponse OnRequestComplete.ExecuteIfBound"));
-        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, true);
+        OnRequestComplete.ExecuteIfBound(ApiRequest, Response, true);
     }
     else if(Response.IsValid() && Response->GetResponseCode() == EHttpResponseCodes::Denied && AuthenticationStrategy != nullptr)
     {
-        UE_LOG(LogReadyPlayerMe, Warning, TEXT("TryRefresh"));
-        AuthenticationStrategy->TryRefresh(ApiRequestData);
+        AuthenticationStrategy->TryRefresh(ApiRequest);
     }
     else
     {
         UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed"), *Request->GetURL());
-        OnRequestComplete.ExecuteIfBound(*ApiRequest, Response, false);
+        OnRequestComplete.ExecuteIfBound(ApiRequest, Response, false);
     }
 }

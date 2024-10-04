@@ -11,17 +11,18 @@ FDeveloperAuthApi::FDeveloperAuthApi()
 	OnRequestComplete.BindRaw(this, &FDeveloperAuthApi::HandleLoginResponse);
 }
 
-void FDeveloperAuthApi::HandleLoginResponse(const FApiRequest& ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful) const
+void FDeveloperAuthApi::HandleLoginResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful) const
 {
 	FDeveloperLoginResponse DevLoginResponse;
 	if(bWasSuccessful && Response.IsValid())
 	{
-		FString Data = Response->GetContentAsString();
-		if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &DevLoginResponse, 0, 0))
+		const FString Data = Response->GetContentAsString();
+		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &DevLoginResponse, 0, 0))
 		{
 			OnLoginResponse.ExecuteIfBound(DevLoginResponse, true);
 			return;
 		}
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse login response: %s"), *Data );
 	}
 
 	OnLoginResponse.ExecuteIfBound(DevLoginResponse, bWasSuccessful);
@@ -29,10 +30,10 @@ void FDeveloperAuthApi::HandleLoginResponse(const FApiRequest& ApiRequest, FHttp
 
 void FDeveloperAuthApi::LoginWithEmail(FDeveloperLoginRequest Request)
 {
-	FApiRequest ApiRequest = FApiRequest();
-	ApiRequest.Url = ApiUrl;
-	ApiRequest.Method = POST;
-	ApiRequest.Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest.Payload = Request.ToJsonString();
+	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = ApiUrl;
+	ApiRequest->Method = POST;
+	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	ApiRequest->Payload = Request.ToJsonString();
 	DispatchRaw(ApiRequest);
 }

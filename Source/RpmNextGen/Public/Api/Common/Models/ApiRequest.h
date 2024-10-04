@@ -46,6 +46,11 @@ struct RPMNEXTGEN_API FApiRequest
 			return TEXT("DELETE");
 		}
 	}
+
+	bool IsValid() const
+	{
+		return !Url.IsEmpty();
+	}
 };
 
 USTRUCT(BlueprintType)

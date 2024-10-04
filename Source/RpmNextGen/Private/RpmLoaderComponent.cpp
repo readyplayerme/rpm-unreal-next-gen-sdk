@@ -13,6 +13,7 @@
 #include "Api/Characters/Models/CharacterUpdateResponse.h"
 #include "Api/Files/GlbLoader.h"
 #include "Cache/AssetCacheManager.h"
+#include "GenericPlatform/GenericPlatformCrashContext.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 URpmLoaderComponent::URpmLoaderComponent()
@@ -140,7 +141,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	FileApi->LoadAssetFileFromUrl(Url, AssetData);
 }
 
-void URpmLoaderComponent::HandleAssetLoaded(TArray<unsigned char>* Data, const FAsset& Asset)
+void URpmLoaderComponent::HandleAssetLoaded(const TArray<unsigned char>* Data, const FAsset& Asset)
 {
 	if(!Data)
 	{
@@ -155,8 +156,13 @@ void URpmLoaderComponent::HandleAssetLoaded(TArray<unsigned char>* Data, const F
 	OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
 }
 
-void URpmLoaderComponent::HandleCharacterAssetLoaded(TArray<unsigned char>* Data, const FString& FileName)
+void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<unsigned char>* Data, const FString& FileName)
 {
+	if(!Data)
+	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load character asset data"));
+		return;
+	}
 	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
 	if(!GltfRuntimeAsset)
 	{
@@ -167,15 +173,20 @@ void URpmLoaderComponent::HandleCharacterAssetLoaded(TArray<unsigned char>* Data
 
 void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful)
 {
-	if(!bWasSuccessful || !CharacterCreateResponse.IsValid())
+	UE_LOG( LogReadyPlayerMe, Error, TEXT("HandleCharacterCreateResponse. Id = %s GLbUrl = %s IconUrl = %s "), *CharacterCreateResponse.Data.Id, *CharacterCreateResponse.Data.GlbUrl, *CharacterCreateResponse.Data.IconUrl); 
+	if(bWasSuccessful && CharacterCreateResponse.IsValid())
 	{
+		UE_LOG( LogReadyPlayerMe, Error, TEXT("Create success, loading from URL"));
+		CharacterData.Id = CharacterCreateResponse.Data.Id;
 		OnCharacterCreated.Broadcast(CharacterData);
-		LoadCharacterAssetsFromCache(CharacterData.Assets);
+		LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
 		return;
 	}
-	CharacterData.Id = CharacterCreateResponse.Data.Id;
+
+	
+	UE_LOG( LogReadyPlayerMe, Error, TEXT("Failed to create character from web. Was successful: %d. IsValid %d"), bWasSuccessful, CharacterCreateResponse.IsValid());
 	OnCharacterCreated.Broadcast(CharacterData);
-	LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
+	LoadCharacterAssetsFromCache(CharacterData.Assets);
 }
 
 void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse, bool bWasSuccessful)
