@@ -49,15 +49,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	void LoadAndCreateButtons();
 
-	UFUNCTION(BlueprintCallable, Category = "Category Panel")
-	void LoadAndCreateButtons();
-
 	UFUNCTION()
 	virtual void OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton);
 	
 	virtual void CreateButton(const FString& AssetType);
 	virtual void SynchronizeProperties() override;
 	virtual void NativeConstruct() override;
+	
 private:
 	TArray<TSubclassOf<URpmCategoryButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;
