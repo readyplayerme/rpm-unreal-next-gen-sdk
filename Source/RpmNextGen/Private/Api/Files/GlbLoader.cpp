@@ -24,14 +24,14 @@ FGlbLoader::~FGlbLoader()
     delete FileWriter;
 }
 
-void FGlbLoader::HandleFileRequestComplete(const TArray<uint8>* Data, const FString& FileName)
+void FGlbLoader::HandleFileRequestComplete(const TArray<uint8>& Data, const FString& FileName)
 {
     UglTFRuntimeAsset* GltfAsset = nullptr;
-    if (Data)
+    if (Data.Num() > 0)
     {
         if(OnGLtfAssetLoaded.IsBound())
         {
-            GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, *GltfConfig);
+            GltfAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, *GltfConfig);
             OnGLtfAssetLoaded.ExecuteIfBound(GltfAsset, TEXT("AssetType"));
         }
         return;

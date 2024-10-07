@@ -140,29 +140,30 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	FileApi->LoadAssetFileFromUrl(Url, AssetData);
 }
 
-void URpmLoaderComponent::HandleAssetLoaded(const TArray<unsigned char>* Data, const FAsset& Asset)
+void URpmLoaderComponent::HandleAssetLoaded(const TArray<uint8>& Data, const FAsset& Asset)
 {
-	if(!Data)
+	if(Data.Num() == 0)
 	{
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid or empty data received for asset: %s. Trying to load from cache."), *Asset.Id);
 		LoadGltfRuntimeAssetFromCache(Asset);
 		return;
 	}
-	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
 	if(!GltfRuntimeAsset)
 	{
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset."));
 	}
 	OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
 }
 
-void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<unsigned char>* Data, const FString& FileName)
+void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<uint8>& Data, const FString& FileName)
 {
-	if(!Data)
+	if(Data.Num() == 0)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load character asset data"));
 		return;
 	}
-	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(*Data, GltfConfig);
+	UglTFRuntimeAsset* GltfRuntimeAsset = UglTFRuntimeFunctionLibrary::glTFLoadAssetFromData(Data, GltfConfig);
 	if(!GltfRuntimeAsset)
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));

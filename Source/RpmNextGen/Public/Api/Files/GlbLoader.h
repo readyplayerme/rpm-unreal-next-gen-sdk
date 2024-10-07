@@ -31,5 +31,5 @@ protected:
 	FString DownloadDirectory;
 	
 	UFUNCTION()
-	virtual void HandleFileRequestComplete(const TArray<uint8>* Data, const FString& String);
+	virtual void HandleFileRequestComplete(const TArray<uint8>& Data, const FString& String);
 };
