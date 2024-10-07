@@ -26,6 +26,8 @@ struct RPMNEXTGEN_API FApiRequest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	TMap<FString, FString> Headers;
 
+	TMap<FString, FString> QueryParams;
+
 	FString Payload;
 
 	FString GetVerb() const
@@ -43,6 +45,11 @@ struct RPMNEXTGEN_API FApiRequest
 		case DELETE:
 			return TEXT("DELETE");
 		}
+	}
+
+	bool IsValid() const
+	{
+		return !Url.IsEmpty();
 	}
 };
 

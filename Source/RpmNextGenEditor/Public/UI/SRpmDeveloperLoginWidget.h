@@ -47,9 +47,9 @@ private:
 	EVisibility GetLoggedInViewVisibility() const;
 	TArray<TSharedPtr<FRpmTextureLoader>> ActiveLoaders;
 	TSharedPtr<FEditorAssetLoader> AssetLoader;
-	TUniquePtr<FAssetApi> AssetApi;
-	TUniquePtr<FDeveloperAccountApi> DeveloperAccountApi;
-	TUniquePtr<FDeveloperAuthApi> DeveloperAuthApi;
+	TSharedPtr<FAssetApi> AssetApi;
+	TSharedPtr<FDeveloperAccountApi> DeveloperAccountApi;
+	TSharedPtr<FDeveloperAuthApi> DeveloperAuthApi;
 	static constexpr const TCHAR* CacheKeyEmail = TEXT("Email");
 	bool bIsLoggedIn = false;
 	bool bIsInitialized = false;

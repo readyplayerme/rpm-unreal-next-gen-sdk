@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Api/Common/WebApiWithAuth.h"
@@ -17,15 +17,15 @@ public:
 	FOnApplicationListResponse OnApplicationListResponse;
 	FOnOrganizationListResponse OnOrganizationResponse;
 	
-	FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy);
+	FDeveloperAccountApi(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy);
 	void ListApplicationsAsync(const FApplicationListRequest& Request);
 	void ListOrganizationsAsync(const FOrganizationListRequest& Request);
 
 private:
 	FString ApiBaseUrl;
 	
-	void HandleOrgListResponse(FString Data, bool bWasSuccessful);
-	void HandleAppListResponse(FString Data, bool bWasSuccessful);
+	void HandleOrgListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAppListResponse(TSharedPtr<FApiRequest>ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 	static FString BuildQueryString(const TMap<FString, FString>& Params);
 };

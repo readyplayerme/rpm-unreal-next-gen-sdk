@@ -6,76 +6,69 @@
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
 #include "Api/Assets/Models/AssetListResponse.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Api/Files/PakFileUtility.h"
 #include "Cache/AssetCacheManager.h"
 #include "Cache/CachedAssetData.h"
 #include "Settings/RpmDeveloperSettings.h"
-#include "Utilities/ConnectionManager.h"
 
 void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const FString& AssetType, FOnAssetIdFetched OnAssetIdFetched)
 {
-	if(!IsInternetConnected())
-	{		
-		TArray<FCachedAssetData> CachedAssets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
-		if( CachedAssets.Num() > 0)
-		{
-			OnAssetIdFetched.ExecuteIfBound(CachedAssets[0].Id);
-			return;
-		}
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Unable to fetch first asset from cache."));
-		return;
-	}
+    if (!WorldContextObject)
+    {
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is null"));
+        OnAssetIdFetched.ExecuteIfBound(FString());
+        return;
+    }
 
-	TSharedPtr<FAssetApi> AssetApi = MakeShared<FAssetApi>();
-	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
-	if(!RpmSettings->ApiKey.IsEmpty() || RpmSettings->ApiProxyUrl.IsEmpty())
-	{
-		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-	}
-	
-	FAssetListQueryParams QueryParams;
-	QueryParams.Type = AssetType;
-	QueryParams.ApplicationId = RpmSettings->ApplicationId;
-	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+    TSharedPtr<FAssetApi> AssetApi = MakeShared<FAssetApi>();
+    TSharedPtr<FOnAssetIdFetched> SharedDelegate = MakeShared<FOnAssetIdFetched>(OnAssetIdFetched);
 
-	if (!WorldContextObject)
-	{
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is null"));
-		return;
-	}
+    const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
+    FAssetListQueryParams QueryParams;
+    QueryParams.Type = AssetType;
+    QueryParams.ApplicationId = RpmSettings->ApplicationId;
+    QueryParams.Limit = 1;
+    FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 
-	AssetApi->OnListAssetsResponse.BindLambda([OnAssetIdFetched, AssetApi](const FAssetListResponse& Response, bool bWasSuccessful)
-	{
-		FString FirstAssetId;
-		if (bWasSuccessful && Response.Data.Num() > 0)
-		{
-			FirstAssetId = Response.Data[0].Id;
-		}
-		OnAssetIdFetched.ExecuteIfBound(FirstAssetId);
-	});
+    TWeakObjectPtr<UObject> WeakContextObject(WorldContextObject);
 
-	AssetApi->ListAssetsAsync(AssetListRequest);
-}
+    AssetApi->OnListAssetsResponse.BindLambda([WeakContextObject, SharedDelegate, AssetApi, AssetType](const FAssetListResponse& Response, bool bWasSuccessful)
+    {
+        if (!WeakContextObject.IsValid())
+        {
+            UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is no longer valid."));
+            SharedDelegate->ExecuteIfBound(FString());
+            return;
+        }
 
-bool URpmFunctionLibrary::IsInternetConnected()
-{
-	return FConnectionManager::Get().IsConnected();
-}
+        if (bWasSuccessful && Response.Data.Num() > 0)
+        {
+            FString FirstAssetId = Response.Data[0].Id;
+            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched: %s"), *FirstAssetId);
+            SharedDelegate->ExecuteIfBound(FirstAssetId);
+            return;
+        }
 
-void URpmFunctionLibrary::CheckInternetConnection(const FOnConnectionStatusRefreshedDelegate& OnConnectionStatusRefreshed)
-{
-	FConnectionManager::Get().OnConnectionStatusRefreshed.BindLambda([OnConnectionStatusRefreshed](bool bIsConnected)
-	{
-		OnConnectionStatusRefreshed.ExecuteIfBound(bIsConnected);
-	});
+        // Fallback to cache if online request failed or returned no data
+        TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
+        if (Assets.Num() > 0)
+        {
+            FString FirstAssetId = Assets[0].Id;
+            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched from cache: %s"), *FirstAssetId);
+            SharedDelegate->ExecuteIfBound(FirstAssetId);
+            return;
+        }
 
-	FConnectionManager::Get().CheckInternetConnection();
+        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch FirstAssetId"));
+        SharedDelegate->ExecuteIfBound(FString());
+    });
+    
+    AssetApi->ListAssetsAsync(AssetListRequest);
 }
 
 void URpmFunctionLibrary::ExtractCachePakFile()
 {
-	FString PakFilePath = FFileUtility::GetFullPersistentPath(FPakFileUtility::CachePakFilePath);
+    const FString PakFilePath = FFileUtility::GetFullPersistentPath(FPakFileUtility::CachePakFilePath);
 
 	FPakFileUtility::ExtractFilesFromPak(PakFilePath);
 }

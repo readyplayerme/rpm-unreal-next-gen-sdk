@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Auth/ApiRequest.h"
+#include "Api/Common/Models/ApiRequest.h"
 #include "ApplicationListRequest.generated.h"
 
 USTRUCT(BlueprintType)

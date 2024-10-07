@@ -2,30 +2,20 @@
 
 
 #include "Samples/RpmAssetPanelWidget.h"
-
 #include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetListRequest.h"
-#include "Api/Auth/ApiKeyAuthStrategy.h"
 #include "Cache/AssetCacheManager.h"
 #include "Cache/CachedAssetData.h"
 #include "Components/PanelWidget.h"
 #include "Components/SizeBox.h"
 #include "Samples/RpmAssetButtonWidget.h"
 #include "Settings/RpmDeveloperSettings.h"
-#include "Utilities/ConnectionManager.h"
 
 void URpmAssetPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	AssetApi = MakeShared<FAssetApi>();
-	// TODO -  add smarter setting of auth strategy
-	if(!RpmSettings->ApiKey.IsEmpty() || RpmSettings->ApiProxyUrl.IsEmpty())
-	{
-		AssetApi->SetAuthenticationStrategy(new FApiKeyAuthStrategy());
-	}
-	
 	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
 }
 
@@ -33,6 +23,8 @@ void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetLi
 {
 	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
 	{
+		Pagination = AssetListResponse.Pagination;
+		OnPaginationUpdated.Broadcast(Pagination);
 		CreateButtonsFromAssets(AssetListResponse.Data);
 		return;
 	}
@@ -52,7 +44,7 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 {
 	if(Assets.Num() < 1)
 	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found") );
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("No assets found"));
 		return;
 	}
 	for (auto Asset : Assets)
@@ -63,10 +55,21 @@ void URpmAssetPanelWidget::CreateButtonsFromAssets(TArray<FAsset> Assets)
 
 void URpmAssetPanelWidget::ClearAllButtons()
 {
-	if(!AssetButtons.IsEmpty())
+	if (ButtonContainer)
 	{
-		AssetButtons.Empty();
+		ButtonContainer->ClearChildren();
+        
+		for (auto& ButtonPair : AssetButtonMap)
+		{
+			if (URpmAssetButtonWidget* ButtonWidget = Cast<URpmAssetButtonWidget>(ButtonPair.Value->GetDefaultObject()))
+			{
+				ButtonWidget->RemoveFromParent();
+				ButtonWidget->ConditionalBeginDestroy(); 
+			}
+		}
 	}
+
+	AssetButtonMap.Empty();
 	SelectedAssetButton = nullptr;
 }
 
@@ -97,7 +100,7 @@ void URpmAssetPanelWidget::CreateButton(const FAsset& AssetData)
 				}
 				
 				AssetButtonInstance->InitializeButton(AssetData, ImageSize);
-				AssetButtons.Add(AssetButtonBlueprint);
+				AssetButtonMap.Add(AssetData.Id, AssetButtonBlueprint);
 				AssetButtonInstance->OnAssetButtonClicked.AddDynamic(this, &URpmAssetPanelWidget::OnAssetButtonClicked);
 			}
 		}
@@ -121,21 +124,43 @@ void URpmAssetPanelWidget::OnAssetButtonClicked(const URpmAssetButtonWidget* Ass
 
 void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 {
+	CurrentAssetType = AssetType;
 	if (!AssetApi.IsValid())
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("AssetApi is null or invalid"));
 		return;
 	}
-	if(!FConnectionManager::Get().IsConnected())
-	{
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("No internet connection, loading assets from cache"));
-		LoadAssetsFromCache(AssetType);
-		return;
-	}
+	
 	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
 	FAssetListQueryParams QueryParams;
 	QueryParams.Type = AssetType;
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;
-	FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+	QueryParams.Limit = PaginationLimit;
+	QueryParams.Page = Pagination.Page;
+	const FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
 	AssetApi->ListAssetsAsync(AssetListRequest);	
+}
+
+void URpmAssetPanelWidget::LoadNextPage()
+{
+	if (!Pagination.HasNextPage)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Already on the last page"));
+		return;
+	}
+	ClearAllButtons();
+	Pagination.Page++;
+	LoadAssetsOfType(CurrentAssetType);
+}
+
+void URpmAssetPanelWidget::LoadPreviousPage()
+{
+	if (!Pagination.HasPrevPage)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("Already on the first page"));
+		return;
+	}
+	ClearAllButtons();
+	Pagination.Page--;
+	LoadAssetsOfType(CurrentAssetType);  
 }

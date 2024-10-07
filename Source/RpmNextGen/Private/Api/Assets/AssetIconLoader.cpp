@@ -22,10 +22,8 @@ void FAssetIconLoader::LoadIcon(const FAsset& Asset, bool bStoreInCache)
 		if(FFileHelper::LoadFileToArray(IconData, * FFileUtility::GetFullPersistentPath(StoredAsset.RelativeIconFilePath)))
 		{
 			OnIconLoaded.ExecuteIfBound(Asset, IconData);
-			UE_LOG(LogReadyPlayerMe, Log, TEXT("Loading icon from cache"));
 			return;
 		}
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Unable to load icon from cache"));
 	}
 	const TSharedRef<FAssetLoadingContext> Context = MakeShared<FAssetLoadingContext>(Asset, "", bStoreInCache);
 	LoadIcon(Context);

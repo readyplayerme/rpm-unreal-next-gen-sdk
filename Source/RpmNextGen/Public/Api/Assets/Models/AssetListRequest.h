@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Api/Common/Models/PaginationQueryParams.h"
@@ -16,7 +16,7 @@ struct RPMNEXTGEN_API FAssetListQueryParams : public FPaginationQueryParams
 	FString Type;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "excludeTypes"))
-	FString ExcludeTypes;
+	TArray<FString> ExcludeTypes;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "characterModelAssetId"))
 	FString CharacterModelAssetId;
@@ -30,53 +30,61 @@ struct RPMNEXTGEN_API FAssetListRequest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	FAssetListQueryParams Params;
 
-	// Default constructor
 	FAssetListRequest()
 	{
 	}
 
-	// Constructor that accepts FAssetListQueryParams
 	FAssetListRequest(const FAssetListQueryParams& InParams)
 		: Params(InParams)
 	{
 	}
 
-	FString BuildQueryString() const;
+	TMap<FString, FString> BuildQueryMap() const;
 };
 
-inline FString FAssetListRequest::BuildQueryString() const
+inline TMap<FString, FString> FAssetListRequest::BuildQueryMap() const
 {
-	if (Params.ApplicationId.IsEmpty() && Params.Type.IsEmpty() && Params.ExcludeTypes.IsEmpty()) return FString();
-	FString QueryString = TEXT("?");
+	TMap<FString, FString> QueryMap;
 	if (!Params.ApplicationId.IsEmpty())
 	{
-		QueryString += TEXT("applicationId=") + Params.ApplicationId + TEXT("&");
+		QueryMap.Add(TEXT("applicationId"), Params.ApplicationId);
 	}
 	if (!Params.Type.IsEmpty())
 	{
-		auto CleanType = Params.Type.Replace(TEXT(" "), TEXT("%20"));
-		QueryString += TEXT("type=") + CleanType + TEXT("&");
+		QueryMap.Add(TEXT("type"), Params.Type);
 	}
 	if (!Params.ExcludeTypes.IsEmpty())
 	{
-		QueryString += TEXT("excludeTypes=") + Params.ExcludeTypes + TEXT("&");
+		if (Params.ExcludeTypes.Num() > 0)
+		{
+			FString ExcludeTypesString;
+			for (int32 i = 0; i < Params.ExcludeTypes.Num(); i++)
+			{
+				ExcludeTypesString += Params.ExcludeTypes[i];
+				// Add '&excludeTypes=' only if it's not the last element
+				if (i < Params.ExcludeTypes.Num() - 1)
+				{
+					ExcludeTypesString += TEXT("&excludeTypes=");
+				}
+			}
+			QueryMap.Add(TEXT("excludeTypes"), ExcludeTypesString);
+		}
 	}
 	if (!Params.CharacterModelAssetId.IsEmpty())
 	{
-		QueryString += TEXT("characterModelAssetId=") + Params.CharacterModelAssetId + TEXT("&");
+		QueryMap.Add(TEXT("characterModelAssetId"), Params.CharacterModelAssetId);
 	}
 	if( Params.Limit > 0 )
 	{
-		QueryString += TEXT("limit=") + FString::FromInt(Params.Limit) + TEXT("&");
+		QueryMap.Add(TEXT("limit"), FString::FromInt(Params.Limit));
 	}
 	if( Params.Page > 0 )
 	{
-		QueryString += TEXT("page=") + FString::FromInt(Params.Page) + TEXT("&");
+		QueryMap.Add(TEXT("page"), FString::FromInt(Params.Page));
 	}
 	if( !Params.Order.IsEmpty() )
 	{
-		QueryString += TEXT("order=") + Params.Order + TEXT("&");
+		QueryMap.Add(TEXT("order"), Params.Order);
 	}
-	QueryString.RemoveFromEnd(TEXT("&"));
-	return QueryString;
+	return QueryMap;
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
@@ -16,10 +16,10 @@ DECLARE_DELEGATE_TwoParams(FOnCharacterCreateResponse, FCharacterCreateResponse,
 DECLARE_DELEGATE_TwoParams(FOnCharacterUpdatResponse, FCharacterUpdateResponse, bool);
 DECLARE_DELEGATE_TwoParams(FOnCharacterFindResponse, FCharacterFindByIdResponse, bool);
 
-class RPMNEXTGEN_API FCharacterApi : public TSharedFromThis<FCharacterApi, ESPMode::ThreadSafe>, public FWebApiWithAuth
+class RPMNEXTGEN_API FCharacterApi : public FWebApiWithAuth
 {
 public:
-	FOnWebApiResponse OnApiResponse;
+	FOnRequestComplete OnApiResponse;
 	FOnCharacterCreateResponse OnCharacterCreateResponse;
 	FOnCharacterUpdatResponse OnCharacterUpdateResponse;
 	FOnCharacterFindResponse OnCharacterFindResponse;
@@ -33,13 +33,14 @@ public:
 	FString GeneratePreviewUrl(const FCharacterPreviewRequest& Request);
 
 protected:
-	FHttpModule* Http;
-	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 
-	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) override;
 
+	void HandleCharacterResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleCharacterCreateResponse(FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleUpdateResponse( FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleFindResponse(FHttpResponsePtr Response, bool bWasSuccessful);
 private:
 	FString BaseUrl;
 	TMap<FString, FString> AssetByType = TMap<FString, FString>();

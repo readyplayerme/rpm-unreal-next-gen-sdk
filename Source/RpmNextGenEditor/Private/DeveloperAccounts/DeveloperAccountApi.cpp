@@ -4,9 +4,10 @@
 #include "DeveloperAccounts/Models/ApplicationListResponse.h"
 #include "DeveloperAccounts/Models/OrganizationListRequest.h"
 #include "DeveloperAccounts/Models/OrganizationListResponse.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
-FDeveloperAccountApi::FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy) : FWebApiWithAuth(InAuthenticationStrategy)
+FDeveloperAccountApi::FDeveloperAccountApi(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy) : FWebApiWithAuth(InAuthenticationStrategy)
 {
     if (URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>())
     {
@@ -21,9 +22,9 @@ void FDeveloperAccountApi::ListApplicationsAsync(const FApplicationListRequest& 
     ApiBaseUrl = RpmSettings->GetApiBaseUrl();
     const FString QueryString = BuildQueryString(Request.Params);
     const FString Url = FString::Printf(TEXT("%s/v1/applications%s"), *ApiBaseUrl, *QueryString);
-    FApiRequest ApiRequest;
-    ApiRequest.Url = Url;
-    OnApiResponse.BindRaw(this, &FDeveloperAccountApi::HandleAppListResponse);
+    TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+    ApiRequest->Url = Url;
+    OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleAppListResponse);
     DispatchRawWithAuth(ApiRequest);
 }
 
@@ -34,16 +35,17 @@ void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest
     ApiBaseUrl = RpmSettings->GetApiBaseUrl();
     const FString QueryString = BuildQueryString(Request.Params);
     const FString Url = FString::Printf(TEXT("%s/v1/organizations%s"), *ApiBaseUrl, *QueryString);
-    FApiRequest ApiRequest;
-    ApiRequest.Url = Url;
-    OnApiResponse.BindRaw(this, &FDeveloperAccountApi::HandleOrgListResponse);
+    TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+    ApiRequest->Url = Url;
+    OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleOrgListResponse);
     DispatchRawWithAuth(ApiRequest);
 }
 
 
-void FDeveloperAccountApi::HandleAppListResponse(FString Data, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleAppListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FApplicationListResponse ApplicationListResponse;
+    FString Data = Response->GetContentAsString();
     if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &ApplicationListResponse, 0, 0))
     {
         OnApplicationListResponse.ExecuteIfBound(ApplicationListResponse, true);
@@ -52,9 +54,10 @@ void FDeveloperAccountApi::HandleAppListResponse(FString Data, bool bWasSuccessf
     OnApplicationListResponse.ExecuteIfBound(ApplicationListResponse, false);
 }
 
-void FDeveloperAccountApi::HandleOrgListResponse(FString Data, bool bWasSuccessful)
+void FDeveloperAccountApi::HandleOrgListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FOrganizationListResponse OrganizationListResponse;
+    FString Data = Response->GetContentAsString();
     if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &OrganizationListResponse, 0, 0))
     {
         OnOrganizationResponse.ExecuteIfBound(OrganizationListResponse, true);

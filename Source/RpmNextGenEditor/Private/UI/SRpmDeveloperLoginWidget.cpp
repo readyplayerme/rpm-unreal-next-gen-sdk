@@ -193,28 +193,27 @@ void SRpmDeveloperLoginWidget::Initialize()
 	const FDeveloperAuth DevAuthData = FDevAuthTokenCache::GetAuthData();
 	if (!DeveloperAuthApi.IsValid())
 	{
-		DeveloperAuthApi = MakeUnique<FDeveloperAuthApi>();
+		DeveloperAuthApi = MakeShared<FDeveloperAuthApi>();
 
 		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
 	}
 
 	if (!AssetApi.IsValid())
 	{
-		AssetApi = MakeUnique<FAssetApi>();
+		AssetApi = MakeShared<FAssetApi>();
 		if (!DevAuthData.IsDemo)
 		{
-			AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
+			AssetApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 		}
 		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
 	}
 	if (!DeveloperAccountApi.IsValid())
 	{
-		DeveloperAccountApi = MakeUnique<FDeveloperAccountApi>(nullptr);
+		DeveloperAccountApi = MakeShared<FDeveloperAccountApi>(nullptr);
 		if (!DevAuthData.IsDemo)
 		{
-			DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
+			DeveloperAccountApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 		}
-
 		DeveloperAccountApi->OnOrganizationResponse.BindRaw(
 			this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
 		DeveloperAccountApi->OnApplicationListResponse.BindRaw(
@@ -346,8 +345,8 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 	FEditorCache::SetString(CacheKeyEmail, Email);
 	Email = Email.TrimStartAndEnd();
 	Password = Password.TrimStartAndEnd();
-	DeveloperAccountApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
-	AssetApi->SetAuthenticationStrategy(new DeveloperTokenAuthStrategy());
+	DeveloperAccountApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
+	AssetApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 	FDeveloperLoginRequest LoginRequest = FDeveloperLoginRequest(Email, Password);
 	DeveloperAuthApi->LoginWithEmail(LoginRequest);
 	return FReply::Handled();
@@ -364,7 +363,7 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 	if (bWasSuccessful)
 	{
 		UserName = Response.Data.Name;
-		FDeveloperAuth AuthData = FDeveloperAuth(Response.Data, false);
+		const FDeveloperAuth AuthData = FDeveloperAuth(Response.Data, false);
 		FDevAuthTokenCache::SetAuthData(AuthData);
 		SetLoggedInState(true);
 		GetOrgList();
@@ -374,8 +373,7 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 	FDevAuthTokenCache::ClearAuthData();
 }
 
-void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizationListResponse& Response,
-                                                              bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{

@@ -105,12 +105,10 @@ void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
 	// Remove components by type, or remove all if AssetType is empty or it's a new base model
 	if (AssetType.IsEmpty() || AssetType == FAssetApi::BaseModelType)
 	{
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Removing all mesh components"));
 		RemoveAllMeshes();
 	}
 	else if (LoadedMeshComponentsByAssetType.Contains(AssetType))
 	{
-		UE_LOG(LogReadyPlayerMe, Log, TEXT("Removing mesh components of type %s"), *AssetType);
 		TArray<USceneComponent*>& ComponentsToRemove = LoadedMeshComponentsByAssetType[AssetType];
 		for (USceneComponent* ComponentToRemove : ComponentsToRemove)
 		{

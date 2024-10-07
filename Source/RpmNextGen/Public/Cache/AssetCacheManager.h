@@ -69,6 +69,23 @@ public:
 		return Assets;
 	}
 
+	TArray<FCachedAssetData> GetAssetsExcludingTypes(const TArray<FString>& AssetExcludeTypes) const
+	{
+		TArray<FCachedAssetData> Assets;
+		for (const auto& Entry : StoredAssets)
+		{
+			const FCachedAssetData& CachedAsset = Entry.Value;
+			for (auto ExcludeTypes : AssetExcludeTypes)
+			{
+				if (CachedAsset.Type != ExcludeTypes)
+                {
+                	Assets.Add(CachedAsset);
+                }
+			}
+		}
+		return Assets;
+	}
+
 	void StoreAndTrackIcon(const FAssetLoadingContext& Context, const bool bSaveManifest = true)
 	{
 		const FCachedAssetData& StoredAsset = FCachedAssetData(Context.Asset);

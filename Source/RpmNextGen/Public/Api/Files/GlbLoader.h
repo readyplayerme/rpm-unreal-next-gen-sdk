@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "FileApi.h"
@@ -31,5 +31,5 @@ protected:
 	FString DownloadDirectory;
 	
 	UFUNCTION()
-	virtual void HandleFileRequestComplete(TArray<uint8>* Data, const FString& String);
+	virtual void HandleFileRequestComplete(const TArray<uint8>* Data, const FString& String);
 };

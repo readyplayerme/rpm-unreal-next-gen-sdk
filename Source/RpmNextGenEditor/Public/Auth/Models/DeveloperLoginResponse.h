@@ -41,9 +41,9 @@ struct RPMNEXTGENEDITOR_API FDeveloperLoginResponse : public FApiResponse
 	{
 		if (JsonObject.IsValid())
 		{
-		return FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), StaticStruct(), &OutObject, 0, 0);
+			return FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), StaticStruct(), &OutObject, 0, 0);
 		}
-		UE_LOG(LogReadyPlayerMe, Warning, TEXT("JsonObject Invalid"));
+		UE_LOG(LogReadyPlayerMe, Error, TEXT("JsonObject Invalid"));
 		return false;
 	}
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Samples/RpmCategoryPanelWidget.h"
-
+#include "RpmNextGen.h"
 #include "Api/Assets/AssetApi.h"
 #include "Api/Assets/Models/AssetTypeListRequest.h"
 #include "Blueprint/WidgetTree.h"
@@ -14,6 +14,12 @@ class URpmDeveloperSettings;
 void URpmCategoryPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if(bIsInitialized)
+	{
+		UE_LOG(LogReadyPlayerMe, Warning, TEXT("URpmCategoryPanelWidget Already initialized"));
+		return;
+	}
+	bIsInitialized = true;
 	AssetApi = MakeShared<FAssetApi>();
 	AssetApi->OnListAssetTypeResponse.BindUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded);
 	AssetButtons = TArray<TSubclassOf<URpmCategoryButtonWidget>>();
@@ -30,12 +36,12 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {
-	URpmDeveloperSettings* Settings = GetMutableDefault<URpmDeveloperSettings>();
-	FAssetTypeListRequest AssetListRequest;
+	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
+	FAssetTypeListRequest AssetTypeListRequest;
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
-	AssetListRequest.Params = QueryParams;
-	AssetApi->ListAssetTypesAsync(AssetListRequest);
+	AssetTypeListRequest.Params = QueryParams;
+	AssetApi->ListAssetTypesAsync(AssetTypeListRequest);
 }
 
 void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton)
@@ -70,7 +76,7 @@ void URpmCategoryPanelWidget::CreateButton(const FString& AssetType)
 				AssetButtons.Add(CategoryButton->GetClass());
 				return;
 			}
-			UE_LOG(LogTemp, Error, TEXT("Failed to Load %s button"), *AssetType);
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to Load %s button"), *AssetType);
 		}
 	}
 }
@@ -93,7 +99,7 @@ void URpmCategoryPanelWidget::AssetTypesLoaded(const FAssetTypeListResponse& Ass
 		OnCategoriesLoaded.Broadcast(AssetTypeListResponse.Data);
 		return;
 	}
-	UE_LOG(LogTemp, Error, TEXT("Failed to load asset types"));
+	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load asset types"));
 	OnCategoriesLoaded.Broadcast(TArray<FString>());
 }
 

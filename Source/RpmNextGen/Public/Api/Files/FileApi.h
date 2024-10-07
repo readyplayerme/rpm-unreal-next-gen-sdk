@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpRequest.h"
 
 struct FAsset;
-DECLARE_DELEGATE_TwoParams(FOnFileRequestComplete, TArray<uint8>*, const FString&);
-DECLARE_DELEGATE_TwoParams(FOnAssetFileRequestComplete, TArray<uint8>*, const FAsset&);
+DECLARE_DELEGATE_TwoParams(FOnFileRequestComplete, const TArray<uint8>*, const FString&);
+DECLARE_DELEGATE_TwoParams(FOnAssetFileRequestComplete, const TArray<uint8>*, const FAsset&);
 
 class RPMNEXTGEN_API FFileApi : public TSharedFromThis<FFileApi>
 {

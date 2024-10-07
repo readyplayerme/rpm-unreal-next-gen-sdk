@@ -15,7 +15,7 @@ public:
 	
 	FDeveloperAuthApi();
 
-	void HandleLoginResponse(FString JsonData, bool bIsSuccessful) const;
+	void HandleLoginResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful) const;
 	void LoginWithEmail(FDeveloperLoginRequest Request);
 
 private:
