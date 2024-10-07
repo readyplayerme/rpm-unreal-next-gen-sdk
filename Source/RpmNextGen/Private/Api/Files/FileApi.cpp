@@ -1,4 +1,4 @@
-﻿#include "Api/Files/FileApi.h"
+#include "Api/Files/FileApi.h"
 
 #include "HttpModule.h"
 #include "RpmNextGen.h"

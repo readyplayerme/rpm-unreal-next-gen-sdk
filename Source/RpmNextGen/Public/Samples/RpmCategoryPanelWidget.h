@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Category Panel")
 	void LoadAndCreateButtons();
 
+	UFUNCTION(BlueprintCallable, Category = "Category Panel")
+	void LoadAndCreateButtons();
+
 	UFUNCTION()
 	virtual void OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton);
 	
