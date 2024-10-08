@@ -1,4 +1,4 @@
-﻿#include "Api/Files/GlbLoader.h"
+#include "Api/Files/GlbLoader.h"
 #include "RpmNextGen.h"
 #include "glTFRuntime/Public/glTFRuntimeFunctionLibrary.h"
 #include "Api/Files//FileUtility.h"

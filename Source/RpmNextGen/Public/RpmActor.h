@@ -24,6 +24,8 @@ class RPMNEXTGEN_API ARpmActor : public AActor
 public:	
 	/** Default constructor for ARpmActor. Initializes the actor and sets the root component. */
 	ARpmActor();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	FRpmAnimationConfig AnimationConfig;
 
 	/** Animation configuration used for controlling skeletal animations. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
@@ -94,6 +96,8 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveMeshComponentsOfType(const FString& AssetType);
+	
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 	/** Weak reference to the master pose component, used for synchronizing skeletal animations. */

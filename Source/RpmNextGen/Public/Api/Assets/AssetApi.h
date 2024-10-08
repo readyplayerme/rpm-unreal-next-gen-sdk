@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Api/Common/ApiRequestStrategy.h"
 #include "Api/Common/WebApiWithAuth.h"
 #include "Models/AssetTypeListResponse.h"
