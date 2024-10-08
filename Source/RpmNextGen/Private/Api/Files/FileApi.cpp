@@ -60,19 +60,6 @@ void FFileApi::AssetFileRequestComplete(FHttpRequestPtr Request, FHttpResponsePt
 	OnAssetFileRequestComplete.ExecuteIfBound(TArray<uint8>(), Asset);
 }
 
-void FFileApi::AssetFileRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FAsset Asset)
-{
-	
-	if (bWasSuccessful && Response.IsValid() && Response->GetContentLength() > 0)
-	{
-		TArray<uint8> Content = Response->GetContent();
-		OnAssetFileRequestComplete.ExecuteIfBound(&Content, Asset);
-		return;
-	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Failed to load file from URL. Try loading from cache"));
-	OnAssetFileRequestComplete.ExecuteIfBound(nullptr, Asset);
-}
-
 bool FFileApi::LoadFileFromPath(const FString& Path, TArray<uint8>& OutContent)
 {
 	if (!FPaths::FileExists(Path))

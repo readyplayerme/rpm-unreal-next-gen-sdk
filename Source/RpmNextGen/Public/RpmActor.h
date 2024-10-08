@@ -27,10 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
 	FRpmAnimationConfig AnimationConfig;
 
-	/** Animation configuration used for controlling skeletal animations. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
-	FRpmAnimationConfig AnimationConfig;
-
 	/** A map of animation configurations associated with base model IDs. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
 	TMap<FString, FRpmAnimationConfig> AnimationConfigsByBaseModelId;
@@ -96,8 +92,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
 	void RemoveMeshComponentsOfType(const FString& AssetType);
-	
-	virtual void Tick(float DeltaTime) override;
 
 protected:
 	/** Weak reference to the master pose component, used for synchronizing skeletal animations. */
