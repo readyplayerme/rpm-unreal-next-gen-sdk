@@ -90,7 +90,6 @@ UUserWidget* URpmCreatorWidget::CreateAssetPanel(const FString& Category)
 	AssetPanelSwitcher->AddChild(AssetPanelWidget);
 	AssetPanelWidget->PaginationLimit = PaginationLimit;
 	AssetPanelWidget->Rename(*Category);
-	AssetPanelWidget->SetCategoryName(Category);
 	AssetPanelWidget->ButtonSize = FVector2D(200, 200);
 	AssetPanelWidget->ImageSize = FVector2D(200, 200);
 	AssetPanelWidget->OnAssetSelected.AddDynamic(this, &URpmCreatorWidget::HandleAssetSelectedFromPanel);
