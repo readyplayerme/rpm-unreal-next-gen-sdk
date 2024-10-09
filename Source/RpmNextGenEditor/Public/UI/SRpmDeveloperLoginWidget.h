@@ -12,7 +12,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Containers/Map.h"
 
-
+class FRpmTextureLoader;
 struct FDeveloperLoginResponse;
 class URpmDeveloperSettings;
 class UDeveloperAuthApi;
@@ -45,11 +45,11 @@ private:
 
 	EVisibility GetLoginViewVisibility() const;
 	EVisibility GetLoggedInViewVisibility() const;
-
-	FEditorAssetLoader AssetLoader;
-	TUniquePtr<FAssetApi> AssetApi;
-	TUniquePtr<FDeveloperAccountApi> DeveloperAccountApi;
-	TUniquePtr<FDeveloperAuthApi> DeveloperAuthApi;
+	TArray<TSharedPtr<FRpmTextureLoader>> ActiveLoaders;
+	TSharedPtr<FEditorAssetLoader> AssetLoader;
+	TSharedPtr<FAssetApi> AssetApi;
+	TSharedPtr<FDeveloperAccountApi> DeveloperAccountApi;
+	TSharedPtr<FDeveloperAuthApi> DeveloperAuthApi;
 	static constexpr const TCHAR* CacheKeyEmail = TEXT("Email");
 	bool bIsLoggedIn = false;
 	bool bIsInitialized = false;
@@ -71,9 +71,11 @@ private:
 	void HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful);
 	void HandleApplicationListResponse(const FApplicationListResponse& Response, bool bWasSuccessful);
 	void HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful);
-	void OnLoadStyleClicked(const FString& StyleId);
+	void OnLoadBaseModelClicked(const FAsset& Asset);
 	void SetLoggedInState(const bool IsLoggedIn);
 	void PopulateComboBoxItems(const TArray<FString>& Items, const FString ActiveItem);
 	void OnComboBoxSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type SelectInfo);
+	UFUNCTION()
+	void OnTextureLoaded(UTexture2D* Texture2D, TSharedPtr<SImage> SImage, TSharedPtr<FRpmTextureLoader> LoaderToRemove);
 	void AddCharacterStyle(const FAsset& StyleAsset);
 };

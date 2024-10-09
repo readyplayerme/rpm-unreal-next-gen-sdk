@@ -12,4 +12,18 @@ struct RPMNEXTGEN_API FCharacterCreateResponse : public FApiResponse
 
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me", meta = (JsonName = "data"))
 	FRpmCharacter Data;
+
+	FCharacterCreateResponse()
+	{		
+	}
+
+	FCharacterCreateResponse(FRpmCharacter Data)
+	{
+		this->Data = Data;
+	}
+
+	bool IsValid() const
+	{
+		return !Data.Id.IsEmpty() && !Data.GlbUrl.IsEmpty();
+	}
 };

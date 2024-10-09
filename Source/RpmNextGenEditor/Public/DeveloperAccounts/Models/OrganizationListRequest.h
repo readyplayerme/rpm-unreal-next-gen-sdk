@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Auth/ApiRequest.h"
 #include "OrganizationListRequest.generated.h"
 
 USTRUCT(BlueprintType)

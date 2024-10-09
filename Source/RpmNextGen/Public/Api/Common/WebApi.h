@@ -1,35 +1,34 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "JsonObjectConverter.h"
-#include "Api/Auth/ApiRequest.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Misc/ScopeExit.h"
+#include "Models/ApiRequest.h"
 
 class FHttpModule;
-DECLARE_DELEGATE_TwoParams(FOnWebApiResponse, FString, bool);
+
 
 class RPMNEXTGEN_API FWebApi
 {
 public:
+	DECLARE_DELEGATE_ThreeParams(FOnRequestComplete, TSharedPtr<FApiRequest>, FHttpResponsePtr, bool);
+	
+	FOnRequestComplete OnRequestComplete;
+	
 	FWebApi();
 	virtual ~FWebApi();
 	
-	FOnWebApiResponse OnApiResponse;
-	
-protected:
-	void DispatchRaw(
-		const FApiRequest& Data
-	);
-	
-	 virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void DispatchRaw(TSharedPtr<FApiRequest> ApiRequest);
+protected:	
+	FHttpModule* Http;
 	
 	FString BuildQueryString(const TMap<FString, FString>& QueryParams);
 	
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
-
-	FHttpModule* Http;
+	
+	virtual void OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSharedPtr<FApiRequest> ApiRequest);
 };
 
 template <typename T>

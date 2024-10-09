@@ -7,7 +7,7 @@
 
 RPMNEXTGEN_API DECLARE_LOG_CATEGORY_EXTERN(LogReadyPlayerMe, Log, All);
 
-class FRpmNextGenModule : public IModuleInterface
+class RPMNEXTGEN_API FRpmNextGenModule : public IModuleInterface
 {
 public:
 

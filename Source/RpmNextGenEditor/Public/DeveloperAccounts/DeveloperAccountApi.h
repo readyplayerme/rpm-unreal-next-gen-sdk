@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Api/Common/WebApiWithAuth.h"
@@ -14,16 +14,18 @@ DECLARE_DELEGATE_TwoParams(FOnOrganizationListResponse, const FOrganizationListR
 class RPMNEXTGENEDITOR_API FDeveloperAccountApi : public FWebApiWithAuth
 {
 public:
-	FDeveloperAccountApi(IAuthenticationStrategy* InAuthenticationStrategy);
-	void ListApplicationsAsync(const FApplicationListRequest& Request);
-	void ListOrganizationsAsync(const FOrganizationListRequest& Request);
-	
 	FOnApplicationListResponse OnApplicationListResponse;
 	FOnOrganizationListResponse OnOrganizationResponse;
-private:
-	static FString BuildQueryString(const TMap<FString, FString>& Params);
-	void HandleOrgListResponse(FString Data, bool bWasSuccessful);
-	void HandleAppListResponse(FString Data, bool bWasSuccessful);
+	
+	FDeveloperAccountApi(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy);
+	void ListApplicationsAsync(const FApplicationListRequest& Request);
+	void ListOrganizationsAsync(const FOrganizationListRequest& Request);
 
+private:
 	FString ApiBaseUrl;
+	
+	void HandleOrgListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HandleAppListResponse(TSharedPtr<FApiRequest>ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	static FString BuildQueryString(const TMap<FString, FString>& Params);
 };
