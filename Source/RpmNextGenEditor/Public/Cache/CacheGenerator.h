@@ -1,7 +1,7 @@
 #pragma once
 #include "Api/Assets/Models/AssetListResponse.h"
+#include "Api/Assets/Models/AssetListRequest.h"
 
-struct FAssetListRequest;
 class FTaskManager;
 struct FCachedAssetData;
 class FAssetSaver;
@@ -24,7 +24,7 @@ public:
 	FOnLocalCacheGenerated OnLocalCacheGenerated;
 	
 	FCacheGenerator();
-	virtual ~FCacheGenerator() = default;
+	virtual ~FCacheGenerator();
 	
 	void DownloadRemoteCacheFromUrl(const FString& Url);
 	void GenerateLocalCache(int InItemsPerCategory);

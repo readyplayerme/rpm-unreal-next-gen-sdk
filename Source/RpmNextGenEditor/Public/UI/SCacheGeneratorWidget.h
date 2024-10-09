@@ -16,7 +16,7 @@ public:
 private:
 	float ItemsPerCategory = 10.0f;
 	FString CacheUrl;
-	TUniquePtr<FCacheGenerator> CacheGenerator;
+	TSharedPtr<FCacheGenerator> CacheGenerator;
 	
 	// Callback functions for your buttons
 	FReply OnGenerateOfflineCacheClicked();
