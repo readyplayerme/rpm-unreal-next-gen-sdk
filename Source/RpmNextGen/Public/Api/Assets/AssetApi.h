@@ -21,6 +21,7 @@ public:
 	
 	FAssetApi();
 	FAssetApi(EApiRequestStrategy InApiRequestStrategy);
+	virtual ~FAssetApi() override;
 	
 	void Initialize();
 	void ListAssetsAsync(const FAssetListRequest& Request);

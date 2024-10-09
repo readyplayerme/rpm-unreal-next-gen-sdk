@@ -15,7 +15,7 @@ void SCacheGeneratorWidget::Construct(const FArguments& InArgs)
 {
     if(!CacheGenerator)
     {
-        CacheGenerator = MakeUnique<FCacheGenerator>();
+        CacheGenerator = MakeShared<FCacheGenerator>();
         CacheGenerator->OnCacheDataLoaded.BindRaw(this, &SCacheGeneratorWidget::OnFetchCacheDataComplete);
         CacheGenerator->OnDownloadRemoteCacheDelegate.BindRaw(this, &SCacheGeneratorWidget::OnDownloadRemoteCacheComplete);
         CacheGenerator->OnLocalCacheGenerated.BindRaw(this, &SCacheGeneratorWidget::OnGenerateLocalCacheCompleted);
