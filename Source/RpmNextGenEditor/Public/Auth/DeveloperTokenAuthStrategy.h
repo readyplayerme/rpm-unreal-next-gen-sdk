@@ -17,6 +17,6 @@ public:
 	
 private:
 	TSharedPtr<FAuthApi> AuthApi;
-	
-	void RefreshTokenAsync(const FRefreshTokenRequest& Request);
+	TSharedPtr<FApiRequest> ApiRequestToRetry;
+	void RefreshTokenAsync(const FRefreshTokenRequest& RefreshRequest);
 };
