@@ -39,24 +39,39 @@ USkeletalMesh* FEditorAssetLoader::SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, co
 {
 	const FglTFRuntimeSkeletonConfig SkeletonConfig = FglTFRuntimeSkeletonConfig();
 	USkeleton* Skeleton = GltfAsset->LoadSkeleton(0, SkeletonConfig);
+	if (!IsValid(Skeleton))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load skeleton for %s"), *LoadedAssetId);
+		return nullptr;
+	}
+	FglTFRuntimeSkeletalMeshConfig MeshConfig = FglTFRuntimeSkeletalMeshConfig();
+	MeshConfig.Skeleton = Skeleton;
 
-	FglTFRuntimeSkeletalMeshConfig meshConfig = FglTFRuntimeSkeletalMeshConfig();
-	meshConfig.Skeleton = Skeleton;
+	USkeletalMesh* SkeletalMesh = GltfAsset->LoadSkeletalMeshRecursive(TEXT(""), {}, MeshConfig);
 
-	USkeletalMesh* skeletalMesh = GltfAsset->LoadSkeletalMeshRecursive(TEXT(""), {}, meshConfig);
-	skeletalMesh->SetSkeleton(Skeleton);
-	Skeleton->SetPreviewMesh(skeletalMesh);
+	if (!IsValid(SkeletalMesh))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load skeletal mesh for %s. 1"), *LoadedAssetId);
+		return nullptr;
+	}
+
+	// Ensure proper UObject flags to avoid garbage collection
+	SkeletalMesh->SetFlags(RF_Public | RF_Standalone);
+	SkeletalMesh->SetSkeleton(Skeleton);
+	Skeleton->SetPreviewMesh(SkeletalMesh);
+
 	const FString CoreAssetPath = FString::Printf(TEXT("/Game/ReadyPlayerMe/CharacterModels/%s/"), *LoadedAssetId);
 	const FString SkeletonAssetPath = FString::Printf(TEXT("%s%s_Skeleton"), *CoreAssetPath, *LoadedAssetId);
 	const FString SkeletalMeshAssetPath = FString::Printf(TEXT("%s%s_SkeletalMesh"), *CoreAssetPath, *LoadedAssetId);
-
+	UE_LOG(LogTemp, Log, TEXT("Saving SkeletalMesh to path: %s"), *SkeletalMeshAssetPath);
+	UE_LOG(LogTemp, Log, TEXT("Saving Skeleton to path: %s"), *SkeletonAssetPath);
 	const auto NameGenerator = NewObject<UAssetNameGenerator>();
 	NameGenerator->SetPath(CoreAssetPath);
 
-	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(skeletalMesh, SkeletalMeshAssetPath, SkeletonAssetPath, TEXT(""), NameGenerator->MaterialNameGeneratorDelegate, NameGenerator->TextureNameGeneratorDelegate);
+	UTransientObjectSaverLibrary::SaveTransientSkeletalMesh(SkeletalMesh, SkeletalMeshAssetPath, SkeletonAssetPath, TEXT(""), NameGenerator->MaterialNameGeneratorDelegate, NameGenerator->TextureNameGeneratorDelegate);
 
 	UE_LOG(LogReadyPlayerMe, Log, TEXT("Character model saved: %s"), *LoadedAssetId);
-	return skeletalMesh;
+	return SkeletalMesh;
 }
 
 void FEditorAssetLoader::LoadBaseModelAsset(const FAsset& Asset)
@@ -87,7 +102,7 @@ void FEditorAssetLoader::LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAs
 
 	if (GltfAsset)
 	{
-		FTransform Transform = FTransform::Identity;
+		const FTransform Transform = FTransform::Identity;
 
 
 		ARpmActor* NewActor = EditorWorld->SpawnActorDeferred<ARpmActor>(ARpmActor::StaticClass(), Transform);
