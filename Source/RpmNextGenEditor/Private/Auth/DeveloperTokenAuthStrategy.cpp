@@ -1,5 +1,4 @@
 ﻿#include "Auth/DeveloperTokenAuthStrategy.h"
-
 #include "RpmNextGen.h"
 #include "Auth/DevAuthTokenCache.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
@@ -27,12 +26,12 @@ void DeveloperTokenAuthStrategy::AddAuthToRequest(TSharedPtr<FApiRequest> ApiReq
 		ApiRequest->Headers.Remove(Key);
 	}
 	ApiRequest->Headers.Add(Key, FString::Printf(TEXT("Bearer %s"), *Token));
-	
 	OnAuthComplete.ExecuteIfBound(ApiRequest, true);
 }
 
 void DeveloperTokenAuthStrategy::TryRefresh(TSharedPtr<FApiRequest> ApiRequest)
 {
+	ApiRequestToRetry = ApiRequest;
 	FRefreshTokenRequest RefreshRequest;
 	RefreshRequest.Data.Token = FDevAuthTokenCache::GetAuthData().Token;
 	RefreshRequest.Data.RefreshToken = FDevAuthTokenCache::GetAuthData().RefreshToken;
@@ -47,13 +46,11 @@ void DeveloperTokenAuthStrategy::OnRefreshTokenResponse(TSharedPtr<FApiRequest> 
 		DeveloperAuth.Token = Response.Data.Token;
 		DeveloperAuth.RefreshToken = Response.Data.RefreshToken;
 		FDevAuthTokenCache::SetAuthData(DeveloperAuth);
-		OnTokenRefreshed.ExecuteIfBound(Request, Response.Data, true);
+		OnTokenRefreshed.ExecuteIfBound(ApiRequestToRetry, Response.Data, true);
 		return;
 	}
-	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
-	OnTokenRefreshed.ExecuteIfBound(Request, Response.Data, false);
+	OnTokenRefreshed.ExecuteIfBound(ApiRequestToRetry, Response.Data, false);
 }
-
 
 void DeveloperTokenAuthStrategy::RefreshTokenAsync(const FRefreshTokenRequest& Request)
 {	
