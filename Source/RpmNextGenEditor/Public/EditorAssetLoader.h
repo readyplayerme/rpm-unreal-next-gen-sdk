@@ -1,22 +1,29 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Assets/AssetLoader.h"
+#include "Api/Assets/AssetGlbLoader.h"
 #include "HAL/PlatformFilemanager.h"
 
-class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetLoader
+struct FglTFRuntimeConfig;
+class UglTFRuntimeAsset;
+
+class RPMNEXTGENEDITOR_API FEditorAssetLoader : public FAssetGlbLoader
 {
 public:
-	void OnAssetLoadComplete(UglTFRuntimeAsset* gltfAsset, bool bWasSuccessful,
-	                             FString LoadedAssetId);
+	USkeleton* SkeletonToCopy;
+
 	FEditorAssetLoader();
 	virtual ~FEditorAssetLoader() override;
 
-	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* gltfAsset, FString AssetId = "");
-	void LoadGLBFromURLWithId(const FString& URL, const FString AssetId);
+	void LoadAssetToWorldAsURpmActor(UglTFRuntimeAsset* GltfAsset, FString AssetId = "");
+	void LoadBaseModelAsset(const FAsset& Asset);
+	
 	USkeletalMesh* SaveAsUAsset(UglTFRuntimeAsset* GltfAsset, const FString& LoadedAssetId) const;
-	USkeleton* SkeletonToCopy;
 
 private:
-	void LoadAssetToWorld(FString AssetId, UglTFRuntimeAsset* gltfAsset);
+	FglTFRuntimeConfig* GltfConfig;
+	
+	void LoadAssetToWorld(const FString& AssetId, UglTFRuntimeAsset* GltfAsset);
+	UFUNCTION()
+	void HandleGlbLoaded(const FAsset& Asset, const TArray<unsigned char>& Data);
 };

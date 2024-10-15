@@ -17,12 +17,13 @@ public:
 	void PluginButtonClicked();
 	
 private:
-
 	void RegisterMenus();
 	void FillReadyPlayerMeMenu(UToolMenu* Menu);
 	void OpenLoaderWindow();
-	TSharedRef<SDockTab> OnSpawnLoaderWindow(const FSpawnTabArgs& SpawnTabArgs);
-	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
-	TSharedPtr<class FUICommandList> PluginCommands;
+	void OpenCacheEditorWindow();
 	
+	TSharedRef<SDockTab> OnSpawnLoaderWindow(const FSpawnTabArgs& SpawnTabArgs);
+	TSharedRef<SDockTab> OnSpawnCacheWindow(const FSpawnTabArgs& SpawnTabArgs);
+	TSharedRef<SDockTab> OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs);
+	TSharedPtr<FUICommandList> PluginCommands;
 };

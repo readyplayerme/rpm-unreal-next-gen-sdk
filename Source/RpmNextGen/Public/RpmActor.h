@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "glTFRuntimeAsset.h"
+#include "RpmCharacterTypes.h"
+#include "RpmLoaderComponent.h"
 #include "RpmActor.generated.h"
 
 UCLASS()
@@ -13,14 +15,42 @@ class RPMNEXTGEN_API ARpmActor : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ARpmActor();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	FRpmAnimationConfig AnimationConfig;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me")
+	TMap<FString, FRpmAnimationConfig> AnimationConfigsByBaseModelId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|Glb Import Settings")
+	FglTFRuntimeStaticMeshConfig StaticMeshConfig;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|Glb Import Settings")
+	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
+
+	FRpmCharacterData CharacterData;
+	
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadCharacter(const FRpmCharacterData& InCharacterData, UglTFRuntimeAsset* GltfAsset);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadAsset(const FAsset& Asset, UglTFRuntimeAsset* GltfAsset );
+	
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	virtual void LoadGltfAssetWithSkeleton(UglTFRuntimeAsset* GltfAsset, const FAsset& Asset, const FRpmAnimationConfig& InAnimationCharacter);
+
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	void RemoveAllMeshes();
+	
+	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
+	void RemoveMeshComponentsOfType(const FString& AssetType);
+	
+	virtual void Tick(float DeltaTime) override;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	TWeakObjectPtr<USkeletalMeshComponent> MasterPoseComponent;
 	
-	virtual void ProcessNode(USceneComponent* NodeParentComponent, const FName SocketName, FglTFRuntimeNode& Node);
+	virtual void BeginPlay() override;
 
 	template<typename T>
 	FName GetSafeNodeName(const FglTFRuntimeNode& Node)
@@ -28,56 +58,14 @@ protected:
 		return MakeUniqueObjectName(this, T::StaticClass(), *Node.Name);
 	}
 
-	UPROPERTY()
-	TMap<USceneComponent*, FName> SocketMapping;
-	UPROPERTY()
-	TArray<USkeletalMeshComponent*> DiscoveredSkeletalMeshComponents;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	UglTFRuntimeAsset* Asset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	FglTFRuntimeStaticMeshConfig StaticMeshConfig;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	FglTFRuntimeSkeletalMeshConfig SkeletalMeshConfig;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	FglTFRuntimeSkeletalAnimationConfig SkeletalAnimationConfig;
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Ready Player Me|glTFRuntime", meta = (DisplayName = "On StaticMeshComponent Created"))
-	void ReceiveOnStaticMeshComponentCreated(UStaticMeshComponent* StaticMeshComponent, const FglTFRuntimeNode& Node);
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Ready Player Me|glTFRuntime", meta = (DisplayName = "On SkeletalMeshComponent Created"))
-	void ReceiveOnSkeletalMeshComponentCreated(USkeletalMeshComponent* SkeletalMeshComponent, const FglTFRuntimeNode& Node);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	int32 RootNodeIndex;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true), Category = "Ready Player Me|glTFRuntime")
-	bool bStaticMeshesAsSkeletalOnMorphTargets;
-
-	DECLARE_MULTICAST_DELEGATE_TwoParams(FglTFRuntimeAssetActorNodeProcessed, const FglTFRuntimeNode&, USceneComponent*);
-	FglTFRuntimeAssetActorNodeProcessed OnNodeProcessed;
-
-	virtual void PostUnregisterAllComponents() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadGltfAsset(UglTFRuntimeAsset* GltfAsset);
-	void ClearLoadedComponents();
-
-	virtual void SetupAsset();
-
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me|glTFRuntime")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Ready Player Me")
 	USceneComponent* AssetRoot;
 
-	void ProcessBoneNode(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
-	USceneComponent* CreateNewComponent(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
-	void SetupComponentTags(USceneComponent* Component, FglTFRuntimeNode& Node, const FName SocketName);
-	void ProcessChildNodes(USceneComponent* NodeParentComponent, FglTFRuntimeNode& Node);
+	TMap<FString, TArray<USceneComponent*>> LoadedMeshComponentsByAssetType;
+	
+	TArray<USceneComponent*> LoadMeshComponents(UglTFRuntimeAsset* GltfAsset, const FString& AssetType);
+	USkeletalMeshComponent* CreateSkeletalMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
+	UStaticMeshComponent* CreateStaticMeshComponent(UglTFRuntimeAsset* GltfAsset, const FglTFRuntimeNode& Node);
+
 };

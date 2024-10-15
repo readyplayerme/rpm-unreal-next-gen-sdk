@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Samples/RpmCategoryButtonWidget.h"
+
+#include "RpmNextGen.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
@@ -19,14 +21,19 @@ void URpmCategoryButtonWidget::NativeConstruct()
 	}
 }
 
-void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Image)
+void URpmCategoryButtonWidget::InitializeButton(FString Category, UTexture2D* Image, const FVector2D& InImageSize)
 {
 	AssetCategoryName = Category;
 
 	if (CategoryImage)
-	{
-		CategoryImageTexture = Image;
-		CategoryImage->SetBrushFromTexture(CategoryImageTexture);
+	{		
+		CategoryImage->SetDesiredSizeOverride(InImageSize);
+
+		if(Image)
+		{
+			CategoryImageTexture = Image;
+			CategoryImage->SetBrushFromTexture(CategoryImageTexture);
+		}
 	}	
 }
 

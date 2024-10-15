@@ -8,7 +8,7 @@ class RPMNEXTGEN_API FApiKeyAuthStrategy : public IAuthenticationStrategy
 {
 public:
 	FApiKeyAuthStrategy();
-	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> Request) override;
-	virtual void OnRefreshTokenResponse(const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
-	virtual void TryRefresh(TSharedPtr<FApiRequest> Request) override;
+	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest) override;
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest) override;
+	virtual void OnRefreshTokenResponse(TSharedPtr<FApiRequest> ApiRequest, const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
 };

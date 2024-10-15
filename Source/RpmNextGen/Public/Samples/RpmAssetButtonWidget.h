@@ -1,5 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RpmAssetButtonWidget.generated.h"
 
+class FRpmTextureLoader;
 class USizeBox;
 class UBorder;
 class UImage;
@@ -23,7 +23,6 @@ class RPMNEXTGEN_API URpmAssetButtonWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	
 	UPROPERTY(meta = (BindWidget))
 	UButton* AssetButton;
 
@@ -43,16 +42,19 @@ public:
 	virtual void SetSelected(const bool bInIsSelected);
 
 	FAsset GetAssetData() const { return AssetData; }
+	
 protected:
+	UFUNCTION()
+	void OnTextureLoaded(UTexture2D* Texture2D);
+	
 	virtual void NativeConstruct() override;
 
 private:
+	TSharedPtr<FRpmTextureLoader> TextureLoader;
 	FLinearColor DefaultColor;
-
 	FAsset AssetData;
-
+	bool bIsSelected;
+	
 	UFUNCTION()
 	virtual void HandleButtonClicked();
-
-	bool bIsSelected;
 };

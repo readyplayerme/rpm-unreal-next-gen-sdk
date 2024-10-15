@@ -18,7 +18,6 @@ class RPMNEXTGEN_API URpmDeveloperSettings : public UDeveloperSettings
 	FString ApiBaseUrl;
 
 public:
-	URpmDeveloperSettings();
 	
 	UPROPERTY(VisibleAnywhere, Config, Category = "Auth Settings", meta = (ReadOnly  = "true", ToolTip = "Base URL for authentication requests."))
 	FString ApiBaseAuthUrl;
@@ -31,9 +30,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, Config, Category = "Auth Settings", meta = (ToolTip = "Proxy URL for API requests. If empty, the base URL will be used."))
 	FString ApiProxyUrl;
-
+	
+	URpmDeveloperSettings();
+	
 	void SetupDemoAccount();
 	void Reset();
+	
 	FString GetApiBaseUrl() const;
 
 	bool IsValid() const
@@ -46,7 +48,8 @@ public:
 private:
 	const FString DemoAppId = TEXT("665e05a50c62c921e5a6ab84");
 	const FString DemoProxyUrl = TEXT("https://api.readyplayer.me/demo");
+	
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif // WITH_EDITOR
+#endif 
 };

@@ -10,15 +10,15 @@ UAssetNameGenerator::UAssetNameGenerator()
 
 void UAssetNameGenerator::SetPath(FString NewPath)
 {
-	this->path = NewPath;
+	this->Path = NewPath;
 }
 
 FString UAssetNameGenerator::GenerateMaterialName(UMaterialInterface* Material, const int32 MaterialIndex, const FString& SlotName) const
 {
-	return FString::Printf(TEXT("%sMaterial_%d"), *path, MaterialIndex);
+	return FString::Printf(TEXT("%sMaterial_%d"), *Path, MaterialIndex);
 }
 
 FString UAssetNameGenerator::GenerateTextureName(UTexture* Texture, UMaterialInterface* Material, const FString& MaterialPath, const FString& ParamName) const
 {
-	return FString::Printf(TEXT("%s%s%s"), *path, *Material->GetName(), *ParamName);
+	return FString::Printf(TEXT("%s%s%s"), *Path, *Material->GetName(), *ParamName);
 }

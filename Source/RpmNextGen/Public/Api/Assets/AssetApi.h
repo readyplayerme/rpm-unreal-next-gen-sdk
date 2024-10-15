@@ -1,22 +1,41 @@
-﻿#pragma once
+#pragma once
+#include "Api/Common/ApiRequestStrategy.h"
 #include "Api/Common/WebApiWithAuth.h"
+#include "Models/AssetTypeListResponse.h"
 
+struct FApiRequest;
+struct FAssetTypeListRequest;
 struct FAssetListRequest;
 struct FAssetListResponse;
 
 DECLARE_DELEGATE_TwoParams(FOnListAssetsResponse, const FAssetListResponse&, bool);
-DECLARE_DELEGATE_TwoParams(FOnListAssetTypeResponse, const FAssetListResponse&, bool);
+DECLARE_DELEGATE_TwoParams(FOnListAssetTypeResponse, const FAssetTypeListResponse&, bool);
 
-class RPMNEXTGEN_API FAssetApi : public FWebApiWithAuth
+class RPMNEXTGEN_API FAssetApi :  public FWebApiWithAuth
 {
 public:
-	FAssetApi();
-	void ListAssetsAsync(const FAssetListRequest& Request);
+	static const FString BaseModelType;
+	
 	FOnListAssetsResponse OnListAssetsResponse;
 	FOnListAssetTypeResponse OnListAssetTypeResponse;
-private:
-	void HandleListAssetResponse(FString Response, bool bWasSuccessful);
-	void HandleListAssetTypeResponse(FString Response, bool bWasSuccessful);
 	
+	FAssetApi();
+	FAssetApi(EApiRequestStrategy InApiRequestStrategy);
+	virtual ~FAssetApi() override;
+	
+	void Initialize();
+	void ListAssetsAsync(const FAssetListRequest& Request);
+	void ListAssetTypesAsync(const FAssetTypeListRequest& Request);
+protected:
+	EApiRequestStrategy ApiRequestStrategy;
+	
+private:
 	FString ApiBaseUrl;
+	bool bIsInitialized = false;
+	void HandleAssetResponse(TSharedPtr<FApiRequest>, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	void LoadAssetsFromCache(TMap<FString, FString> QueryParams);
+	void LoadAssetTypesFromCache();
+
+	TArray<FString> ExtractQueryValues(const FString& QueryString, const FString& Key);
 };
