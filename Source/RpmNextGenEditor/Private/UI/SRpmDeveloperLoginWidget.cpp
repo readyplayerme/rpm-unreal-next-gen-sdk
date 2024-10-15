@@ -27,9 +27,19 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SRpmDeveloperLoginWidget::Construct(const FArguments& InArgs)
 {
 	FDeveloperAuth AuthData = FDevAuthTokenCache::GetAuthData();
-	FDevAuthTokenCache::SetAuthData(AuthData);
-	bIsLoggedIn = AuthData.IsValid();
-	UserName = AuthData.Name;
+
+	bIsLoggedIn = false;
+	if(AuthData.IsValid())
+	{
+		FDevAuthTokenCache::SetAuthData(AuthData);
+		bIsLoggedIn = AuthData.IsValid();
+		UserName = AuthData.Name;
+	}
+	else
+	{
+		UserName = "User";
+		FDevAuthTokenCache::ClearAuthData();
+	}
 
 	ChildSlot
 	[

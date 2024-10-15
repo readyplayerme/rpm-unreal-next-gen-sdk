@@ -23,6 +23,10 @@ FAssetApi::FAssetApi(EApiRequestStrategy InApiRequestStrategy) : ApiRequestStrat
 	Initialize();
 }
 
+FAssetApi::~FAssetApi()
+{
+}
+
 void FAssetApi::Initialize()
 {
 	if (bIsInitialized)	return;

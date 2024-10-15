@@ -25,6 +25,10 @@ FCacheGenerator::FCacheGenerator() : CurrentBaseModelIndex(0), MaxItemsPerCatego
 	AssetApi->OnListAssetTypeResponse.BindRaw(this, &FCacheGenerator::OnListAssetTypesResponse);
 }
 
+FCacheGenerator::~FCacheGenerator()
+{
+}
+
 void FCacheGenerator::DownloadRemoteCacheFromUrl(const FString& Url)
 {
 	TSharedRef<IHttpRequest> Request = Http->CreateRequest();

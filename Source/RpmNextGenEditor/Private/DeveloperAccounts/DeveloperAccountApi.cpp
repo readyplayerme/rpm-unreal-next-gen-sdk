@@ -1,4 +1,4 @@
-﻿#include "DeveloperAccounts/DeveloperAccountApi.h"
+#include "DeveloperAccounts/DeveloperAccountApi.h"
 #include "JsonObjectConverter.h"
 #include "DeveloperAccounts/Models/ApplicationListRequest.h"
 #include "DeveloperAccounts/Models/ApplicationListResponse.h"
@@ -57,12 +57,16 @@ void FDeveloperAccountApi::HandleAppListResponse(TSharedPtr<FApiRequest> ApiRequ
 void FDeveloperAccountApi::HandleOrgListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     FOrganizationListResponse OrganizationListResponse;
-    FString Data = Response->GetContentAsString();
-    if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &OrganizationListResponse, 0, 0))
+    if(Response.IsValid())
     {
-        OnOrganizationResponse.ExecuteIfBound(OrganizationListResponse, true);
-        return;
+        FString Data = Response->GetContentAsString();
+        if (bWasSuccessful && !Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &OrganizationListResponse, 0, 0))
+        {
+            OnOrganizationResponse.ExecuteIfBound(OrganizationListResponse, true);
+            return;
+        }
     }
+
     OnOrganizationResponse.ExecuteIfBound(OrganizationListResponse, false);
 }
 

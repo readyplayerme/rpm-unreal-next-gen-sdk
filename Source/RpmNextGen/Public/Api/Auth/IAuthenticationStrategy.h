@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Models/RefreshTokenResponse.h"
 
+struct FApiRequest;
+
 DECLARE_DELEGATE_TwoParams(FOnAuthComplete, TSharedPtr<FApiRequest>, bool);
 DECLARE_DELEGATE_ThreeParams(FOnTokenRefreshed, TSharedPtr<FApiRequest>, const FRefreshTokenResponseBody&, bool);
 
