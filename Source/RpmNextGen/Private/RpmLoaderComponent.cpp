@@ -76,12 +76,12 @@ void URpmLoaderComponent::LoadGltfRuntimeAssetFromCache(const FAsset& Asset)
 			{
 				UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
 			}
-			OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
+			OnAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
 			return;
 		}
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset from cache"));
-	OnNewAssetLoaded.Broadcast(Asset, nullptr);
+	OnAssetLoaded.Broadcast(Asset, nullptr);
 }
 
 void URpmLoaderComponent::LoadCharacterAssetsFromCache(TMap<FString, FAsset> AssetMap)
@@ -137,7 +137,7 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	PreviewRequest.Params.Assets = ParamAssets;
 	const FString& Url = CharacterApi->GeneratePreviewUrl(PreviewRequest);
 
-	FileApi->LoadAssetFileFromUrl(Url, AssetData);
+	FileApi->LoadFileFromUrl(Url);
 }
 
 void URpmLoaderComponent::HandleAssetLoaded(const TArray<unsigned char>* Data, const FAsset& Asset)
@@ -152,7 +152,7 @@ void URpmLoaderComponent::HandleAssetLoaded(const TArray<unsigned char>* Data, c
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load gltf asset"));
 	}
-	OnNewAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
+	OnAssetLoaded.Broadcast(Asset, GltfRuntimeAsset);
 }
 
 void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<unsigned char>* Data, const FString& FileName)
