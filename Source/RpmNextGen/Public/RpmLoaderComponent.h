@@ -22,7 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterCreated, FRpmCharacterDa
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterAssetLoaded, const FRpmCharacterData&, CharacterData, UglTFRuntimeAsset*, GltfRuntimeAsset);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewAssetLoaded, const FAsset&, Asset, UglTFRuntimeAsset*, GltfRuntimeAsset );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, const FAsset&, Asset, UglTFRuntimeAsset*, GltfRuntimeAsset );
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
@@ -33,7 +33,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterAssetLoaded OnCharacterAssetLoaded;
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
-	FOnNewAssetLoaded OnNewAssetLoaded;
+	FOnAssetLoaded OnAssetLoaded;
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterCreated OnCharacterCreated;
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
