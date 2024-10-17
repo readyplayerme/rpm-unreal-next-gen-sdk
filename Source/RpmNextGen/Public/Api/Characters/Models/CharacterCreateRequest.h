@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Common/Models/ApiResponse.h"
 #include "CharacterCreateRequest.generated.h"
 
 USTRUCT(BlueprintType)

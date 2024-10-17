@@ -1,12 +1,14 @@
 ﻿#include "Api/Auth/AuthApi.h"
-
 #include "RpmNextGen.h"
 #include "Api/Auth/Models/CreateUserRequest.h"
+#include "Api/Auth/Models/CreateUserResponse.h"
 #include "Api/Auth/Models/LoginWithCodeRequest.h"
+#include "Api/Auth/Models/LoginWithCodeResponse.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
 #include "Api/Auth/Models/SendLoginCodeRequest.h"
+#include "Api/Auth/Models/RefreshTokenRequest.h"
+#include "Api/Auth/Models/SendLoginCodeResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FAuthApi::FAuthApi()
@@ -22,7 +24,7 @@ void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
 	ApiRequest->Url = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest->Payload = Request.ToJsonString();
+	ApiRequest->Payload = ConvertToJsonString(Request);
 	DispatchRaw(ApiRequest);
 }
 
@@ -32,7 +34,7 @@ void FAuthApi::SendLoginCode(const FSendLoginCodeRequest& Request)
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/request-login-code"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest->Payload = Request.ToJsonString();
+	ApiRequest->Payload = ConvertToJsonString(Request);
 	DispatchRaw(ApiRequest);
 }
 
@@ -42,7 +44,7 @@ void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request)
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/login"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest->Payload = Request.ToJsonString();
+	ApiRequest->Payload = ConvertToJsonString(Request);
 }
 
 void FAuthApi::CreateUser(const FCreateUserRequest& Request)
@@ -51,7 +53,7 @@ void FAuthApi::CreateUser(const FCreateUserRequest& Request)
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/users"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	ApiRequest->Payload = Request.ToJsonString();
+	ApiRequest->Payload = ConvertToJsonString(Request);
 }
 
 void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -76,41 +78,28 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 			return;
 		}
 
-		FSendLoginCodeRequest SendLoginCodeRequest;
+		FSendLoginCodeResponse SendLoginCodeRequest;
 		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &SendLoginCodeRequest, 0, 0))
 		{
-			if (OnSendLoginCodeResponse.IsBound())
-			{
-				OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
-			}
+			OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
 			return;
 		}
 
-		FLoginWithCodeRequest LoginWithCodeResponse;
+		FLoginWithCodeResponse LoginWithCodeResponse;
 		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &LoginWithCodeResponse, 0, 0))
 		{
-			if (OnLoginWithCodeResponse.IsBound())
-			{
-				OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
-			}
+			OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
 			return;
 		}
 
-		FCreateUserRequest CreateUserResponse;
+		FCreateUserResponse CreateUserResponse;
 		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &CreateUserResponse, 0, 0))
 		{
-			if (OnCreateUserResponse.IsBound())
-			{
-				OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
-			}
+			OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
 			return;
 		}
-		
 	}
 
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
-	if (OnRefreshTokenResponse.IsBound())
-	{
-		OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
-	}
+	OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
 }
