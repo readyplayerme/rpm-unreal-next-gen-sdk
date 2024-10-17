@@ -1,26 +1,57 @@
 ﻿#include "Api/Auth/AuthApi.h"
 
 #include "RpmNextGen.h"
+#include "Api/Auth/Models/CreateUserRequest.h"
+#include "Api/Auth/Models/LoginWithCodeRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
 #include "Api/Auth/Models/RefreshTokenResponse.h"
+#include "Api/Auth/Models/SendLoginCodeRequest.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FAuthApi::FAuthApi()
 {
-	const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
-	ApiUrl = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
+	RpmSettings = GetDefault<URpmDeveloperSettings>();
+	
 	OnRequestComplete.BindRaw(this, &FAuthApi::OnProcessComplete);
 }
 
 void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request)
 {
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
-	ApiRequest->Url = ApiUrl;
+	ApiRequest->Url = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = Request.ToJsonString();
 	DispatchRaw(ApiRequest);
+}
+
+void FAuthApi::SendLoginCode(const FSendLoginCodeRequest& Request)
+{
+	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/request-login-code"), *RpmSettings->GetApiBaseUrl());
+	ApiRequest->Method = POST;
+	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	ApiRequest->Payload = Request.ToJsonString();
+	DispatchRaw(ApiRequest);
+}
+
+void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request)
+{
+	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/login"), *RpmSettings->GetApiBaseUrl());
+	ApiRequest->Method = POST;
+	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	ApiRequest->Payload = Request.ToJsonString();
+}
+
+void FAuthApi::CreateUser(const FCreateUserRequest& Request)
+{
+	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
+	ApiRequest->Url = FString::Printf(TEXT("%s/v1/users"), *RpmSettings->GetApiBaseUrl());
+	ApiRequest->Method = POST;
+	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
+	ApiRequest->Payload = Request.ToJsonString();
 }
 
 void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -44,6 +75,37 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 			}
 			return;
 		}
+
+		FSendLoginCodeRequest SendLoginCodeRequest;
+		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &SendLoginCodeRequest, 0, 0))
+		{
+			if (OnSendLoginCodeResponse.IsBound())
+			{
+				OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
+			}
+			return;
+		}
+
+		FLoginWithCodeRequest LoginWithCodeResponse;
+		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &LoginWithCodeResponse, 0, 0))
+		{
+			if (OnLoginWithCodeResponse.IsBound())
+			{
+				OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
+			}
+			return;
+		}
+
+		FCreateUserRequest CreateUserResponse;
+		if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &CreateUserResponse, 0, 0))
+		{
+			if (OnCreateUserResponse.IsBound())
+			{
+				OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
+			}
+			return;
+		}
+		
 	}
 
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
