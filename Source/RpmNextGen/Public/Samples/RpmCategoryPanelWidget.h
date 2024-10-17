@@ -55,7 +55,6 @@ public:
 	virtual void CreateButton(const FString& AssetType);
 	virtual void SynchronizeProperties() override;
 	virtual void NativeConstruct() override;
-	
 private:
 	TArray<TSubclassOf<URpmCategoryButtonWidget>> AssetButtons;
 	TSharedPtr<FAssetApi> AssetApi;

@@ -45,8 +45,8 @@ public:
 	
 	void SetGltfConfig(const FglTFRuntimeConfig* Config);
 
-	void HandleAssetLoaded(const TArray<unsigned char>* Data, const FAsset& Asset);
-	void HandleCharacterAssetLoaded(const TArray<unsigned char>* Array, const FString& FileName);
+	void HandleAssetLoaded(const TArray<uint8>& Data, const FAsset& Asset);
+	void HandleCharacterAssetLoaded(const TArray<uint8>& Array, const FString& FileName);
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
