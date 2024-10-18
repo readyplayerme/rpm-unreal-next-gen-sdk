@@ -20,6 +20,14 @@ DECLARE_DELEGATE_ThreeParams(FOnCreateUserResponse, TSharedPtr<FApiRequest>, con
 
 class RPMNEXTGEN_API FAuthApi : public FWebApi
 {
+	enum class EAuthRequestType
+	{
+		RefreshToken,
+		SendLoginCode,
+		LoginWithCode,
+		CreateUser
+	};
+
 public:
 	FOnRefreshTokenResponse OnRefreshTokenResponse;
 	FOnSendLoginCodeResponse OnSendLoginCodeResponse;
