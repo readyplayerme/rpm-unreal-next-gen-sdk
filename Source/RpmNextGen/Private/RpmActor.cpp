@@ -115,6 +115,7 @@ void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
 			if (ComponentToRemove)
 			{
 				ComponentToRemove->DestroyComponent();
+				ComponentToRemove = nullptr;
 			}
 		}
 		LoadedMeshComponentsByAssetType.Remove(AssetType);
@@ -132,6 +133,7 @@ void ARpmActor::RemoveAllMeshes()
 			if (ComponentToRemove)
 			{
 				ComponentToRemove->DestroyComponent();
+				ComponentToRemove = nullptr;
 			}
 		}
 	}
