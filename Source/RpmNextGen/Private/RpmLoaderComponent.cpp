@@ -104,7 +104,7 @@ void URpmLoaderComponent::LoadAssetsFromCacheWithNewStyle()
 	}
 }
 
-void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
+void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData)
 {
 	if (CharacterData.BaseModelId.IsEmpty())
 	{
@@ -116,10 +116,25 @@ void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
 	{
 		CharacterData.BaseModelId = AssetData.Id;
 	}
-	CharacterData.Assets.Add(AssetData.Type, AssetData);
-	
+	bool bShouldRemoveAsset = !bIsBaseModel && CharacterData.Assets.Contains(AssetData.Type) && CharacterData.Assets[AssetData.Type].Id == AssetData.Id;
+
+	if(bShouldRemoveAsset)
+	{
+		CharacterData.Assets.Remove(AssetData.Type);
+	}
+	else
+	{
+		CharacterData.Assets.Add(AssetData.Type, AssetData);
+	}
+	// character created from cache
 	if(CharacterData.Id.IsEmpty())
 	{
+		// if asset needs to be removed just broadcast the event and return
+		if(bShouldRemoveAsset)
+		{
+			OnAssetRemoved.Broadcast(AssetData);
+			return;
+		}
 		LoadGltfRuntimeAssetFromCache(AssetData);
 		if(bIsBaseModel && CharacterData.Assets.Num() > 1)
 		{

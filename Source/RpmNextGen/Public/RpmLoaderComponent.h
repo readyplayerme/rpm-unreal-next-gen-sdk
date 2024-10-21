@@ -23,6 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterDa
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterAssetLoaded, const FRpmCharacterData&, CharacterData, UglTFRuntimeAsset*, GltfRuntimeAsset);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, const FAsset&, Asset, UglTFRuntimeAsset*, GltfRuntimeAsset );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetRemoved, const FAsset&, Asset);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
@@ -40,6 +41,8 @@ public:
 	FOnCharacterUpdated OnCharacterUpdated;
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterFound OnCharacterFound;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
+	FOnAssetRemoved OnAssetRemoved;
 
 	URpmLoaderComponent();
 	
@@ -71,7 +74,7 @@ protected:
 	virtual void LoadCharacterAssetsFromCache(TMap<FString, FAsset> AssetMap);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
+	virtual void LoadAssetPreview(FAsset AssetData);
 	
 	UFUNCTION()
 	virtual void HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful);
