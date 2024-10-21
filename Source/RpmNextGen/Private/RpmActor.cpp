@@ -122,6 +122,11 @@ void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
 	}
 }
 
+void ARpmActor::RemoveAssetOfType(const FAsset& Asset)
+{
+	CharacterData.Assets.Remove(Asset.Type);
+	RemoveMeshComponentsOfType(Asset.Type);
+}
 
 void ARpmActor::RemoveAllMeshes()
 {

@@ -23,6 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterUpdated, FRpmCharacterDa
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterFound, FRpmCharacterData, CharacterData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterAssetLoaded, const FRpmCharacterData&, CharacterData, UglTFRuntimeAsset*, GltfRuntimeAsset);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAssetLoaded, const FAsset&, Asset, UglTFRuntimeAsset*, GltfRuntimeAsset );
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAssetRemoved, const FAsset&, Asset);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RPMNEXTGEN_API URpmLoaderComponent : public UActorComponent
@@ -40,6 +41,8 @@ public:
 	FOnCharacterUpdated OnCharacterUpdated;
 	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
 	FOnCharacterFound OnCharacterFound;
+	UPROPERTY(BlueprintAssignable, Category = "Ready Player Me" )
+	FOnAssetRemoved OnAssetRemoved;
 
 	URpmLoaderComponent();
 	
