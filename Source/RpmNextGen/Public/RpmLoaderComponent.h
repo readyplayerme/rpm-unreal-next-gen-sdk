@@ -74,7 +74,7 @@ protected:
 	virtual void LoadCharacterAssetsFromCache(TMap<FString, FAsset> AssetMap);
 	
 	UFUNCTION(BlueprintCallable, Category = "Ready Player Me")
-	virtual void LoadAssetPreview(FAsset AssetData, bool bUseCache);
+	virtual void LoadAssetPreview(FAsset AssetData);
 	
 	UFUNCTION()
 	virtual void HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful);

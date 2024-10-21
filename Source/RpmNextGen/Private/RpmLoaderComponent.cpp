@@ -104,7 +104,7 @@ void URpmLoaderComponent::LoadAssetsFromCacheWithNewStyle()
 	}
 }
 
-void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData, bool bUseCache)
+void URpmLoaderComponent::LoadAssetPreview(FAsset AssetData)
 {
 	if (CharacterData.BaseModelId.IsEmpty())
 	{
