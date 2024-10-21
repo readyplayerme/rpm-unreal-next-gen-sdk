@@ -104,7 +104,7 @@ void ARpmActor::RemoveMeshComponentsOfType(const FString& AssetType)
 	{
 		RemoveAllMeshes();
 	}
-	else if (TArray<USceneComponent*>* ComponentsToRemove = LoadedMeshComponentsByAssetType.Find(AssetType))
+	else if (LoadedMeshComponentsByAssetType.Contains(AssetType))
 	{
 		TArray<USceneComponent*>& ComponentsToRemove = LoadedMeshComponentsByAssetType[AssetType];
 		for (USceneComponent* ComponentToRemove : ComponentsToRemove)
@@ -134,11 +134,8 @@ void ARpmActor::RemoveMeshComponents(const TArray<USceneComponent*>& Components)
 	{
 		if (Component)
 		{
-			if (ComponentToRemove)
-			{
-				ComponentToRemove->DestroyComponent();
-				ComponentToRemove = nullptr;
-			}
+			Component->DestroyComponent();
+			Component = nullptr;
 		}
 	}
 }

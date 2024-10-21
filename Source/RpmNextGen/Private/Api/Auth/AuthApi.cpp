@@ -88,61 +88,76 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 		switch (RequestType)
 		{
 		case EAuthRequestType::RefreshToken:
-			FRefreshTokenResponse TokenResponse;
-			if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &TokenResponse, 0, 0))
 			{
-				if (OnRefreshTokenResponse.IsBound())
+				FRefreshTokenResponse TokenResponse;
+				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &TokenResponse, 0, 0))
 				{
-					OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, TokenResponse, true);
+					if (OnRefreshTokenResponse.IsBound())
+					{
+						OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, TokenResponse, true);
+					}
+					return;
 				}
-				return;
+				break;
 			}
-			break;
 		case EAuthRequestType::SendLoginCode:
-			FSendLoginCodeResponse SendLoginCodeRequest;
-			if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &SendLoginCodeRequest, 0, 0))
 			{
-				OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
-				return;
+				FSendLoginCodeResponse SendLoginCodeRequest;
+				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &SendLoginCodeRequest, 0, 0))
+				{
+					OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
+					return;
+				}
+				break;
 			}
-			break;
 		case EAuthRequestType::LoginWithCode:
-			FLoginWithCodeResponse LoginWithCodeResponse;
-			if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &LoginWithCodeResponse, 0, 0))
 			{
-				OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
-				return;
+				FLoginWithCodeResponse LoginWithCodeResponse;
+				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &LoginWithCodeResponse, 0, 0))
+				{
+					OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
+					return;
+				}
+				break;
 			}
-			break;
 		case EAuthRequestType::CreateUser:
-			FCreateUserResponse CreateUserResponse;
-			if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &CreateUserResponse, 0, 0))
 			{
-				OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
-				return;
+				FCreateUserResponse CreateUserResponse;
+				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &CreateUserResponse, 0, 0))
+				{
+					OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
+					return;
+				}
+				break;
 			}
-			break;
 		}
 	}
 
 	switch (RequestType)
 	{
 	case EAuthRequestType::RefreshToken:
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
-		OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
-		break;
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
+			OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
+			break;
+		}
 	case EAuthRequestType::SendLoginCode:
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to send login code"));
-		OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, FSendLoginCodeResponse(), false);
-		break;
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to send login code"));
+			OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, FSendLoginCodeResponse(), false);
+			break;
+		}
 	case EAuthRequestType::LoginWithCode:
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to login with code"));
-		OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, FLoginWithCodeResponse(), false);
-		break;
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to login with code"));
+			OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, FLoginWithCodeResponse(), false);
+			break;
+		}
 	case EAuthRequestType::CreateUser:
-		UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create user"));
-		OnCreateUserResponse.ExecuteIfBound(ApiRequest, FCreateUserResponse(), false);
-		break;
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create user"));
+			OnCreateUserResponse.ExecuteIfBound(ApiRequest, FCreateUserResponse(), false);
+			break;
+		}
 	}
-
 }
