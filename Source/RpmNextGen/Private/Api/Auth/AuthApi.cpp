@@ -1,4 +1,4 @@
-﻿#include "Api/Auth/AuthApi.h"
+#include "Api/Auth/AuthApi.h"
 #include "RpmNextGen.h"
 #include "Api/Auth/Models/CreateUserRequest.h"
 #include "Api/Auth/Models/CreateUserResponse.h"
@@ -44,6 +44,7 @@ void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request)
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
+	DispatchRaw(ApiRequest);
 }
 
 void FAuthApi::CreateUser(const FCreateUserRequest& Request)
@@ -53,6 +54,7 @@ void FAuthApi::CreateUser(const FCreateUserRequest& Request)
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
+	DispatchRaw(ApiRequest);
 }
 
 void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
