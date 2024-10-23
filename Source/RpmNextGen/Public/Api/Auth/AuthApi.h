@@ -5,7 +5,6 @@
 
 struct FCreateUserResponse;
 struct FLoginWithCodeResponse;
-struct FSendLoginCodeResponse;
 class URpmDeveloperSettings;
 struct FCreateUserRequest;
 struct FLoginWithCodeRequest;
@@ -14,7 +13,7 @@ struct FRefreshTokenResponse;
 struct FRefreshTokenRequest;
 
 DECLARE_DELEGATE_ThreeParams(FOnRefreshTokenResponse, TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool);
-DECLARE_DELEGATE_ThreeParams(FOnSendLoginCodeResponse, TSharedPtr<FApiRequest>, const FSendLoginCodeResponse&, bool);
+DECLARE_DELEGATE_TwoParams(FOnSendLoginCodeResponse, TSharedPtr<FApiRequest>, bool);
 DECLARE_DELEGATE_ThreeParams(FOnLoginWithCodeResponse, TSharedPtr<FApiRequest>, const FLoginWithCodeResponse&, bool);
 DECLARE_DELEGATE_ThreeParams(FOnCreateUserResponse, TSharedPtr<FApiRequest>, const FCreateUserResponse&, bool);
 

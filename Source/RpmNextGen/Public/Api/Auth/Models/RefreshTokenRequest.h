@@ -20,7 +20,6 @@ struct RPMNEXTGEN_API FRefreshTokenRequest
 {
 	GENERATED_BODY()
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ready Player Me")
 	FRefreshTokenRequestBody Data;
 };

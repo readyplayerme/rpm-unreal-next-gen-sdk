@@ -1,4 +1,4 @@
-#include "Api/Auth/AuthApi.h"
+﻿#include "Api/Auth/AuthApi.h"
 #include "RpmNextGen.h"
 #include "Api/Auth/Models/CreateUserRequest.h"
 #include "Api/Auth/Models/CreateUserResponse.h"
@@ -8,7 +8,6 @@
 #include "Api/Auth/Models/RefreshTokenResponse.h"
 #include "Api/Auth/Models/SendLoginCodeRequest.h"
 #include "Api/Auth/Models/RefreshTokenRequest.h"
-#include "Api/Auth/Models/SendLoginCodeResponse.h"
 #include "Settings/RpmDeveloperSettings.h"
 
 FAuthApi::FAuthApi()
@@ -104,10 +103,10 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 			}
 		case EAuthRequestType::SendLoginCode:
 			{
-				FSendLoginCodeResponse SendLoginCodeRequest;
-				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &SendLoginCodeRequest, 0, 0))
+				if(Response->GetResponseCode() == 201)
 				{
-					OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, SendLoginCodeRequest, true);
+					
+					OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, true);
 					return;
 				}
 				break;
@@ -146,7 +145,7 @@ void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpRespon
 	case EAuthRequestType::SendLoginCode:
 		{
 			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to send login code"));
-			OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, FSendLoginCodeResponse(), false);
+			OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, false);
 			break;
 		}
 	case EAuthRequestType::LoginWithCode:
