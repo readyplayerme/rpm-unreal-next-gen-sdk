@@ -28,42 +28,74 @@ void URpmFunctionLibrary::FetchFirstAssetId(UObject* WorldContextObject, const F
     QueryParams.Type = AssetType;
     QueryParams.ApplicationId = RpmSettings->ApplicationId;
     QueryParams.Limit = 1;
-    FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
+    TSharedPtr<FAssetListRequest> AssetListRequest = MakeShared<FAssetListRequest>(QueryParams);
 
     TWeakObjectPtr<UObject> WeakContextObject(WorldContextObject);
 
-    AssetApi->OnListAssetsResponse.BindLambda([WeakContextObject, SharedDelegate, AssetApi, AssetType](const FAssetListResponse& Response, bool bWasSuccessful)
-    {
-        if (!WeakContextObject.IsValid())
-        {
-            UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is no longer valid."));
-            SharedDelegate->ExecuteIfBound(FString());
-            return;
-        }
+    // TODO make this work
+    // AssetApi->ListAssetsAsync(AssetListRequest, [WeakContextObject, SharedDelegate, AssetApi, AssetType](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
+    // {
+    //     if (!WeakContextObject.IsValid())
+    //     {
+    //         UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is no longer valid."));
+    //         SharedDelegate->ExecuteIfBound(FString());
+    //         return;
+    //     }
+    //
+    //     if (bWasSuccessful && Response->Data.Num() > 0)
+    //     {
+    //         FString FirstAssetId = Response->Data[0].Id;
+    //         UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched: %s"), *FirstAssetId);
+    //         SharedDelegate->ExecuteIfBound(FirstAssetId);
+    //         return;
+    //     }
+    //
+    //     // Fallback to cache if online request failed or returned no data
+    //     TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
+    //     if (Assets.Num() > 0)
+    //     {
+    //         FString FirstAssetId = Assets[0].Id;
+    //         UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched from cache: %s"), *FirstAssetId);
+    //         SharedDelegate->ExecuteIfBound(FirstAssetId);
+    //         return;
+    //     }
+    //
+    //     UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch FirstAssetId"));
+    //     SharedDelegate->ExecuteIfBound(FString());
+    // });
 
-        if (bWasSuccessful && Response.Data.Num() > 0)
-        {
-            FString FirstAssetId = Response.Data[0].Id;
-            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched: %s"), *FirstAssetId);
-            SharedDelegate->ExecuteIfBound(FirstAssetId);
-            return;
-        }
-
-        // Fallback to cache if online request failed or returned no data
-        TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
-        if (Assets.Num() > 0)
-        {
-            FString FirstAssetId = Assets[0].Id;
-            UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched from cache: %s"), *FirstAssetId);
-            SharedDelegate->ExecuteIfBound(FirstAssetId);
-            return;
-        }
-
-        UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch FirstAssetId"));
-        SharedDelegate->ExecuteIfBound(FString());
-    });
-    
-    AssetApi->ListAssetsAsync(AssetListRequest);
+    // AssetApi->OnListAssetsResponse.BindLambda([WeakContextObject, SharedDelegate, AssetApi, AssetType](const FAssetListResponse& Response, bool bWasSuccessful)
+    // {
+    //     if (!WeakContextObject.IsValid())
+    //     {
+    //         UE_LOG(LogReadyPlayerMe, Error, TEXT("WorldContextObject is no longer valid."));
+    //         SharedDelegate->ExecuteIfBound(FString());
+    //         return;
+    //     }
+    //
+    //     if (bWasSuccessful && Response.Data.Num() > 0)
+    //     {
+    //         FString FirstAssetId = Response.Data[0].Id;
+    //         UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched: %s"), *FirstAssetId);
+    //         SharedDelegate->ExecuteIfBound(FirstAssetId);
+    //         return;
+    //     }
+    //
+    //     // Fallback to cache if online request failed or returned no data
+    //     TArray<FCachedAssetData> Assets = FAssetCacheManager::Get().GetAssetsOfType(AssetType);
+    //     if (Assets.Num() > 0)
+    //     {
+    //         FString FirstAssetId = Assets[0].Id;
+    //         UE_LOG(LogReadyPlayerMe, Warning, TEXT("FirstAssetId fetched from cache: %s"), *FirstAssetId);
+    //         SharedDelegate->ExecuteIfBound(FirstAssetId);
+    //         return;
+    //     }
+    //
+    //     UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch FirstAssetId"));
+    //     SharedDelegate->ExecuteIfBound(FString());
+    // });
+    //
+    // AssetApi->ListAssetsAsync(AssetListRequest);
 }
 
 void URpmFunctionLibrary::ExtractCachePakFile()

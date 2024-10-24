@@ -16,42 +16,53 @@ FCharacterApi::FCharacterApi()
 	{
 		SetAuthenticationStrategy(MakeShared<FApiKeyAuthStrategy>());
 	}
-	OnRequestComplete.BindRaw(this, &FCharacterApi::HandleCharacterResponse);
 }
 
 FCharacterApi::~FCharacterApi()
 {
 }
 
-void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
+void FCharacterApi::CreateAsync(TSharedPtr<FCharacterCreateRequest> Request, FOnCharacterCreateResponse OnComplete)
 {
-	AssetByType.Append(Request.Data.Assets);
+	AssetByType.Append(Request->Data.Assets);
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = FString::Printf(TEXT("%s"), *BaseUrl);
 	ApiRequest->Method = POST;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth(ApiRequest);
+	SendRequestWithAuth<FCharacterCreateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterCreateResponse> Response, bool bWasSuccessful)
+	 {
+		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character CREATE request failed."));
+		 OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	 });
 }
 
-void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
+void FCharacterApi::UpdateAsync(TSharedPtr<FCharacterUpdateRequest> Request, FOnCharacterUpdatResponse OnComplete)
 {
-	AssetByType.Append(Request.Payload.Assets);
+	AssetByType.Append(Request->Payload.Assets);
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
-	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
+	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request->Id);
 	ApiRequest->Method = PATCH;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth(ApiRequest);
+	SendRequestWithAuth<FCharacterUpdateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterUpdateResponse> Response, bool bWasSuccessful)
+	{
+		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character UPDATE request failed."));
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
 
-void FCharacterApi::FindByIdAsync(const FCharacterFindByIdRequest& Request)
+void FCharacterApi::FindByIdAsync(TSharedPtr<FCharacterFindByIdRequest> Request, FOnCharacterFindResponse OnComplete)
 {
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
-	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
+	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request->Id);
 	ApiRequest->Method = GET;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth(ApiRequest);
+	SendRequestWithAuth<FCharacterFindByIdResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterFindByIdResponse> Response, bool bWasSuccessful)
+	{
+		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character FindById request failed."));
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
 
 FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Request)
@@ -61,75 +72,33 @@ FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Reques
 	return url;
 }
 
-void FCharacterApi::HandleCharacterResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	const FString Verb = ApiRequest->GetVerb();
-	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
-	if (Response.IsValid() && Response->GetResponseCode() == 401)
-	{
-		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
-		bSuccess = false;
-	}
-	switch (ApiRequest->Method)
-	{
-		case POST:
-			HandleCharacterCreateResponse(Response, bSuccess);
-			break;
-		case PATCH:
-			HandleUpdateResponse( Response, bSuccess);
-			break;
-		case GET: 
-			HandleFindResponse(Response, bSuccess);
-			break;
-		default:
-			break;
-	}
-}
+// TODO re-add 401 check before removing this (as a reminder )
+// void FCharacterApi::HandleCharacterResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
+// {
+// 	const FString Verb = ApiRequest->GetVerb();
+// 	bool bSuccess = bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode());
+// 	if (Response.IsValid() && Response->GetResponseCode() == 401)
+// 	{
+// 		UE_LOG(LogReadyPlayerMe, Error,TEXT("The request to the character API failed with a 401 response code. Please ensure that your API Key or proxy is correctly configured."));
+// 		bSuccess = false;
+// 	}
+// 	switch (ApiRequest->Method)
+// 	{
+// 		case POST:
+// 			HandleCharacterCreateResponse(Response, bSuccess);
+// 			break;
+// 		case PATCH:
+// 			HandleUpdateResponse( Response, bSuccess);
+// 			break;
+// 		case GET: 
+// 			HandleFindResponse(Response, bSuccess);
+// 			break;
+// 		default:
+// 			break;
+// 	}
+//}
 
-void FCharacterApi::HandleCharacterCreateResponse(FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if(bWasSuccessful)
-	{
-		FCharacterCreateResponse CharacterCreateResponse;
-		if(FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterCreateResponse, 0, 0))
-		{
-			OnCharacterCreateResponse.ExecuteIfBound(CharacterCreateResponse, true);
-			return;
-		}
-	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character CREATE request failed."));
-	OnCharacterCreateResponse.ExecuteIfBound(FCharacterCreateResponse(), false);
-}
 
-void FCharacterApi::HandleUpdateResponse(FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if(bWasSuccessful)
-	{
-		FCharacterUpdateResponse CharacterUpdateResponse;
-		if(FJsonObjectConverter::JsonObjectStringToUStruct( Response->GetContentAsString(), &CharacterUpdateResponse, 0, 0))
-		{
-			OnCharacterUpdateResponse.ExecuteIfBound(CharacterUpdateResponse, true);
-			return;
-		}
-	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character UPDATE request failed."));
-	OnCharacterUpdateResponse.ExecuteIfBound(FCharacterUpdateResponse(), false);
-}
-
-void FCharacterApi::HandleFindResponse(FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if(bWasSuccessful)
-	{
-		FCharacterFindByIdResponse CharacterFindByIdResponse;
-		if(FJsonObjectConverter::JsonObjectStringToUStruct(	Response->GetContentAsString(), &CharacterFindByIdResponse, 0, 0))
-		{
-			OnCharacterFindResponse.ExecuteIfBound(CharacterFindByIdResponse, true);
-			return;
-		}
-	}
-	UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character FIND request failed."));
-	OnCharacterFindResponse.ExecuteIfBound(FCharacterFindByIdResponse(), false);
-}
 
 
 

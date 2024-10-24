@@ -38,17 +38,17 @@ protected:
 	TUniquePtr<FAssetApi> AssetApi;
 	TArray<FString> AssetTypes;
 	TMap<FString, TArray<FAsset>> AssetMapByBaseModelId;
-	TArray<FAssetListRequest> AssetListRequests;
+	TArray<TSharedPtr<FAssetListRequest>> AssetListRequests;
 	int32 CurrentBaseModelIndex;
 	
 	UFUNCTION()
 	void OnAssetGlbSaved(const FAsset& Asset, const TArray<uint8>& Data);
 	UFUNCTION()
 	void OnAssetIconSaved(const FAsset& Asset, const TArray<uint8>& Data);
-	
-	void FetchBaseModels() const;
-	void FetchAssetTypes() const;
+
 	void AddFolderToNonAssetDirectory() const;
+	void FetchBaseModels();
+	void FetchAssetTypes();
 	void FetchNextRefittedAsset();
 	
 	virtual void OnDownloadRemoteCacheComplete(TSharedPtr<IHttpRequest> Request, TSharedPtr<IHttpResponse> Response, bool bWasSuccessful);
@@ -64,7 +64,7 @@ private:
 	int NumberOfAssetsSaved = 0;
 	
 	void StartFetchingRefittedAssets();
-	void OnListAssetsResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
-	void OnListAssetTypesResponse(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful);
-
+	void OnListBaseModelsComplete(TSharedPtr<FAssetListResponse> AssetListResponse, bool bWasSuccessful);
+	void OnListAssetsComplete(TSharedPtr<FAssetListResponse> AssetListResponse, bool bWasSuccessful);
+	void OnListAssetTypesComplete(TSharedPtr<FAssetTypeListResponse> AssetTypeListResponse, bool bWasSuccessful);
 };

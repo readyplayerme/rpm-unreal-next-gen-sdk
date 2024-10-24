@@ -6,17 +6,14 @@
 struct FDeveloperLoginResponse;
 struct FDeveloperLoginRequest;
 
-DECLARE_DELEGATE_TwoParams(FOnDeveloperLoginResponse, const FDeveloperLoginResponse&, bool);
+DECLARE_DELEGATE_TwoParams(FOnDeveloperLoginResponse, TSharedPtr<FDeveloperLoginResponse>, bool);
 
 class RPMNEXTGENEDITOR_API FDeveloperAuthApi : public FWebApi
 {
-public:
-	FOnDeveloperLoginResponse OnLoginResponse;
-	
+public:	
 	FDeveloperAuthApi();
 
-	void HandleLoginResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful) const;
-	void LoginWithEmail(FDeveloperLoginRequest Request);
+	void LoginWithEmail(TSharedPtr<FDeveloperLoginRequest> Request, FOnDeveloperLoginResponse OnComplete);
 
 private:
 	FString ApiUrl;

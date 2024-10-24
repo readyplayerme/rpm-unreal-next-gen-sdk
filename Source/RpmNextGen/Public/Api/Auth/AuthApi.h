@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Api/Common/WebApi.h"
 #include "Api/Common/WebApiWithAuth.h"
 
 struct FApiResponse;
@@ -14,32 +13,20 @@ struct FSendLoginCodeRequest;
 struct FRefreshTokenResponse;
 struct FRefreshTokenRequest;
 
-// DECLARE_DELEGATE_ThreeParams(FOnRefreshTokenResponse, TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool);
-// DECLARE_DELEGATE_TwoParams(FOnSendLoginCodeResponse, TSharedPtr<FApiRequest>, bool);
-// DECLARE_DELEGATE_ThreeParams(FOnLoginWithCodeResponse, TSharedPtr<FApiRequest>, const FLoginWithCodeResponse&, bool);
-// DECLARE_DELEGATE_ThreeParams(FOnCreateUserResponse, TSharedPtr<FApiRequest>, const FCreateUserResponse&, bool);
-
 class RPMNEXTGEN_API FAuthApi : public FWebApiWithAuth
 {
-	// enum class EAuthRequestType
-	// {
-	// 	RefreshToken,
-	// 	SendLoginCode,
-	// 	LoginWithCode,
-	// 	CreateUser
-	// };
-
+	DECLARE_DELEGATE_TwoParams(FOnRefreshTokenResponse, TSharedPtr<FRefreshTokenResponse>, bool);
+	DECLARE_DELEGATE_OneParam(FOnSendLoginCodeResponse, bool);
+	DECLARE_DELEGATE_TwoParams(FOnLoginWithCodeResponse, TSharedPtr<const FLoginWithCodeResponse>, bool);
+	DECLARE_DELEGATE_TwoParams(FOnCreateUserResponse, TSharedPtr<FCreateUserResponse>, bool);
+	
 public:
-	// FOnRefreshTokenResponse OnRefreshTokenResponse;
-	// FOnSendLoginCodeResponse OnSendLoginCodeResponse;
-	// FOnLoginWithCodeResponse OnLoginWithCodeResponse;
-	// FOnCreateUserResponse OnCreateUserResponse;
 	
 	FAuthApi();
-	void RefreshToken(const FRefreshTokenRequest& Request, TFunction<void(TSharedPtr<FRefreshTokenResponse>, bool)> OnComplete);
-	void SendLoginCode(const FSendLoginCodeRequest& Request, TFunction<void(TSharedPtr<FApiResponse>, bool)> OnComplete);
-	void LoginWithCode(const FLoginWithCodeRequest& Request, TFunction<void(TSharedPtr<FLoginWithCodeResponse>, bool)> OnComplete);
-	void CreateUser(const FCreateUserRequest& Request, TFunction<void(TSharedPtr<FCreateUserResponse>, bool)> OnComplete);
+	void RefreshToken(const FRefreshTokenRequest& Request, FOnRefreshTokenResponse OnComplete);
+	void SendLoginCode(const FSendLoginCodeRequest& Request, FOnSendLoginCodeResponse OnComplete);
+	void LoginWithCode(const FLoginWithCodeRequest& Request, FOnLoginWithCodeResponse OnComplete);
+	void CreateUser(const FCreateUserRequest& Request, FOnCreateUserResponse OnComplete);
 
 private:
 	const URpmDeveloperSettings* RpmSettings;

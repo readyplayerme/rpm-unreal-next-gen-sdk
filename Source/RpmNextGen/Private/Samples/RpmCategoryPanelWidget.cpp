@@ -21,7 +21,6 @@ void URpmCategoryPanelWidget::NativeConstruct()
 	}
 	bIsInitialized = true;
 	AssetApi = MakeShared<FAssetApi>();
-	AssetApi->OnListAssetTypeResponse.BindUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded);
 	AssetButtons = TArray<TSubclassOf<URpmCategoryButtonWidget>>();
 }
 
@@ -37,11 +36,11 @@ void URpmCategoryPanelWidget::UpdateSelectedButton(URpmCategoryButtonWidget* Cat
 void URpmCategoryPanelWidget::LoadAndCreateButtons()
 {
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
-	FAssetTypeListRequest AssetTypeListRequest;
+	TSharedPtr<FAssetTypeListRequest> AssetTypeListRequest = MakeShared<FAssetTypeListRequest>();
 	FAssetTypeListQueryParams QueryParams = FAssetTypeListQueryParams();
 	QueryParams.ApplicationId = Settings->ApplicationId;
-	AssetTypeListRequest.Params = QueryParams;
-	AssetApi->ListAssetTypesAsync(AssetTypeListRequest);
+	AssetTypeListRequest->Params = QueryParams;
+	AssetApi->ListAssetTypesAsync(AssetTypeListRequest, FOnListAssetTypesResponse::CreateUObject(this, &URpmCategoryPanelWidget::AssetTypesLoaded));
 }
 
 void URpmCategoryPanelWidget::OnCategoryButtonClicked(URpmCategoryButtonWidget* CategoryButton)
@@ -86,17 +85,17 @@ void URpmCategoryPanelWidget::SynchronizeProperties()
 	Super::SynchronizeProperties();
 }
 
-void URpmCategoryPanelWidget::AssetTypesLoaded(const FAssetTypeListResponse& AssetTypeListResponse, bool bWasSuccessful)
+void URpmCategoryPanelWidget::AssetTypesLoaded(TSharedPtr<FAssetTypeListResponse> Response, bool bWasSuccessful)
 {	
-	if(bWasSuccessful && ButtonContainer)
+	if(bWasSuccessful && ButtonContainer && Response.IsValid())
 	{
 		ButtonContainer->ClearChildren();
 
-		for (const FString& AssetType : AssetTypeListResponse.Data)
+		for (const FString& AssetType : Response->Data)
 		{
 			CreateButton(AssetType);
 		}
-		OnCategoriesLoaded.Broadcast(AssetTypeListResponse.Data);
+		OnCategoriesLoaded.Broadcast(Response->Data);
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to load asset types"));

@@ -32,6 +32,9 @@ protected:
 	template <typename T>
 	FString ConvertToJsonString(const T& Data);
 	
+	template <typename T>
+	FString ConvertToJsonString(const TSharedPtr<T>& DataPtr);
+	
 };
 
 template <typename T>
@@ -85,11 +88,19 @@ void FWebApi::SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSh
 
 			if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 			{
-				TSharedPtr<T> ParsedResponse = MakeShareable(new T());
-				FString ContentAsString = Response->GetContentAsString();
-				FJsonObjectConverter::JsonObjectStringToUStruct(ContentAsString, ParsedResponse.Get(), 0, 0);
-
-				OnResponse(ParsedResponse, true);
+				if constexpr (std::is_same_v<T, TArray<uint8>>)
+				{
+					TSharedPtr<T> ByteArrayResponse = MakeShareable(new T(Response->GetContent()));
+					OnResponse(ByteArrayResponse, true);
+				}
+				else
+				{
+					TSharedPtr<T> ParsedResponse = MakeShareable(new T());
+					FString ContentAsString = Response->GetContentAsString();
+					UE_LOG(LogTemp, Log, TEXT("Response: %s"), *ContentAsString);
+					FJsonObjectConverter::JsonObjectStringToUStruct(ContentAsString, ParsedResponse.Get(), 0, 0);
+					OnResponse(ParsedResponse, true);
+				}
 			}
 			else
 			{
@@ -108,5 +119,21 @@ FString FWebApi::ConvertToJsonString(const T& Data)
 {
 	FString JsonString;
 	FJsonObjectConverter::UStructToJsonObjectString(Data, JsonString);
+	return JsonString;
+}
+
+// Overload for TSharedPtr
+template <typename T>
+FString FWebApi::ConvertToJsonString(const TSharedPtr<T>& DataPtr)
+{
+	FString JsonString;
+    
+	// Ensure the TSharedPtr is valid
+	if (DataPtr.IsValid())
+	{
+		// Convert the underlying struct to JSON
+		FJsonObjectConverter::UStructToJsonObjectString(*DataPtr.Get(), JsonString);
+	}
+    
 	return JsonString;
 }

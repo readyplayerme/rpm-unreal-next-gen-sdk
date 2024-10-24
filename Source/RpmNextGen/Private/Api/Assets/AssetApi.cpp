@@ -32,7 +32,7 @@ void FAssetApi::Initialize()
 	if (bIsInitialized)	return;
 	
 	const URpmDeveloperSettings* Settings = GetDefault<URpmDeveloperSettings>();
-	OnRequestComplete.BindRaw(this, &FAssetApi::HandleAssetResponse);
+	ApiBaseUrl = Settings->GetApiBaseUrl();
 	if (Settings->ApplicationId.IsEmpty())
 	{
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty. Please set the Application ID in the Ready Player Me Developer Settings"));
@@ -45,7 +45,7 @@ void FAssetApi::Initialize()
 	bIsInitialized = true;
 }
 
-void FAssetApi::ListAssetsAsync(TSharedPtr<FAssetListRequest> Request, TFunction<void(TSharedPtr<FAssetListResponse>, bool)> OnComplete)
+void FAssetApi::ListAssetsAsync(TSharedPtr<FAssetListRequest> Request, FOnListAssetsResponse OnComplete)
 {
 	if(ApiRequestStrategy == EApiRequestStrategy::CacheOnly)
 	{
@@ -61,17 +61,20 @@ void FAssetApi::ListAssetsAsync(TSharedPtr<FAssetListRequest> Request, TFunction
 		// OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
 		// return;
 	}
-	const FString ApiBaseUrl = RpmSettings->GetApiBaseUrl();
 	
 	const FString Url = FString::Printf(TEXT("%s/v1/phoenix-assets"), *ApiBaseUrl);
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = Url;
 	ApiRequest->Method = GET;
 	ApiRequest->QueryParams = Request->BuildQueryMap();
-	SendRequestWithAuth<FAssetListResponse>(ApiRequest, OnComplete);
+
+	SendRequestWithAuth<FAssetListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
+	 {
+		 OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	 });
 }
 
-void FAssetApi::ListAssetTypesAsync(TSharedPtr<FAssetTypeListRequest> Request, TFunction<void(TSharedPtr<FAssetTypeListResponse>, bool)> OnComplete)
+void FAssetApi::ListAssetTypesAsync(TSharedPtr<FAssetTypeListRequest> Request, FOnListAssetTypesResponse OnComplete)
 {
 	if(ApiRequestStrategy == EApiRequestStrategy::CacheOnly)
 	{
@@ -91,7 +94,10 @@ void FAssetApi::ListAssetTypesAsync(TSharedPtr<FAssetTypeListRequest> Request, T
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = Url;
 	ApiRequest->Method = GET;
-	SendRequestWithAuth<FAssetTypeListResponse>(ApiRequest, OnComplete);
+	SendRequestWithAuth<FAssetTypeListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetTypeListResponse> Response, bool bWasSuccessful)
+	{
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
 
 // void FAssetApi::HandleAssetResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -136,11 +142,11 @@ void FAssetApi::ListAssetTypesAsync(TSharedPtr<FAssetTypeListRequest> Request, T
 // 	LoadAssetsFromCache(ApiRequest->QueryParams);
 // }
 
-void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams, TFunction<void(TSharedPtr<FAssetListResponse>, bool)> OnComplete)
+void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams, FOnListAssetsResponse OnComplete)
 {
 	if(QueryParams.Num() < 1)
 	{
-		//OnListAssetsResponse.ExecuteIfBound(FAssetListResponse(), false);
+		OnComplete.ExecuteIfBound(MakeShared<FAssetListResponse>(), false);
 		return;
 	}
 	const FString TypeKey = TEXT("type");
@@ -168,25 +174,25 @@ void FAssetApi::LoadAssetsFromCache(TMap<FString, FString> QueryParams, TFunctio
 			FAsset Asset = CachedAsset.ToAsset();
 			AssetListResponse->Data.Add(Asset);
 		}
-		OnComplete(AssetListResponse, true);
+		OnComplete.ExecuteIfBound(AssetListResponse, true);
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
-	OnComplete(nullptr, false);
+	OnComplete.ExecuteIfBound(nullptr, false);
 }
 
-void FAssetApi::LoadAssetTypesFromCache(TFunction<void(TSharedPtr<FAssetTypeListResponse>, bool)> OnComplete)
+void FAssetApi::LoadAssetTypesFromCache(FOnListAssetTypesResponse OnComplete)
 {
 	TArray<FString> AssetTypes = FAssetCacheManager::Get().LoadAssetTypes();
 	if (AssetTypes.Num() > 0)
 	{
 		TSharedPtr<FAssetTypeListResponse> AssetListResponse = MakeShared<FAssetTypeListResponse>();
 		AssetListResponse->Data.Append(AssetTypes);
-		OnComplete(AssetListResponse, true);
+		OnComplete.ExecuteIfBound(AssetListResponse, true);
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Warning, TEXT("No assets found in the cache."));
-	OnComplete(nullptr, false);
+	OnComplete.ExecuteIfBound(nullptr, false);
 }
 
 TArray<FString> FAssetApi::ExtractQueryValues(const FString& QueryString, const FString& Key)

@@ -51,7 +51,8 @@ inline TMap<FString, FString> FAssetListRequest::BuildQueryMap() const
 	}
 	if (!Params.Type.IsEmpty())
 	{
-		QueryMap.Add(TEXT("type"), Params.Type);
+		const FString CleanType = Params.Type.Replace(TEXT(" "), TEXT("%20")); // Replace spaces with %20 to make it URL friendly
+		QueryMap.Add(TEXT("type"), CleanType);
 	}
 	if (!Params.ExcludeTypes.IsEmpty())
 	{
@@ -67,7 +68,8 @@ inline TMap<FString, FString> FAssetListRequest::BuildQueryMap() const
 					ExcludeTypesString += TEXT("&excludeTypes=");
 				}
 			}
-			QueryMap.Add(TEXT("excludeTypes"), ExcludeTypesString);
+			const FString CleanExcludeTypes = ExcludeTypesString.Replace(TEXT(" "), TEXT("%20")); // Replace spaces with %20 to make it URL friendly
+			QueryMap.Add(TEXT("excludeTypes"), CleanExcludeTypes);
 		}
 	}
 	if (!Params.CharacterModelAssetId.IsEmpty())

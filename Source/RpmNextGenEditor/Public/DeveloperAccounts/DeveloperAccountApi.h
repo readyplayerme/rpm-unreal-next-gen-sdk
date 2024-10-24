@@ -8,24 +8,17 @@ struct FOrganizationListRequest;
 struct FApplicationListResponse;
 struct FApplicationListRequest;
 
-DECLARE_DELEGATE_TwoParams(FOnApplicationListResponse, const FApplicationListResponse&, bool);
-DECLARE_DELEGATE_TwoParams(FOnOrganizationListResponse, const FOrganizationListResponse&, bool);
+DECLARE_DELEGATE_TwoParams(FOnApplicationListResponse, TSharedPtr<FApplicationListResponse>, bool);
+DECLARE_DELEGATE_TwoParams(FOnOrganizationListResponse, TSharedPtr<FOrganizationListResponse>, bool);
 
 class RPMNEXTGENEDITOR_API FDeveloperAccountApi : public FWebApiWithAuth
 {
-public:
-	FOnApplicationListResponse OnApplicationListResponse;
-	FOnOrganizationListResponse OnOrganizationResponse;
-	
+public:	
 	FDeveloperAccountApi(const TSharedPtr<IAuthenticationStrategy>& InAuthenticationStrategy);
-	void ListApplicationsAsync(const FApplicationListRequest& Request);
-	void ListOrganizationsAsync(const FOrganizationListRequest& Request);
+	void ListApplicationsAsync(TSharedPtr<FApplicationListRequest> Request, FOnApplicationListResponse OnComplete);
+	void ListOrganizationsAsync(TSharedPtr<FOrganizationListRequest> Request, FOnOrganizationListResponse OnComplete);
 
 private:
 	FString ApiBaseUrl;
-	
-	void HandleOrgListResponse(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
-	void HandleAppListResponse(TSharedPtr<FApiRequest>ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful);
-	
 	static FString BuildQueryString(const TMap<FString, FString>& Params);
 };

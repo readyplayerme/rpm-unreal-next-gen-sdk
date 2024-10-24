@@ -49,6 +49,7 @@ inline FString FAssetTypeListRequest::BuildQueryString() const
 	}
 	if (!Params.Type.IsEmpty())
 	{
+		const FString CleanType = Params.Type.Replace(TEXT(" "), TEXT("%20"));
 		QueryString += TEXT("type=") + Params.Type + TEXT("&");
 	}
 	if (!Params.ExcludeTypes.IsEmpty())

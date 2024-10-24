@@ -25,9 +25,6 @@ URpmLoaderComponent::URpmLoaderComponent()
 	FileApi->OnAssetFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleAssetLoaded);
 	FileApi->OnFileRequestComplete.BindUObject(this, &URpmLoaderComponent::HandleCharacterAssetLoaded);
 	CharacterApi = MakeShared<FCharacterApi>();
-	CharacterApi->OnCharacterCreateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse);
-	CharacterApi->OnCharacterUpdateResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse);
-	CharacterApi->OnCharacterFindResponse.BindUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse);
 	CharacterData = FRpmCharacterData();
 	GltfConfig = FglTFRuntimeConfig();
 	GltfConfig.TransformBaseType = EglTFRuntimeTransformBaseType::YForward;
@@ -50,11 +47,25 @@ void URpmLoaderComponent::CreateCharacter(const FString& BaseModelId)
 	BaseModelAsset.Id = BaseModelId;
 	BaseModelAsset.Type = FAssetApi::BaseModelType;
 	CharacterData.Assets.Add( FAssetApi::BaseModelType, BaseModelAsset);
-	FCharacterCreateRequest CharacterCreateRequest = FCharacterCreateRequest();
-	CharacterCreateRequest.Data.Assets = TMap<FString, FString>();
-	CharacterCreateRequest.Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
-	CharacterCreateRequest.Data.ApplicationId = AppId;
-	CharacterApi->CreateAsync(CharacterCreateRequest);
+	TSharedPtr<FCharacterCreateRequest> CharacterCreateRequest = MakeShared<FCharacterCreateRequest>();
+	CharacterCreateRequest->Data.Assets = TMap<FString, FString>();
+	CharacterCreateRequest->Data.Assets.Add(FAssetApi::BaseModelType, BaseModelId);
+	CharacterCreateRequest->Data.ApplicationId = AppId;
+	CharacterApi->CreateAsync(CharacterCreateRequest, FOnCharacterCreateResponse::CreateUObject(this, &URpmLoaderComponent::HandleCharacterCreateResponse));
+}
+
+void URpmLoaderComponent::UpdateCharacter(const TMap<FString, FString>& Assets)
+{
+	TSharedPtr<FCharacterUpdateRequest> CharacterCreateRequest = MakeShared<FCharacterUpdateRequest>();
+	CharacterCreateRequest->Payload.Assets = Assets;
+	CharacterApi->UpdateAsync(CharacterCreateRequest , FOnCharacterUpdatResponse::CreateUObject(this, &URpmLoaderComponent::HandleCharacterUpdateResponse));
+}
+
+void URpmLoaderComponent::FindCharacterById(const FString CharacterId)
+{
+	TSharedPtr<FCharacterFindByIdRequest> CharacterFindByIdRequest = MakeShared<FCharacterFindByIdRequest>();
+	CharacterFindByIdRequest->Id = CharacterId;
+	CharacterApi->FindByIdAsync(CharacterFindByIdRequest, FOnCharacterFindResponse::CreateUObject(this, &URpmLoaderComponent::HandleCharacterFindResponse));
 }
 
 void URpmLoaderComponent::LoadCharacterFromUrl(FString Url)
@@ -171,13 +182,13 @@ void URpmLoaderComponent::HandleCharacterAssetLoaded(const TArray<uint8>& Data, 
 	OnCharacterAssetLoaded.Broadcast(CharacterData, GltfRuntimeAsset);
 }
 
-void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse CharacterCreateResponse, bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterCreateResponse(TSharedPtr<FCharacterCreateResponse> Response, bool bWasSuccessful)
 {
-	if(bWasSuccessful && CharacterCreateResponse.IsValid())
+	if(bWasSuccessful && Response.IsValid())
 	{
-		CharacterData.Id = CharacterCreateResponse.Data.Id;
+		CharacterData.Id = Response->Data.Id;
 		OnCharacterCreated.Broadcast(CharacterData);
-		LoadCharacterFromUrl(CharacterCreateResponse.Data.GlbUrl);
+		LoadCharacterFromUrl(Response->Data.GlbUrl);
 		return;
 	}
 	
@@ -187,12 +198,12 @@ void URpmLoaderComponent::HandleCharacterCreateResponse(FCharacterCreateResponse
 	LoadCharacterAssetsFromCache(CharacterData.Assets);
 }
 
-void URpmLoaderComponent::HandleCharacterUpdateResponse(FCharacterUpdateResponse CharacterUpdateResponse, bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterUpdateResponse(TSharedPtr<FCharacterUpdateResponse> CharacterUpdateResponse, bool bWasSuccessful)
 {
 	OnCharacterUpdated.Broadcast(CharacterData);
 }
 
-void URpmLoaderComponent::HandleCharacterFindResponse(FCharacterFindByIdResponse CharacterFindByIdResponse, bool bWasSuccessful)
+void URpmLoaderComponent::HandleCharacterFindResponse(TSharedPtr<FCharacterFindByIdResponse> CharacterFindByIdResponse, bool bWasSuccessful)
 {
 	OnCharacterFound.Broadcast(CharacterData);
 }

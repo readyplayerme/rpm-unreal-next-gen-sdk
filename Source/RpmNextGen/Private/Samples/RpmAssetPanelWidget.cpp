@@ -16,16 +16,15 @@ void URpmAssetPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	AssetApi = MakeShared<FAssetApi>();
-	AssetApi->OnListAssetsResponse.BindUObject(this, &URpmAssetPanelWidget::OnAssetListResponse);
 }
 
-void URpmAssetPanelWidget::OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful)
+void URpmAssetPanelWidget::OnAssetListResponse(TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
 {
-	if(bWasSuccessful && AssetListResponse.Data.Num() > 0)
+	if(bWasSuccessful && Response->Data.Num() > 0)
 	{
-		Pagination = AssetListResponse.Pagination;
+		Pagination = Response->Pagination;
 		OnPaginationUpdated.Broadcast(Pagination);
-		CreateButtonsFromAssets(AssetListResponse.Data);
+		CreateButtonsFromAssets(Response->Data);
 		return;
 	}
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to fetch assets"));
@@ -137,8 +136,8 @@ void URpmAssetPanelWidget::LoadAssetsOfType(const FString& AssetType)
 	QueryParams.ApplicationId = RpmSettings->ApplicationId;
 	QueryParams.Limit = PaginationLimit;
 	QueryParams.Page = Pagination.Page;
-	const FAssetListRequest AssetListRequest = FAssetListRequest(QueryParams);
-	AssetApi->ListAssetsAsync(AssetListRequest);	
+	const TSharedPtr<FAssetListRequest> AssetListRequest = MakeShared<FAssetListRequest>(QueryParams);
+	AssetApi->ListAssetsAsync(AssetListRequest,FOnListAssetsResponse::CreateUObject(this, &URpmAssetPanelWidget::OnAssetListResponse));	
 }
 
 void URpmAssetPanelWidget::LoadNextPage()

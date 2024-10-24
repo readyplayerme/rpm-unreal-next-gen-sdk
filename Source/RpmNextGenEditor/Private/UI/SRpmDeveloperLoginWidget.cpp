@@ -204,8 +204,6 @@ void SRpmDeveloperLoginWidget::Initialize()
 	if (!DeveloperAuthApi.IsValid())
 	{
 		DeveloperAuthApi = MakeShared<FDeveloperAuthApi>();
-
-		DeveloperAuthApi->OnLoginResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleLoginResponse);
 	}
 
 	if (!AssetApi.IsValid())
@@ -215,7 +213,6 @@ void SRpmDeveloperLoginWidget::Initialize()
 		{
 			AssetApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 		}
-		AssetApi->OnListAssetsResponse.BindRaw(this, &SRpmDeveloperLoginWidget::HandleBaseModelListResponse);
 	}
 	if (!DeveloperAccountApi.IsValid())
 	{
@@ -224,10 +221,6 @@ void SRpmDeveloperLoginWidget::Initialize()
 		{
 			DeveloperAccountApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 		}
-		DeveloperAccountApi->OnOrganizationResponse.BindRaw(
-			this, &SRpmDeveloperLoginWidget::HandleOrganizationListResponse);
-		DeveloperAccountApi->OnApplicationListResponse.BindRaw(
-			this, &SRpmDeveloperLoginWidget::HandleApplicationListResponse);
 	}
 	bIsInitialized = true;
 	if (bIsLoggedIn)
@@ -357,23 +350,37 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 	Password = Password.TrimStartAndEnd();
 	DeveloperAccountApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 	AssetApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
-	FDeveloperLoginRequest LoginRequest = FDeveloperLoginRequest(Email, Password);
-	DeveloperAuthApi->LoginWithEmail(LoginRequest);
+	const TSharedPtr<FDeveloperLoginRequest> LoginRequest = MakeShared<FDeveloperLoginRequest>(Email, Password);
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	DeveloperAuthApi->LoginWithEmail(LoginRequest, FOnDeveloperLoginResponse::CreateLambda([WeakPtrThis]( TSharedPtr<FDeveloperLoginResponse> Response, bool bWasSuccessful)
+	{
+		if(WeakPtrThis.IsValid())
+		{
+			WeakPtrThis.Pin()->HandleLoginResponse(Response, bWasSuccessful);
+		}
+	}));
 	return FReply::Handled();
 }
 
 void SRpmDeveloperLoginWidget::GetOrgList()
 {
-	FOrganizationListRequest OrgRequest;
-	DeveloperAccountApi->ListOrganizationsAsync(OrgRequest);
+	TSharedPtr<FOrganizationListRequest> OrgRequest = MakeShared<FOrganizationListRequest>();
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	DeveloperAccountApi->ListOrganizationsAsync(OrgRequest, FOnOrganizationListResponse::CreateLambda([WeakPtrThis]( TSharedPtr<FOrganizationListResponse> Response, bool bWasSuccessful)
+	{
+		if(WeakPtrThis.IsValid())
+		{
+			WeakPtrThis.Pin()->HandleOrganizationListResponse(Response, bWasSuccessful);
+		}
+	}));
 }
 
-void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse& Response, bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleLoginResponse(TSharedPtr<FDeveloperLoginResponse> Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		UserName = Response.Data.Name;
-		const FDeveloperAuth AuthData = FDeveloperAuth(Response.Data, false);
+		UserName = Response->Data.Name;
+		const FDeveloperAuth AuthData = FDeveloperAuth(Response->Data, false);
 		FDevAuthTokenCache::SetAuthData(AuthData);
 		SetLoggedInState(true);
 		GetOrgList();
@@ -383,18 +390,25 @@ void SRpmDeveloperLoginWidget::HandleLoginResponse(const FDeveloperLoginResponse
 	FDevAuthTokenCache::ClearAuthData();
 }
 
-void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizationListResponse& Response, bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(TSharedPtr<FOrganizationListResponse> Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		if (Response.Data.Num() == 0)
+		if (Response->Data.Num() == 0)
 		{
 			UE_LOG(LogReadyPlayerMe, Error, TEXT("No organizations found"));
 			return;
 		}
-		FApplicationListRequest Request;
-		Request.Params.Add("organizationId", Response.Data[0].Id);
-		DeveloperAccountApi->ListApplicationsAsync(Request);
+		TSharedPtr<FApplicationListRequest> Request = MakeShared<FApplicationListRequest>();
+		Request->Params.Add("organizationId", Response->Data[0].Id);
+		TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+		DeveloperAccountApi->ListApplicationsAsync(Request, FOnApplicationListResponse::CreateLambda( [WeakPtrThis](TSharedPtr<FApplicationListResponse> Response, bool bWasSuccessful)
+		{
+			if(WeakPtrThis.IsValid())
+			{
+				WeakPtrThis.Pin()->HandleApplicationListResponse(Response, bWasSuccessful);
+			}
+		}));
 		return;
 	}
 
@@ -402,12 +416,12 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(const FOrganizatio
 }
 
 
-void SRpmDeveloperLoginWidget::HandleApplicationListResponse(const FApplicationListResponse& Response,                                                             bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleApplicationListResponse(TSharedPtr<FApplicationListResponse> Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
 		const URpmDeveloperSettings* RpmSettings = GetDefault<URpmDeveloperSettings>();
-		UserApplications = Response.Data;
+		UserApplications = Response->Data;
 		FString Active;
 		TArray<FString> Items;
 		for (const FApplication& App : UserApplications)
@@ -513,18 +527,25 @@ void SRpmDeveloperLoginWidget::LoadBaseModelList()
 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Application ID is empty, unable to load base models."));
 		return;
 	}
-	FAssetListRequest Request = FAssetListRequest();
+	TSharedPtr<FAssetListRequest> Request = MakeShared<FAssetListRequest>();
 	FAssetListQueryParams Params = FAssetListQueryParams();
 	Params.ApplicationId = RpmSettings->ApplicationId;
 	Params.Type = FAssetApi::BaseModelType;
-	Request.Params = Params;
-	AssetApi->ListAssetsAsync(Request);
+	Request->Params = Params;
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	AssetApi->ListAssetsAsync(Request, FOnListAssetsResponse::CreateLambda( [WeakPtrThis](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
+	{
+		if(WeakPtrThis.IsValid())
+		{
+			WeakPtrThis.Pin()->HandleBaseModelListResponse(Response, bWasSuccessful);
+		}
+	}));
 }
 
-void SRpmDeveloperLoginWidget::HandleBaseModelListResponse(const FAssetListResponse& Response, bool bWasSuccessful)
+void SRpmDeveloperLoginWidget::HandleBaseModelListResponse(TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
 {
 	CharacterStyleAssets.Empty();
-	for (FAsset Asset : Response.Data)
+	for (FAsset Asset : Response->Data)
 	{
 		CharacterStyleAssets.Add(Asset.Id, Asset);
 		AddCharacterStyle(Asset);

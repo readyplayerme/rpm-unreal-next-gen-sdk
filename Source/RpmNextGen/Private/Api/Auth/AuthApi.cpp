@@ -13,153 +13,57 @@
 FAuthApi::FAuthApi()
 {
 	RpmSettings = GetDefault<URpmDeveloperSettings>();
-	OnRequestComplete.BindRaw(this, &FAuthApi::OnProcessComplete);
 }
 
-void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request, TFunction<void(TSharedPtr<FRefreshTokenResponse>, bool)> OnComplete)
+void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request, FOnRefreshTokenResponse OnComplete)
 {
 	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = FString::Printf(TEXT("%s/refresh"), *RpmSettings->ApiBaseAuthUrl);
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FRefreshTokenResponse>(ApiRequest, OnComplete);
+	SendRequestWithAuth<FRefreshTokenResponse>(ApiRequest, [OnComplete](TSharedPtr<FRefreshTokenResponse> Response, bool bWasSuccessful)
+	{
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
 
-void FAuthApi::SendLoginCode(const FSendLoginCodeRequest& Request, TFunction<void(TSharedPtr<FApiResponse>, bool)> OnComplete)
+void FAuthApi::SendLoginCode(const FSendLoginCodeRequest& Request, FOnSendLoginCodeResponse OnComplete)
 {
 	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/request-login-code"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FApiResponse>(ApiRequest, OnComplete);
+	// TODO confirm this works since this request has no return data
+	SendRequestWithAuth<FApiResponse>(ApiRequest, [OnComplete](TSharedPtr<FApiResponse> Response, bool bWasSuccessful)
+	{
+		OnComplete.ExecuteIfBound(bWasSuccessful && Response.IsValid());
+	});
 }
 
-void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request, TFunction<void(TSharedPtr<FLoginWithCodeResponse>, bool)> OnComplete)
+void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request, FOnLoginWithCodeResponse OnComplete)
 {
 	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/auth/login"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FLoginWithCodeResponse>(ApiRequest, OnComplete);
+	SendRequestWithAuth<FLoginWithCodeResponse>(ApiRequest, [OnComplete](TSharedPtr<FLoginWithCodeResponse> Response, bool bWasSuccessful)
+	{
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
 
-void FAuthApi::CreateUser(const FCreateUserRequest& Request, TFunction<void(TSharedPtr<FCreateUserResponse>, bool)> OnComplete)
+void FAuthApi::CreateUser(const FCreateUserRequest& Request, FOnCreateUserResponse OnComplete)
 {
 	const TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = FString::Printf(TEXT("%s/v1/users"), *RpmSettings->GetApiBaseUrl());
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FCreateUserResponse>(ApiRequest, OnComplete);
+	SendRequestWithAuth<FCreateUserResponse>(ApiRequest, [OnComplete](TSharedPtr<FCreateUserResponse> Response, bool bWasSuccessful)
+	{
+		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
+	});
 }
-
-
-// void FAuthApi::OnProcessComplete(TSharedPtr<FApiRequest> ApiRequest, FHttpResponsePtr Response, bool bWasSuccessful)
-// {
-// 	if (!ApiRequest.IsValid())
-// 	{
-// 		UE_LOG(LogReadyPlayerMe, Error, TEXT("Invalid ApiRequest in FAuthApi::OnProcessComplete."));
-// 		return;
-// 	}
-//
-// 	EAuthRequestType RequestType;
-// 	if (ApiRequest->Url.Contains(TEXT("refresh")))
-// 	{
-// 		RequestType = EAuthRequestType::RefreshToken;
-// 	}
-// 	else if (ApiRequest->Url.Contains(TEXT("/auth/request-login-code")))
-// 	{
-// 		RequestType = EAuthRequestType::SendLoginCode;
-// 	}
-// 	else if (ApiRequest->Url.Contains(TEXT("auth/login")))
-// 	{
-// 		RequestType = EAuthRequestType::LoginWithCode;
-// 	}
-// 	else if (ApiRequest->Url.Contains(TEXT("users")))
-// 	{
-// 		RequestType = EAuthRequestType::CreateUser;
-// 	}
-//
-// 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-// 	{
-// 		FString Data = Response->GetContentAsString();
-//
-// 		switch (RequestType)
-// 		{
-// 		case EAuthRequestType::RefreshToken:
-// 			{
-// 				FRefreshTokenResponse TokenResponse;
-// 				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &TokenResponse, 0, 0))
-// 				{
-// 					if (OnRefreshTokenResponse.IsBound())
-// 					{
-// 						OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, TokenResponse, true);
-// 					}
-// 					return;
-// 				}
-// 				break;
-// 			}
-// 		case EAuthRequestType::SendLoginCode:
-// 			{
-// 				if(Response->GetResponseCode() == 201)
-// 				{
-// 					
-// 					OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, true);
-// 					return;
-// 				}
-// 				break;
-// 			}
-// 		case EAuthRequestType::LoginWithCode:
-// 			{
-// 				FLoginWithCodeResponse LoginWithCodeResponse;
-// 				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &LoginWithCodeResponse, 0, 0))
-// 				{
-// 					OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, LoginWithCodeResponse, true);
-// 					return;
-// 				}
-// 				break;
-// 			}
-// 		case EAuthRequestType::CreateUser:
-// 			{
-// 				FCreateUserResponse CreateUserResponse;
-// 				if (!Data.IsEmpty() && FJsonObjectConverter::JsonObjectStringToUStruct(Data, &CreateUserResponse, 0, 0))
-// 				{
-// 					OnCreateUserResponse.ExecuteIfBound(ApiRequest, CreateUserResponse, true);
-// 					return;
-// 				}
-// 				break;
-// 			}
-// 		}
-// 	}
-//
-// 	switch (RequestType)
-// 	{
-// 	case EAuthRequestType::RefreshToken:
-// 		{
-// 			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to refresh token"));
-// 			OnRefreshTokenResponse.ExecuteIfBound(ApiRequest, FRefreshTokenResponse(), false);
-// 			break;
-// 		}
-// 	case EAuthRequestType::SendLoginCode:
-// 		{
-// 			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to send login code"));
-// 			OnSendLoginCodeResponse.ExecuteIfBound(ApiRequest, false);
-// 			break;
-// 		}
-// 	case EAuthRequestType::LoginWithCode:
-// 		{
-// 			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to login with code"));
-// 			OnLoginWithCodeResponse.ExecuteIfBound(ApiRequest, FLoginWithCodeResponse(), false);
-// 			break;
-// 		}
-// 	case EAuthRequestType::CreateUser:
-// 		{
-// 			UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to create user"));
-// 			OnCreateUserResponse.ExecuteIfBound(ApiRequest, FCreateUserResponse(), false);
-// 			break;
-// 		}
-// 	}
-// }

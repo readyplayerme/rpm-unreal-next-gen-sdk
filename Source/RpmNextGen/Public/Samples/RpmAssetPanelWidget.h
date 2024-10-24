@@ -57,9 +57,8 @@ public:
 
 	UFUNCTION()
 	void OnAssetButtonClicked(const URpmAssetButtonWidget* AssetButtonWidget);
-	
-	UFUNCTION()
-	void OnAssetListResponse(const FAssetListResponse& AssetListResponse, bool bWasSuccessful);
+
+	void OnAssetListResponse(TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = "Asset Panel")
 	void LoadAssetsFromCache(const FString& AssetType);
