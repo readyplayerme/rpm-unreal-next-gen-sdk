@@ -1,51 +1,26 @@
 ﻿#include "Api/Common/WebApi.h"
-#include "HttpModule.h"
-#include "RpmNextGen.h"
-#include "Interfaces/IHttpResponse.h"
 
 FWebApi::FWebApi()
 {
-    Http = &FHttpModule::Get();
+    HttpModule = &FHttpModule::Get();
 }
 
 FWebApi::~FWebApi()
 {
-    
+    CancelAllRequests();
 }
 
-void FWebApi::DispatchRaw(TSharedPtr<FApiRequest> ApiRequest)
+void FWebApi::CancelAllRequests()
 {
-    TSharedPtr<IHttpRequest> Request = Http->CreateRequest();
-    FString Url = ApiRequest->Url + BuildQueryString(ApiRequest->QueryParams);
-    Request->SetURL(Url);
-    Request->SetVerb(ApiRequest->GetVerb());
-    Request->SetTimeout(10);
-    FString Headers;
-    for (const auto& Header : ApiRequest->Headers)
+    for (const auto& Request : ActiveRequests)
     {
-        Request->SetHeader(Header.Key, Header.Value);
-        Headers.Append(FString::Printf(TEXT("%s: %s\n"), *Header.Key, *Header.Value));
+        Request->OnProcessRequestComplete().Unbind();
+        Request->CancelRequest();
     }
-
-    if (!ApiRequest->Payload.IsEmpty() && ApiRequest->Method != ERequestMethod::GET)
-    {
-        Request->SetContentAsString(ApiRequest->Payload);
-    }
-    Request->OnProcessRequestComplete().BindRaw(this, &FWebApi::OnProcessResponse, ApiRequest);
-    Request->ProcessRequest();
+    ActiveRequests.Empty();
 }
 
-void FWebApi::OnProcessResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, TSharedPtr<FApiRequest> ApiRequest)
-{
-    if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-    {
-        OnRequestComplete.ExecuteIfBound(ApiRequest, Response, true);
-        return;
-    }
-    FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
-    UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
-    OnRequestComplete.ExecuteIfBound(ApiRequest, Response, false);
-}
+
 
 FString FWebApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
 {

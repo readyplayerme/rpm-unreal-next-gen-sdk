@@ -8,7 +8,30 @@ class RPMNEXTGEN_API FApiKeyAuthStrategy : public IAuthenticationStrategy
 {
 public:
 	FApiKeyAuthStrategy();
-	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest) override;
-	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest) override;
-	virtual void OnRefreshTokenResponse(TSharedPtr<FApiRequest> ApiRequest, const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
+	FApiKeyAuthStrategy(const FString& InApiKey);
+	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, bool)> OnAuthComplete) override
+	{
+		if(ApiKey.IsEmpty())
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Api Key not set!") );
+			OnAuthComplete(ApiRequest, false);
+			return;
+		}
+		ApiRequest->Headers.Add(TEXT("X-API-Key"), ApiKey);
+
+		OnAuthComplete(ApiRequest, true);
+	}
+
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool)> OnTokenRefreshed) override
+	{
+		if(ApiKey.IsEmpty())
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("No API key provided for refresh") );
+			OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), false);
+			return;
+		}
+		OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), !ApiKey.IsEmpty());
+	}
+private:
+	FString ApiKey;
 };

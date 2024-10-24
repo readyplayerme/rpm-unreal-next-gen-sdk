@@ -25,7 +25,7 @@ void FDeveloperAccountApi::ListApplicationsAsync(const FApplicationListRequest& 
     TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
     ApiRequest->Url = Url;
     OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleAppListResponse);
-    DispatchRawWithAuth(ApiRequest);
+    SendRequestWithAuth(ApiRequest);
 }
 
 void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest& Request)
@@ -38,7 +38,7 @@ void FDeveloperAccountApi::ListOrganizationsAsync(const FOrganizationListRequest
     TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
     ApiRequest->Url = Url;
     OnRequestComplete.BindRaw(this, &FDeveloperAccountApi::HandleOrgListResponse);
-    DispatchRawWithAuth(ApiRequest);
+    SendRequestWithAuth(ApiRequest);
 }
 
 

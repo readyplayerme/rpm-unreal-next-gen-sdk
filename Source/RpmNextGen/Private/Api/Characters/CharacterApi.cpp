@@ -31,7 +31,7 @@ void FCharacterApi::CreateAsync(const FCharacterCreateRequest& Request)
 	ApiRequest->Method = POST;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	DispatchRawWithAuth(ApiRequest);
+	SendRequestWithAuth(ApiRequest);
 }
 
 void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
@@ -42,7 +42,7 @@ void FCharacterApi::UpdateAsync(const FCharacterUpdateRequest& Request)
 	ApiRequest->Method = PATCH;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	DispatchRawWithAuth(ApiRequest);
+	SendRequestWithAuth(ApiRequest);
 }
 
 void FCharacterApi::FindByIdAsync(const FCharacterFindByIdRequest& Request)
@@ -51,7 +51,7 @@ void FCharacterApi::FindByIdAsync(const FCharacterFindByIdRequest& Request)
 	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request.Id);
 	ApiRequest->Method = GET;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	DispatchRawWithAuth(ApiRequest);
+	SendRequestWithAuth(ApiRequest);
 }
 
 FString FCharacterApi::GeneratePreviewUrl(const FCharacterPreviewRequest& Request)

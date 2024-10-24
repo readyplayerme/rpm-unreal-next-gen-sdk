@@ -10,13 +10,35 @@ class RPMNEXTGENEDITOR_API DeveloperTokenAuthStrategy : public IAuthenticationSt
 {
 public:
 	DeveloperTokenAuthStrategy();
+	DeveloperTokenAuthStrategy(const FString& InApiKey);
+	virtual ~DeveloperTokenAuthStrategy() override = default;
 	
-	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest) override;
-	virtual void OnRefreshTokenResponse(TSharedPtr<FApiRequest>, const FRefreshTokenResponse& Response, bool bWasSuccessful) override;
-	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest) override;
+	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, bool)> OnAuthComplete) override
+	{
+		if(ApiKey.IsEmpty())
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("Api Key not set!") );
+			OnAuthComplete(ApiRequest, false);
+			return;
+		}
+		ApiRequest->Headers.Add(TEXT("X-API-Key"), ApiKey);
+
+		OnAuthComplete(ApiRequest, true);
+	}
+
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool)> OnTokenRefreshed) override
+	{
+		// TODO add refresh request logic later
+		if(ApiKey.IsEmpty())
+		{
+			UE_LOG(LogReadyPlayerMe, Error, TEXT("No API key provided for refresh") );
+			OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), false);
+			return;
+		}
+		OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), !ApiKey.IsEmpty());
+	}
 	
 private:
-	TSharedPtr<FAuthApi> AuthApi;
+	FString ApiKey;
 	TSharedPtr<FApiRequest> ApiRequestToRetry;
-	void RefreshTokenAsync(const FRefreshTokenRequest& RefreshRequest);
 };

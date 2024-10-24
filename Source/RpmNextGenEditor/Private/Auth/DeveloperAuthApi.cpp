@@ -35,5 +35,5 @@ void FDeveloperAuthApi::LoginWithEmail(FDeveloperLoginRequest Request)
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	DispatchRaw(ApiRequest);
+	SendRequest(ApiRequest);
 }

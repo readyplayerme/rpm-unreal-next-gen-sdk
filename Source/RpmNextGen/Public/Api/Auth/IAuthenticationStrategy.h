@@ -5,17 +5,13 @@
 
 struct FApiRequest;
 
-DECLARE_DELEGATE_TwoParams(FOnAuthComplete, TSharedPtr<FApiRequest>, bool);
-DECLARE_DELEGATE_ThreeParams(FOnTokenRefreshed, TSharedPtr<FApiRequest>, const FRefreshTokenResponseBody&, bool);
-
 class RPMNEXTGEN_API IAuthenticationStrategy
 {
 public:
-	FOnAuthComplete OnAuthComplete;
-	FOnTokenRefreshed OnTokenRefreshed;
+	virtual ~IAuthenticationStrategy();
+	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest,  TFunction<void(TSharedPtr<FApiRequest>, bool)> OnAuthenticationComplete) = 0;
 
-	virtual ~IAuthenticationStrategy() = default;
-	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest) = 0;
-	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest) = 0;
-	virtual void OnRefreshTokenResponse(TSharedPtr<FApiRequest> ApiRequest, const FRefreshTokenResponse& Response, bool bWasSuccessful) = 0;
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool)> OnTokenRefreshed) = 0;
 };
+
+inline IAuthenticationStrategy::~IAuthenticationStrategy() = default;
