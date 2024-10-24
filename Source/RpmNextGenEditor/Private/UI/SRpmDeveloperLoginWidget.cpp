@@ -234,6 +234,7 @@ void SRpmDeveloperLoginWidget::Initialize()
 SRpmDeveloperLoginWidget::~SRpmDeveloperLoginWidget()
 {
 	ClearLoadedCharacterModelImages();
+	AssetApi->CancelAllRequests();
 }
 
 void SRpmDeveloperLoginWidget::ClearLoadedCharacterModelImages()
@@ -351,7 +352,7 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 	DeveloperAccountApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 	AssetApi->SetAuthenticationStrategy(MakeShared<DeveloperTokenAuthStrategy>());
 	const TSharedPtr<FDeveloperLoginRequest> LoginRequest = MakeShared<FDeveloperLoginRequest>(Email, Password);
-	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = StaticCastSharedRef<SRpmDeveloperLoginWidget>(AsShared());
 	DeveloperAuthApi->LoginWithEmail(LoginRequest, FOnDeveloperLoginResponse::CreateLambda([WeakPtrThis]( TSharedPtr<FDeveloperLoginResponse> Response, bool bWasSuccessful)
 	{
 		if(WeakPtrThis.IsValid())
@@ -365,7 +366,7 @@ FReply SRpmDeveloperLoginWidget::OnLoginClicked()
 void SRpmDeveloperLoginWidget::GetOrgList()
 {
 	TSharedPtr<FOrganizationListRequest> OrgRequest = MakeShared<FOrganizationListRequest>();
-	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = StaticCastSharedRef<SRpmDeveloperLoginWidget>(AsShared());
 	DeveloperAccountApi->ListOrganizationsAsync(OrgRequest, FOnOrganizationListResponse::CreateLambda([WeakPtrThis]( TSharedPtr<FOrganizationListResponse> Response, bool bWasSuccessful)
 	{
 		if(WeakPtrThis.IsValid())
@@ -401,7 +402,7 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(TSharedPtr<FOrgani
 		}
 		TSharedPtr<FApplicationListRequest> Request = MakeShared<FApplicationListRequest>();
 		Request->Params.Add("organizationId", Response->Data[0].Id);
-		TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+		TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = StaticCastSharedRef<SRpmDeveloperLoginWidget>(AsShared());
 		DeveloperAccountApi->ListApplicationsAsync(Request, FOnApplicationListResponse::CreateLambda( [WeakPtrThis](TSharedPtr<FApplicationListResponse> Response, bool bWasSuccessful)
 		{
 			if(WeakPtrThis.IsValid())
@@ -414,7 +415,6 @@ void SRpmDeveloperLoginWidget::HandleOrganizationListResponse(TSharedPtr<FOrgani
 
 	UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to list organizations"));
 }
-
 
 void SRpmDeveloperLoginWidget::HandleApplicationListResponse(TSharedPtr<FApplicationListResponse> Response, bool bWasSuccessful)
 {
@@ -532,10 +532,10 @@ void SRpmDeveloperLoginWidget::LoadBaseModelList()
 	Params.ApplicationId = RpmSettings->ApplicationId;
 	Params.Type = FAssetApi::BaseModelType;
 	Request->Params = Params;
-	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = SharedThis(this);
+	TWeakPtr<SRpmDeveloperLoginWidget> WeakPtrThis = StaticCastSharedRef<SRpmDeveloperLoginWidget>(AsShared());
 	AssetApi->ListAssetsAsync(Request, FOnListAssetsResponse::CreateLambda( [WeakPtrThis](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
 	{
-		if(WeakPtrThis.IsValid())
+		if(WeakPtrThis != nullptr && WeakPtrThis.IsValid())
 		{
 			WeakPtrThis.Pin()->HandleBaseModelListResponse(Response, bWasSuccessful);
 		}

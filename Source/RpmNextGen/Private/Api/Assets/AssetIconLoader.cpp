@@ -30,7 +30,7 @@ void FAssetIconLoader::LoadIcon(const FAsset& Asset, bool bStoreInCache)
 	ApiRequest->Url = Asset.IconUrl;
 	ApiRequest->Method = GET;
 	TWeakPtr<FAssetIconLoader> ThisPtr = SharedThis(this);
-	SendRequest<TArray<uint8>>(ApiRequest, [ThisPtr, Asset, bStoreInCache](TSharedPtr<TArray<uint8>> Response, bool bWasSuccessful)
+	SendRequest<TArray<uint8>>(ApiRequest, [ThisPtr, Asset, bStoreInCache](TSharedPtr<TArray<uint8>> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		if(ThisPtr.IsValid())
 		{

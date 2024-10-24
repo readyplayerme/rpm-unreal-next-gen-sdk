@@ -22,7 +22,7 @@ void FAuthApi::RefreshToken(const FRefreshTokenRequest& Request, FOnRefreshToken
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FRefreshTokenResponse>(ApiRequest, [OnComplete](TSharedPtr<FRefreshTokenResponse> Response, bool bWasSuccessful)
+	SendRequest<FRefreshTokenResponse>(ApiRequest, [OnComplete](TSharedPtr<FRefreshTokenResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	});
@@ -36,7 +36,7 @@ void FAuthApi::SendLoginCode(const FSendLoginCodeRequest& Request, FOnSendLoginC
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	// TODO confirm this works since this request has no return data
-	SendRequestWithAuth<FApiResponse>(ApiRequest, [OnComplete](TSharedPtr<FApiResponse> Response, bool bWasSuccessful)
+	SendRequest<FApiResponse>(ApiRequest, [OnComplete](TSharedPtr<FApiResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		OnComplete.ExecuteIfBound(bWasSuccessful && Response.IsValid());
 	});
@@ -49,7 +49,7 @@ void FAuthApi::LoginWithCode(const FLoginWithCodeRequest& Request, FOnLoginWithC
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FLoginWithCodeResponse>(ApiRequest, [OnComplete](TSharedPtr<FLoginWithCodeResponse> Response, bool bWasSuccessful)
+	SendRequest<FLoginWithCodeResponse>(ApiRequest, [OnComplete](TSharedPtr<FLoginWithCodeResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	});
@@ -62,7 +62,7 @@ void FAuthApi::CreateUser(const FCreateUserRequest& Request, FOnCreateUserRespon
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(Request);
-	SendRequestWithAuth<FCreateUserResponse>(ApiRequest, [OnComplete](TSharedPtr<FCreateUserResponse> Response, bool bWasSuccessful)
+	SendRequest<FCreateUserResponse>(ApiRequest, [OnComplete](TSharedPtr<FCreateUserResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	});

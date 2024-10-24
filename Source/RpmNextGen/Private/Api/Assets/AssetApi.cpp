@@ -68,7 +68,7 @@ void FAssetApi::ListAssetsAsync(TSharedPtr<FAssetListRequest> Request, FOnListAs
 	ApiRequest->Method = GET;
 	ApiRequest->QueryParams = Request->BuildQueryMap();
 
-	SendRequestWithAuth<FAssetListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful)
+	SendRequestWithAuth<FAssetListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetListResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	 {
 		 OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	 });
@@ -94,7 +94,7 @@ void FAssetApi::ListAssetTypesAsync(TSharedPtr<FAssetTypeListRequest> Request, F
 	TSharedPtr<FApiRequest> ApiRequest = MakeShared<FApiRequest>();
 	ApiRequest->Url = Url;
 	ApiRequest->Method = GET;
-	SendRequestWithAuth<FAssetTypeListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetTypeListResponse> Response, bool bWasSuccessful)
+	SendRequestWithAuth<FAssetTypeListResponse>(ApiRequest, [OnComplete](TSharedPtr<FAssetTypeListResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	});

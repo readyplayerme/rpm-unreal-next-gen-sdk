@@ -32,7 +32,7 @@ public:
 
 	void Construct(const FArguments& InArgs);
 	virtual ~SRpmDeveloperLoginWidget() override;
-
+	
 private:
 	TSharedPtr<SVerticalBox> ContentBox;
 	TSharedPtr<SEditableTextBox> EmailTextBox;

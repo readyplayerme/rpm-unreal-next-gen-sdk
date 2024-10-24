@@ -19,7 +19,7 @@ public:
 	virtual ~FWebApi();
 	
 	template <typename T>
-	void SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<T>, bool)> OnResponse);
+	void SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<T>, bool, int32)> OnResponse);
 
 	void CancelAllRequests();
 	
@@ -38,7 +38,7 @@ protected:
 };
 
 template <typename T>
-void FWebApi::SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<T>, bool)> OnResponse)
+void FWebApi::SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<T>, bool, int32)> OnResponse)
 {
 	if (!ApiRequest.IsValid())
 	{
@@ -85,13 +85,14 @@ void FWebApi::SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSh
 			}
 
 			WeakApiPtr.Pin()->ActiveRequests.Remove(HttpRequest);
+			int32 ResponseCode = Response.IsValid() ? Response->GetResponseCode() : -1;
 
 			if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 			{
 				if constexpr (std::is_same_v<T, TArray<uint8>>)
 				{
 					TSharedPtr<T> ByteArrayResponse = MakeShareable(new T(Response->GetContent()));
-					OnResponse(ByteArrayResponse, true);
+					OnResponse(ByteArrayResponse, true, ResponseCode);
 				}
 				else
 				{
@@ -99,14 +100,14 @@ void FWebApi::SendRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSh
 					FString ContentAsString = Response->GetContentAsString();
 					UE_LOG(LogTemp, Log, TEXT("Response: %s"), *ContentAsString);
 					FJsonObjectConverter::JsonObjectStringToUStruct(ContentAsString, ParsedResponse.Get(), 0, 0);
-					OnResponse(ParsedResponse, true);
+					OnResponse(ParsedResponse, true, ResponseCode);
 				}
 			}
 			else
 			{
 				const FString ErrorMessage = Response.IsValid() ? Response->GetContentAsString() : TEXT("Request failed");
 				UE_LOG(LogReadyPlayerMe, Warning, TEXT("WebApi from URL %s request failed: %s"), *Request->GetURL(), *ErrorMessage);
-				OnResponse(nullptr, false);
+				OnResponse(nullptr, false, ResponseCode);
 			}
 		}
 	);

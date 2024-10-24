@@ -30,7 +30,7 @@ void FCharacterApi::CreateAsync(TSharedPtr<FCharacterCreateRequest> Request, FOn
 	ApiRequest->Method = POST;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth<FCharacterCreateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterCreateResponse> Response, bool bWasSuccessful)
+	SendRequestWithAuth<FCharacterCreateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterCreateResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	 {
 		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character CREATE request failed."));
 		 OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
@@ -45,7 +45,7 @@ void FCharacterApi::UpdateAsync(TSharedPtr<FCharacterUpdateRequest> Request, FOn
 	ApiRequest->Method = PATCH;
 	ApiRequest->Payload = ConvertToJsonString(Request);
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth<FCharacterUpdateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterUpdateResponse> Response, bool bWasSuccessful)
+	SendRequestWithAuth<FCharacterUpdateResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterUpdateResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character UPDATE request failed."));
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
@@ -58,7 +58,7 @@ void FCharacterApi::FindByIdAsync(TSharedPtr<FCharacterFindByIdRequest> Request,
 	ApiRequest->Url = FString::Printf(TEXT("%s/%s"), *BaseUrl, *Request->Id);
 	ApiRequest->Method = GET;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
-	SendRequestWithAuth<FCharacterFindByIdResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterFindByIdResponse> Response, bool bWasSuccessful)
+	SendRequestWithAuth<FCharacterFindByIdResponse>(ApiRequest, [OnComplete](TSharedPtr<FCharacterFindByIdResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
 		//UE_LOG(LogReadyPlayerMe, Warning, TEXT("Character FindById request failed."));
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());

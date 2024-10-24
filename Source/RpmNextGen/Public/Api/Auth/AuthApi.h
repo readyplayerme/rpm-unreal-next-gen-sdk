@@ -13,15 +13,14 @@ struct FSendLoginCodeRequest;
 struct FRefreshTokenResponse;
 struct FRefreshTokenRequest;
 
-class RPMNEXTGEN_API FAuthApi : public FWebApiWithAuth
+DECLARE_DELEGATE_TwoParams(FOnRefreshTokenResponse, TSharedPtr<FRefreshTokenResponse>, bool);
+DECLARE_DELEGATE_OneParam(FOnSendLoginCodeResponse, bool);
+DECLARE_DELEGATE_TwoParams(FOnLoginWithCodeResponse, TSharedPtr<const FLoginWithCodeResponse>, bool);
+DECLARE_DELEGATE_TwoParams(FOnCreateUserResponse, TSharedPtr<FCreateUserResponse>, bool);
+
+class RPMNEXTGEN_API FAuthApi : public FWebApi
 {
-	DECLARE_DELEGATE_TwoParams(FOnRefreshTokenResponse, TSharedPtr<FRefreshTokenResponse>, bool);
-	DECLARE_DELEGATE_OneParam(FOnSendLoginCodeResponse, bool);
-	DECLARE_DELEGATE_TwoParams(FOnLoginWithCodeResponse, TSharedPtr<const FLoginWithCodeResponse>, bool);
-	DECLARE_DELEGATE_TwoParams(FOnCreateUserResponse, TSharedPtr<FCreateUserResponse>, bool);
-	
 public:
-	
 	FAuthApi();
 	void RefreshToken(const FRefreshTokenRequest& Request, FOnRefreshTokenResponse OnComplete);
 	void SendLoginCode(const FSendLoginCodeRequest& Request, FOnSendLoginCodeResponse OnComplete);

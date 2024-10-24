@@ -17,9 +17,9 @@ void FDeveloperAuthApi::LoginWithEmail(TSharedPtr<FDeveloperLoginRequest> Reques
 	ApiRequest->Method = POST;
 	ApiRequest->Headers.Add(TEXT("Content-Type"), TEXT("application/json"));
 	ApiRequest->Payload = ConvertToJsonString(*Request.Get());
-	SendRequest<FDeveloperLoginResponse>(ApiRequest, [OnComplete](TSharedPtr<FDeveloperLoginResponse> Response, bool bWasSuccessful)
+	SendRequest<FDeveloperLoginResponse>(ApiRequest, [OnComplete](TSharedPtr<FDeveloperLoginResponse> Response, bool bWasSuccessful, int32 StatusCode)
 	{
-		//UE_LOG(LogReadyPlayerMe, Error, TEXT("Failed to parse login response: %s"), *Data );
 		OnComplete.ExecuteIfBound(Response, bWasSuccessful && Response.IsValid());
 	});
+
 }

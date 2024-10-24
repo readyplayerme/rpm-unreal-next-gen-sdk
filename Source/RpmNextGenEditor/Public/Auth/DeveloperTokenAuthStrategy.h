@@ -1,17 +1,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DevAuthTokenCache.h"
 #include "Api/Auth/AuthApi.h"
 #include "Api/Auth/IAuthenticationStrategy.h"
+#include "Api/Auth/Models/RefreshTokenRequest.h"
+#include "Models/DeveloperAuth.h"
 
 struct FRefreshTokenResponse;
 
-class RPMNEXTGENEDITOR_API DeveloperTokenAuthStrategy : public IAuthenticationStrategy
+class RPMNEXTGENEDITOR_API DeveloperTokenAuthStrategy : public IAuthenticationStrategy, public FAuthApi
 {
 public:
 	DeveloperTokenAuthStrategy();
 	DeveloperTokenAuthStrategy(const FString& InApiKey);
-	virtual ~DeveloperTokenAuthStrategy() override = default;
+	~DeveloperTokenAuthStrategy();
 	
 	virtual void AddAuthToRequest(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, bool)> OnAuthComplete) override
 	{
@@ -26,17 +29,7 @@ public:
 		OnAuthComplete(ApiRequest, true);
 	}
 
-	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool)> OnTokenRefreshed) override
-	{
-		// TODO add refresh request logic later
-		if(ApiKey.IsEmpty())
-		{
-			UE_LOG(LogReadyPlayerMe, Error, TEXT("No API key provided for refresh") );
-			OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), false);
-			return;
-		}
-		OnTokenRefreshed(ApiRequest, FRefreshTokenResponse(), !ApiKey.IsEmpty());
-	}
+	virtual void TryRefresh(TSharedPtr<FApiRequest> ApiRequest, TFunction<void(TSharedPtr<FApiRequest>, const FRefreshTokenResponse&, bool)> OnTokenRefreshed) override;
 	
 private:
 	FString ApiKey;

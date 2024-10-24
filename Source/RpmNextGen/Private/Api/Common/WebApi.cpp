@@ -20,8 +20,6 @@ void FWebApi::CancelAllRequests()
     ActiveRequests.Empty();
 }
 
-
-
 FString FWebApi::BuildQueryString(const TMap<FString, FString>& QueryParams)
 {
     FString QueryString;
